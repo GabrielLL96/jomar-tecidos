@@ -1,12 +1,6 @@
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { BUSINESS } from '@/lib/constants'
 
-const STATS = [
-  { value: '38', label: 'anos de tradição' },
-  { value: '500+', label: 'tecidos no catálogo' },
-  { value: '12k', label: 'clientes atendidos' },
-]
-
 export function AboutPage() {
   return (
     <main>
@@ -16,23 +10,19 @@ export function AboutPage() {
 
       <div className="mx-auto flex max-w-(--breakpoint-md) flex-col gap-5 px-6 py-16 md:px-12">
         <p className="text-[16px] leading-relaxed text-[#3a352b]">
-          Desde {BUSINESS.foundedYear}, a <strong>{BUSINESS.name}</strong> atende famílias e costureiras
-          com uma seleção cuidadosa de tecidos nobres, aviamentos e enxovais. O que começou como uma
-          pequena loja de bairro se tornou referência em tradição têxtil na região.
+          A <strong>{BUSINESS.name}</strong> é uma loja especializada em tecidos finos e enxovais de
+          qualidade, localizada em Minas Gerais. Com tradição no mercado têxtil, oferecemos uma vasta
+          seleção de tecidos nacionais e importados para todos os gostos e necessidades.
         </p>
         <p className="text-[16px] leading-relaxed text-[#3a352b]">
-          Hoje, unimos o atendimento de perto que sempre nos definiu a uma vitrine digital pensada para
-          quem valoriza qualidade, textura e acabamento — do corte à costura final.
+          Nosso compromisso é proporcionar a melhor experiência de compra, com atendimento
+          personalizado e produtos que superam expectativas. Cada tecido é cuidadosamente selecionado
+          para garantir qualidade, durabilidade e beleza.
         </p>
-
-        <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
-          {STATS.map((stat) => (
-            <div key={stat.label} className="bg-cream-secondary rounded-sm p-7 text-center">
-              <div className="text-navy font-serif text-[34px] font-medium">{stat.value}</div>
-              <div className="text-text-meta mt-1.5 text-[12.5px]">{stat.label}</div>
-            </div>
-          ))}
-        </div>
+        <p className="text-[16px] leading-relaxed text-[#3a352b]">
+          Atendemos costureiras, estilistas, decoradores, ateliês e todos que buscam tecidos de
+          excelência para seus projetos especiais.
+        </p>
       </div>
     </main>
   )
