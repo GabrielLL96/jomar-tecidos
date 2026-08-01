@@ -6,7 +6,7 @@ import { WhatsAppButton } from './WhatsAppButton'
 
 export function RootLayout() {
   return (
-    <div className="flex min-h-svh flex-col overflow-x-hidden">
+    <div className="flex min-h-svh flex-col">
       <UtilityBar />
       <Header />
       <Outlet />
