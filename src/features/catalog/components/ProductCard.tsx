@@ -1,0 +1,52 @@
+import { Link } from 'react-router-dom'
+import { Heart } from 'lucide-react'
+import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
+import { formatPriceBRL } from '@/lib/format'
+import { cn } from '@/lib/utils'
+import { useFavorites } from '@/features/favorites/FavoritesContext'
+import type { Product } from '../types'
+
+interface ProductCardProps {
+  product: Product
+  variant?: 'light' | 'dark'
+}
+
+export function ProductCard({ product, variant = 'light' }: ProductCardProps) {
+  const { isFavorite, toggleFavorite } = useFavorites()
+  const favorite = isFavorite(product.id)
+  const isDark = variant === 'dark'
+
+  return (
+    <div className="group relative">
+      <Link to={`/tecidos/${product.slug}`}>
+        <ImagePlaceholder colors={product.colors} className="h-[190px] rounded-sm md:h-[210px]">
+          {product.tag && (
+            <span className="bg-brand-red absolute top-2.5 left-2.5 rounded-sm px-2 py-1 text-[10px] tracking-[0.05em] text-white uppercase">
+              {product.tag}
+            </span>
+          )}
+        </ImagePlaceholder>
+        <div className={cn('mt-3 text-[14.5px] font-medium', isDark ? 'text-white' : 'text-foreground')}>
+          {product.name}
+        </div>
+        <div className={cn('mt-0.5 text-[12px]', isDark ? 'text-[#b6b0d8]' : 'text-text-meta')}>
+          {product.material}
+        </div>
+        <div className={cn('mt-1.5 text-sm font-medium', isDark ? 'text-[#e8c9a3]' : 'text-navy')}>
+          {formatPriceBRL(product.price)} / m
+        </div>
+      </Link>
+      <button
+        type="button"
+        aria-label={favorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+        onClick={() => toggleFavorite(product.id)}
+        className={cn(
+          'absolute top-2.5 right-2.5 flex size-8 items-center justify-center rounded-full bg-white/90',
+          favorite ? 'text-brand-red' : 'text-foreground',
+        )}
+      >
+        <Heart className="size-4" fill={favorite ? 'currentColor' : 'none'} />
+      </button>
+    </div>
+  )
+}
