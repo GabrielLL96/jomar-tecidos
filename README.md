@@ -1,32 +1,61 @@
-# React + TypeScript + Vite
+# Jomar Tecidos e Enxovais
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Landing page / e-commerce da **Jomar Tecidos e Enxovais** (Pouso Alegre, MG, desde 1987) — catálogo de tecidos nobres, aviamentos e enxovais, carrinho, checkout e conta de cliente.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- [Vite](https://vite.dev/) + [React 19](https://react.dev/) + TypeScript (strict)
+- [Tailwind CSS v4](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/) (estilo `radix-nova`, ícones [Lucide](https://lucide.dev/))
+- [React Router](https://reactrouter.com/) v7
+- [TanStack Query](https://tanstack.com/query) v5
+- [Axios](https://axios-http.com/)
+- [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
+- [Motion](https://motion.dev/) (Framer Motion)
+- `useSecureStorage` — hook próprio que criptografa dados salvos no `localStorage` (AES via `crypto-js`)
 
-## React Compiler
+## Escopo atual
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Catálogo, carrinho, checkout, favoritos e login são **mockados localmente** (sem backend) — decisão registrada nos ADRs do projeto. Roteamento usa rotas reais do React Router (não state interno). Pagamento real (gateway Pix/cartão/boleto) está fora de escopo desta fase; o checkout apenas simula a confirmação do pedido.
 
-## Expanding the Oxlint configuration
+## Como rodar
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+cp .env.example .env   # preencher VITE_PUBLIC_CRYPTO_KEY
+npm run dev            # servidor de desenvolvimento
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### Scripts
+
+| Comando           | Descrição                          |
+| ----------------- | ----------------------------------- |
+| `npm run dev`      | Servidor de desenvolvimento (Vite) |
+| `npm run build`    | Type-check (`tsc -b`) + build de produção |
+| `npm run preview`  | Preview local do build de produção |
+| `npm run lint`     | ESLint                             |
+| `npm run format`   | Prettier (`--write`)               |
+
+### Variáveis de ambiente
+
+| Variável                  | Descrição                                                              |
+| -------------------------- | ------------------------------------------------------------------------ |
+| `VITE_API_URL`              | Base URL da API (não utilizada nesta fase — catálogo é mockado)         |
+| `VITE_PUBLIC_CRYPTO_KEY`    | Chave de criptografia do `useSecureStorage`. Sem ela, o hook salva sem criptografia (fallback seguro) |
+
+## Estrutura de pastas
+
+```
+src/
+  components/
+    ui/        # componentes shadcn/ui
+    layout/    # Header, Footer, UtilityBar, RootLayout
+    common/    # componentes utilitários (ImagePlaceholder, ícones)
+  features/
+    catalog/   # dados mock, hooks (TanStack Query), tipos do catálogo
+    cart/      # contexto do carrinho
+    favorites/ # contexto de favoritos
+    auth/      # contexto de autenticação mockada
+  pages/       # páginas roteadas
+  hooks/       # useSecureStorage e demais hooks globais
+  lib/         # axios, query-client, constants, format, utils
+```
