@@ -13,17 +13,12 @@ export function Home() {
 
   return (
     <main>
-      <section className="relative flex min-h-[560px] items-center overflow-hidden">
-        <ImagePlaceholder
-          colors={['#e9e2d2', '#ded4bb']}
-          label="foto — rolo de linho na vitrine"
-          className="absolute inset-0 h-full w-full p-7"
-        />
+      <section className="grid grid-cols-1 overflow-hidden md:grid-cols-2 md:min-h-[560px]">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="relative z-10 flex max-w-xl flex-col justify-center gap-6 px-8 py-16 md:px-16"
+          className="order-2 flex flex-col justify-center gap-6 px-8 py-16 md:order-1 md:px-16"
         >
           <span className="text-brand-red text-[11px] font-semibold tracking-[0.18em] uppercase">
             Tradição têxtil mineira
@@ -41,6 +36,11 @@ export function Home() {
             </Button>
           </div>
         </motion.div>
+        <ImagePlaceholder
+          colors={['#e9e2d2', '#ded4bb']}
+          label="foto — rolo de linho na vitrine"
+          className="order-1 h-64 w-full p-7 md:order-2 md:h-full"
+        />
       </section>
 
       <section className="px-6 py-18 text-center md:px-12">

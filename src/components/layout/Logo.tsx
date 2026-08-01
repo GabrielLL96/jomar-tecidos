@@ -6,9 +6,9 @@ export function Logo() {
       <img
         src="/logo.png"
         alt="Jomar Tecidos e Enxovais"
-        width={1672}
-        height={941}
-        className="h-16 w-auto shrink-0 object-contain"
+        width={1536}
+        height={1024}
+        className="h-20 w-auto shrink-0 object-contain"
       />
     </Link>
   )

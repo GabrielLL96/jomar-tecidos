@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Heart, Menu, Search, ShoppingBag, User, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -17,6 +17,14 @@ export function Header() {
   const { itemCount } = useCart()
   const { favoriteIds } = useFavorites()
   const { user } = useAuth()
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 8)
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   const handleSearchSubmit = (event: FormEvent) => {
     event.preventDefault()
@@ -26,7 +34,12 @@ export function Header() {
   }
 
   return (
-    <header className="border-border bg-background sticky top-0 z-20 flex items-center justify-between gap-6 border-b px-6 py-4 md:px-12">
+    <header
+      className={cn(
+        'border-border sticky top-0 z-20 flex items-center justify-between gap-6 border-b px-6 py-4 backdrop-blur-md transition-colors md:px-12',
+        isScrolled ? 'bg-background/80' : 'bg-background',
+      )}
+    >
       <div className="flex items-center gap-3">
         <button
           type="button"
