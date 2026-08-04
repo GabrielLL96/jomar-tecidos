@@ -10,7 +10,11 @@ import { AboutPage } from '@/pages/AboutPage'
 import { ContactPage } from '@/pages/contact/ContactPage'
 import { FavoritesPage } from '@/pages/FavoritesPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
-import { AccountPage } from '@/pages/auth/AccountPage'
+import { AccountLayout } from '@/pages/auth/AccountLayout'
+import { AccountSummaryPage } from '@/pages/auth/AccountSummaryPage'
+import { AccountOrdersPage } from '@/pages/auth/AccountOrdersPage'
+import { AccountAddressesPage } from '@/pages/auth/AccountAddressesPage'
+import { AccountDataPage } from '@/pages/auth/AccountDataPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 function App() {
@@ -27,7 +31,12 @@ function App() {
         <Route path="/contato" element={<ContactPage />} />
         <Route path="/favoritos" element={<FavoritesPage />} />
         <Route path="/conta/entrar" element={<LoginPage />} />
-        <Route path="/conta" element={<AccountPage />} />
+        <Route path="/conta" element={<AccountLayout />}>
+          <Route index element={<AccountSummaryPage />} />
+          <Route path="pedidos" element={<AccountOrdersPage />} />
+          <Route path="enderecos" element={<AccountAddressesPage />} />
+          <Route path="dados" element={<AccountDataPage />} />
+        </Route>
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

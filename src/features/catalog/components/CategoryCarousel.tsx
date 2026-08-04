@@ -2,12 +2,12 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
-import type { Category } from '../types'
+import type { CategoryCard } from '../types'
 
 const SCROLL_STEP = 284
 
 interface CategoryCarouselProps {
-  categories: Category[]
+  categories: CategoryCard[]
 }
 
 export function CategoryCarousel({ categories }: CategoryCarouselProps) {
@@ -36,8 +36,8 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
       >
         {categories.map((category) => (
           <Link
-            key={category.slug}
-            to={`/tecidos?categoria=${category.slug}`}
+            key={category.id}
+            to={`/tecidos?categoria=${category.id}`}
             className="w-[260px] shrink-0 [scroll-snap-align:start]"
           >
             <ImagePlaceholder colors={category.colors} label={category.tag} className="h-[220px] rounded-sm" />

@@ -1,20 +1,22 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Heart, Minus, Plus } from 'lucide-react'
+import { Heart, Minus, Plus, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatPriceBRL } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { useProduct } from '@/features/catalog/hooks'
-import { PRODUCT_CARE_DEFAULT, PRODUCT_DELIVERY_DEFAULT } from '@/features/catalog/data'
+import { useProduct, useProductReviews } from '@/features/catalog/hooks'
+import { COMPOSITIONS, PRODUCT_CARE_DEFAULT, PRODUCT_DELIVERY_DEFAULT } from '@/features/catalog/data'
+import { formatCompositionBreakdown, formatCompositionLabel, formatWidthM } from '@/features/catalog/utils'
 import { useCart } from '@/features/cart/CartContext'
 import { useFavorites } from '@/features/favorites/FavoritesContext'
 
 export function ProductDetailPage() {
   const { slug = '' } = useParams()
   const { data: product, isLoading } = useProduct(slug)
+  const { data: reviews = [] } = useProductReviews(product?.id ?? '')
   const { addItem } = useCart()
   const { isFavorite, toggleFavorite } = useFavorites()
 
@@ -35,19 +37,24 @@ export function ProductDetailPage() {
   }
 
   const selectedColor = product.colorOptions[selectedColorIdx]
-  const subtotal = product.price * meters
+  const subtotal = product.pricePerMeter * meters
   const favorite = isFavorite(product.id)
+  const outOfStock = product.status === 'out_of_stock'
+  const averageRating = reviews.length
+    ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
+    : null
 
   const handleAddToCart = () => {
     addItem({
       productId: product.id,
       slug: product.slug,
       name: product.name,
+      colorId: selectedColor.id,
       colorLabel: selectedColor.label,
       colorHex: selectedColor.hex,
       stripeColors: product.colors,
       meters,
-      pricePerMeter: product.price,
+      pricePerMeter: product.pricePerMeter,
     })
     toast.success(`${product.name} adicionado à sacola`)
   }
@@ -67,7 +74,7 @@ export function ProductDetailPage() {
           <div className="flex gap-3">
             {product.colorOptions.map((option, index) => (
               <button
-                key={option.label}
+                key={option.id}
                 type="button"
                 aria-label={`Ver na cor ${option.label}`}
                 onClick={() => setSelectedColorIdx(index)}
@@ -83,13 +90,28 @@ export function ProductDetailPage() {
 
         <div>
           <div className="text-brand-red mb-2 text-[11px] font-semibold tracking-[0.14em] uppercase">
-            {product.material}
+            {formatCompositionLabel(product.compositions, COMPOSITIONS)}
           </div>
           <h1 className="text-navy-dark mb-3 font-serif text-[32px] font-medium">{product.name}</h1>
-          <div className="mb-5 text-[22px] font-medium">
-            {formatPriceBRL(product.price)}{' '}
+          <div className="mb-2 flex items-center gap-3 text-[22px] font-medium">
+            {formatPriceBRL(product.pricePerMeter)}{' '}
             <span className="text-text-meta text-[13px] font-normal">/ metro</span>
+            {averageRating !== null && (
+              <span className="text-text-meta flex items-center gap-1 text-[13px] font-normal">
+                <Star className="size-3.5 fill-current text-[#d4a03c]" />
+                {averageRating.toFixed(1)} ({reviews.length})
+              </span>
+            )}
           </div>
+          {outOfStock ? (
+            <div className="bg-foreground mb-5 inline-block rounded-sm px-2.5 py-1 text-[11px] tracking-[0.05em] text-white uppercase">
+              Esgotado
+            </div>
+          ) : product.status === 'low_stock' ? (
+            <div className="bg-navy mb-5 inline-block rounded-sm px-2.5 py-1 text-[11px] tracking-[0.05em] text-white uppercase">
+              Últimas unidades
+            </div>
+          ) : null}
           <p className="text-text-body mb-6 text-[14.5px] leading-relaxed">{product.description}</p>
 
           <div className="mb-5">
@@ -99,7 +121,7 @@ export function ProductDetailPage() {
             <div className="flex gap-2.5">
               {product.colorOptions.map((option, index) => (
                 <button
-                  key={option.label}
+                  key={option.id}
                   type="button"
                   aria-label={option.label}
                   onClick={() => setSelectedColorIdx(index)}
@@ -121,7 +143,7 @@ export function ProductDetailPage() {
               <button
                 type="button"
                 aria-label="Diminuir metragem"
-                onClick={() => setMeters((value) => Math.max(1, value - 1))}
+                onClick={() => setMeters((value) => Math.max(product.minSaleMeters, value - 1))}
                 className="flex h-11 w-10 items-center justify-center"
               >
                 <Minus className="size-4" />
@@ -130,7 +152,7 @@ export function ProductDetailPage() {
               <button
                 type="button"
                 aria-label="Aumentar metragem"
-                onClick={() => setMeters((value) => value + 1)}
+                onClick={() => setMeters((value) => Math.min(product.stockMeters, value + 1))}
                 className="flex h-11 w-10 items-center justify-center"
               >
                 <Plus className="size-4" />
@@ -139,8 +161,13 @@ export function ProductDetailPage() {
           </div>
 
           <div className="mb-7 flex gap-3.5">
-            <Button onClick={handleAddToCart} size="lg" className="h-auto flex-1 rounded-sm px-6 py-4 text-[14.5px]">
-              Adicionar à sacola — {formatPriceBRL(subtotal)}
+            <Button
+              onClick={handleAddToCart}
+              disabled={outOfStock}
+              size="lg"
+              className="h-auto flex-1 rounded-sm px-6 py-4 text-[14.5px]"
+            >
+              {outOfStock ? 'Produto esgotado' : `Adicionar à sacola — ${formatPriceBRL(subtotal)}`}
             </Button>
             <button
               type="button"
@@ -160,15 +187,45 @@ export function ProductDetailPage() {
               <TabsTrigger value="composicao">Composição</TabsTrigger>
               <TabsTrigger value="entrega">Entrega</TabsTrigger>
               <TabsTrigger value="cuidados">Cuidados</TabsTrigger>
+              <TabsTrigger value="avaliacoes">Avaliações ({reviews.length})</TabsTrigger>
             </TabsList>
             <TabsContent value="composicao" className="text-text-body text-[13px] leading-relaxed">
-              {product.composition}
+              {formatCompositionBreakdown(product.compositions, COMPOSITIONS)} · Largura{' '}
+              {formatWidthM(product.widthM)}
+              <div className="text-text-meta mt-2 text-[12px]">SKU: {product.sku}</div>
             </TabsContent>
             <TabsContent value="entrega" className="text-text-body text-[13px] leading-relaxed">
               {PRODUCT_DELIVERY_DEFAULT}
             </TabsContent>
             <TabsContent value="cuidados" className="text-text-body text-[13px] leading-relaxed">
               {PRODUCT_CARE_DEFAULT}
+            </TabsContent>
+            <TabsContent value="avaliacoes" className="flex flex-col gap-4">
+              {reviews.length === 0 ? (
+                <p className="text-text-body text-[13px] leading-relaxed">
+                  Este produto ainda não tem avaliações.
+                </p>
+              ) : (
+                reviews.map((review) => (
+                  <div key={review.id} className="border-border border-b pb-4 last:border-b-0">
+                    <div className="mb-1 flex items-center gap-2">
+                      <div className="flex">
+                        {Array.from({ length: 5 }, (_, index) => (
+                          <Star
+                            key={index}
+                            className={cn(
+                              'size-3.5',
+                              index < review.rating ? 'fill-current text-[#d4a03c]' : 'text-input',
+                            )}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-navy-dark text-[13px] font-semibold">{review.authorName}</span>
+                    </div>
+                    <p className="text-text-body text-[13px] leading-relaxed">{review.text}</p>
+                  </div>
+                ))
+              )}
             </TabsContent>
           </Tabs>
         </div>

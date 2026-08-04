@@ -1,26 +1,52 @@
-export interface Category {
-  slug: string
+export interface Composition {
+  id: string
   name: string
-  count: number
-  tag: string
-  colors: [string, string]
+}
+
+export interface ProductComposition {
+  compositionId: string
+  percentage: number
 }
 
 export interface ColorOption {
+  id: string
   label: string
   hex: string
 }
 
+export type ProductStatus = 'active' | 'low_stock' | 'out_of_stock' | 'draft'
+
 export interface Product {
-  id: number
+  id: string
+  sku: string
   slug: string
   name: string
-  material: string
   categorySlug: string
-  price: number
+  compositions: ProductComposition[]
+  pricePerMeter: number
+  widthM: number
+  stockMeters: number
+  minSaleMeters: number
+  status: ProductStatus
   tag?: 'Novo' | 'Premium'
   colors: [string, string]
   description: string
   colorOptions: ColorOption[]
-  composition: string
+}
+
+export interface CategoryCard {
+  id: string
+  name: string
+  tag: string
+  colors: [string, string]
+  count: number
+}
+
+export interface Review {
+  id: string
+  productId: string
+  authorName: string
+  rating: 1 | 2 | 3 | 4 | 5
+  text: string
+  createdAt: string
 }

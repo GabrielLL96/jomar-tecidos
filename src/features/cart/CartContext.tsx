@@ -26,7 +26,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const addItem: CartContextValue['addItem'] = (item) => {
-    const id = `${item.productId}:${item.colorLabel}`
+    const id = `${item.productId}:${item.colorId}`
     const existing = items.find((cartItem) => cartItem.id === id)
 
     if (existing) {

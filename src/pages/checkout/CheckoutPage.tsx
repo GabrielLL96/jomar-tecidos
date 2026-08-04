@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -9,18 +9,26 @@ import { cn } from '@/lib/utils'
 import { formatPriceBRL } from '@/lib/format'
 import { BUSINESS } from '@/lib/constants'
 import { useCart } from '@/features/cart/CartContext'
+import { useAddresses } from '@/features/account/AddressesContext'
+import { useOrders } from '@/features/orders/OrdersContext'
+import { COUPONS } from '@/features/orders/data'
+import { calculateDiscount, findCoupon, isCouponValid } from '@/features/orders/coupon-utils'
+import type { Coupon } from '@/features/orders/types'
 import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
-
-function generateOrderNumber() {
-  return `JT-${Math.floor(1000 + Math.random() * 9000)}`
-}
 
 export function CheckoutPage() {
   const { items, subtotal, clear } = useCart()
+  const { addOrFindAddress } = useAddresses()
+  const { createOrder } = useOrders()
   const navigate = useNavigate()
 
+  const [couponCode, setCouponCode] = useState('')
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
+  const [couponError, setCouponError] = useState<string | null>(null)
+
   const shipping = subtotal >= BUSINESS.freeShippingThreshold ? 0 : BUSINESS.flatShippingFee
-  const total = subtotal + shipping
+  const discount = appliedCoupon ? calculateDiscount(appliedCoupon, subtotal, shipping) : 0
+  const total = subtotal + shipping - discount
 
   const {
     register,
@@ -30,15 +38,44 @@ export function CheckoutPage() {
     formState: { errors },
   } = useForm<CheckoutInput>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { paymentMethod: 'card' },
+    defaultValues: { paymentMethod: 'credit_card' },
   })
 
   const paymentMethod = watch('paymentMethod')
 
-  const onSubmit = () => {
-    const orderNumber = generateOrderNumber()
+  const handleApplyCoupon = () => {
+    const coupon = findCoupon(couponCode, COUPONS)
+    if (!coupon || !isCouponValid(coupon)) {
+      setAppliedCoupon(null)
+      setCouponError('Cupom inválido ou expirado')
+      return
+    }
+    setAppliedCoupon(coupon)
+    setCouponError(null)
+  }
+
+  const onSubmit = (data: CheckoutInput) => {
+    const address = addOrFindAddress({
+      label: 'Entrega',
+      street: data.address,
+      city: data.city,
+      state: data.state,
+      zipCode: data.zip,
+    })
+
+    const order = createOrder({
+      items,
+      paymentMethod: data.paymentMethod,
+      shippingAddressId: address.id,
+      subtotal,
+      shippingCost: shipping,
+      discountTotal: discount,
+      total,
+      couponId: appliedCoupon?.id,
+    })
+
     clear()
-    navigate(`/pedido/${orderNumber}`, { state: { orderNumber, total } })
+    navigate(`/pedido/${order.id}`)
   }
 
   useEffect(() => {
@@ -79,6 +116,11 @@ export function CheckoutPage() {
                 {errors.city && <p className="text-destructive text-xs">{errors.city.message}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
+                <Label htmlFor="state">UF</Label>
+                <Input id="state" maxLength={2} {...register('state')} />
+                {errors.state && <p className="text-destructive text-xs">{errors.state.message}</p>}
+              </div>
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <Label htmlFor="zip">CEP</Label>
                 <Input id="zip" {...register('zip')} />
                 {errors.zip && <p className="text-destructive text-xs">{errors.zip.message}</p>}
@@ -107,7 +149,7 @@ export function CheckoutPage() {
                 </button>
               ))}
             </div>
-            {paymentMethod === 'card' && (
+            {paymentMethod === 'credit_card' && (
               <div className="flex flex-col gap-1.5">
                 <Input placeholder="Número do cartão" {...register('cardNumber')} />
                 {errors.cardNumber && (
@@ -128,6 +170,42 @@ export function CheckoutPage() {
               <span>{formatPriceBRL(item.meters * item.pricePerMeter)}</span>
             </div>
           ))}
+
+          <div className="border-border mt-3 mb-3 flex gap-2 border-t pt-3.5">
+            <Input
+              placeholder="Cupom de desconto"
+              value={couponCode}
+              onChange={(event) => setCouponCode(event.target.value)}
+              className="h-9 text-[13px]"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleApplyCoupon}
+              className="h-9 rounded-sm px-4 text-[13px]"
+            >
+              Aplicar
+            </Button>
+          </div>
+          {couponError && <p className="text-destructive mb-2 text-xs">{couponError}</p>}
+          {appliedCoupon && (
+            <p className="text-navy mb-2 text-xs">Cupom {appliedCoupon.code} aplicado</p>
+          )}
+
+          <div className="text-text-body mb-2.5 flex justify-between text-[13px]">
+            <span>Subtotal</span>
+            <span>{formatPriceBRL(subtotal)}</span>
+          </div>
+          <div className="text-text-body mb-2.5 flex justify-between text-[13px]">
+            <span>Frete</span>
+            <span>{shipping === 0 ? 'Grátis' : formatPriceBRL(shipping)}</span>
+          </div>
+          {discount > 0 && (
+            <div className="text-brand-red mb-2.5 flex justify-between text-[13px]">
+              <span>Desconto</span>
+              <span>-{formatPriceBRL(discount)}</span>
+            </div>
+          )}
           <div className="text-navy-dark border-border mt-2 flex justify-between border-t pt-4 text-base font-semibold">
             <span>Total</span>
             <span>{formatPriceBRL(total)}</span>

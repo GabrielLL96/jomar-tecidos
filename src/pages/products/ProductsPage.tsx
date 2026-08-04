@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useProducts } from '@/features/catalog/hooks'
-import { materialGroup } from '@/features/catalog/material-group'
+import { COMPOSITIONS } from '@/features/catalog/data'
+import { formatCompositionLabel } from '@/features/catalog/utils'
 import { ProductCard } from '@/features/catalog/components/ProductCard'
 import { ProductFilters } from './components/ProductFilters'
 
@@ -17,7 +18,7 @@ export function ProductsPage() {
 
   const priceBounds: [number, number] = useMemo(() => {
     if (!products?.length) return [0, 300]
-    const prices = products.map((product) => product.price)
+    const prices = products.map((product) => product.pricePerMeter)
     return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))]
   }, [products])
 
@@ -25,8 +26,8 @@ export function ProductsPage() {
     if (!products) return []
     const counts = new Map<string, number>()
     for (const product of products) {
-      const group = materialGroup(product.material)
-      counts.set(group, (counts.get(group) ?? 0) + 1)
+      const label = formatCompositionLabel(product.compositions, COMPOSITIONS)
+      counts.set(label, (counts.get(label) ?? 0) + 1)
     }
     return Array.from(counts.entries()).map(([label, count]) => ({ label, count }))
   }, [products])
@@ -45,10 +46,14 @@ export function ProductsPage() {
     return products.filter((product) => {
       if (categoria && product.categorySlug !== categoria) return false
       if (busca && !product.name.toLowerCase().includes(busca)) return false
-      if (selectedMaterials.length && !selectedMaterials.includes(materialGroup(product.material))) return false
+      if (
+        selectedMaterials.length &&
+        !selectedMaterials.includes(formatCompositionLabel(product.compositions, COMPOSITIONS))
+      )
+        return false
       if (selectedColors.length && !product.colorOptions.some((option) => selectedColors.includes(option.hex)))
         return false
-      if (maxPrice !== null && product.price > maxPrice) return false
+      if (maxPrice !== null && product.pricePerMeter > maxPrice) return false
       return true
     })
   }, [products, categoria, busca, selectedMaterials, selectedColors, maxPrice])

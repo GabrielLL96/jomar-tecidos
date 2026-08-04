@@ -4,20 +4,20 @@ import { useSecureStorage } from '@/hooks/useSecureStorage'
 const FAVORITES_STORAGE_KEY = 'jomar:favorites'
 
 interface FavoritesContextValue {
-  favoriteIds: number[]
-  isFavorite: (productId: number) => boolean
-  toggleFavorite: (productId: number) => void
+  favoriteIds: string[]
+  isFavorite: (productId: string) => boolean
+  toggleFavorite: (productId: string) => void
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | null>(null)
 
 export function FavoritesProvider({ children }: { children: ReactNode }) {
   const { getItem, setItem } = useSecureStorage()
-  const [favoriteIds, setFavoriteIds] = useState<number[]>(
-    () => getItem<number[]>(FAVORITES_STORAGE_KEY, []) ?? [],
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(
+    () => getItem<string[]>(FAVORITES_STORAGE_KEY, []) ?? [],
   )
 
-  const toggleFavorite = (productId: number) => {
+  const toggleFavorite = (productId: string) => {
     const next = favoriteIds.includes(productId)
       ? favoriteIds.filter((id) => id !== productId)
       : [...favoriteIds, productId]
@@ -26,7 +26,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     setItem(FAVORITES_STORAGE_KEY, next)
   }
 
-  const isFavorite = (productId: number) => favoriteIds.includes(productId)
+  const isFavorite = (productId: string) => favoriteIds.includes(productId)
 
   return (
     <FavoritesContext.Provider value={{ favoriteIds, isFavorite, toggleFavorite }}>
