@@ -12,8 +12,8 @@ export function Footer() {
     <footer className="bg-navy-dark mt-auto text-[#c9c5e2]">
       <div className="mx-auto grid max-w-(--breakpoint-xl) grid-cols-2 gap-8 px-6 py-10 md:grid-cols-4 md:px-12">
         <div>
-          <div className="mb-4 font-serif text-[15px] font-semibold text-white">Institucional</div>
-          <div className="flex flex-col gap-2.5 text-[13.5px]">
+          <div className="mb-4 font-serif text-base font-semibold text-white">Institucional</div>
+          <div className="flex flex-col gap-2.5 text-sm">
             <Link to="/sobre" className={inertLinkClass}>
               Sobre Nós
             </Link>
@@ -24,8 +24,8 @@ export function Footer() {
         </div>
 
         <div>
-          <div className="mb-4 font-serif text-[15px] font-semibold text-white">Informações</div>
-          <div className="flex flex-col gap-2.5 text-[13.5px]">
+          <div className="mb-4 font-serif text-base font-semibold text-white">Informações</div>
+          <div className="flex flex-col gap-2.5 text-sm">
             <span className={inertLinkClass}>Novidades</span>
             <span className={inertLinkClass}>Política de Segurança</span>
             <span className={inertLinkClass}>Política de Privacidade</span>
@@ -36,8 +36,8 @@ export function Footer() {
         </div>
 
         <div>
-          <div className="mb-4 font-serif text-[15px] font-semibold text-white">Minha Conta</div>
-          <div className="flex flex-col gap-2.5 text-[13.5px]">
+          <div className="mb-4 font-serif text-base font-semibold text-white">Minha Conta</div>
+          <div className="flex flex-col gap-2.5 text-sm">
             <Link to="/conta/entrar" className={inertLinkClass}>
               Entrar
             </Link>
@@ -54,9 +54,9 @@ export function Footer() {
         </div>
 
         <div>
-          <div className="mb-4 font-serif text-[15px] font-semibold text-white">Contato</div>
-          <div className="mb-2.5 text-[13.5px] font-semibold text-white">{BUSINESS.name}</div>
-          <div className="flex flex-col gap-2 text-[13.5px]">
+          <div className="mb-4 font-serif text-base font-semibold text-white">Contato</div>
+          <div className="mb-2.5 text-sm font-semibold text-white">{BUSINESS.name}</div>
+          <div className="flex flex-col gap-2 text-sm">
             <span className="flex items-center gap-2">
               <MapPin className="size-3.5 shrink-0" />
               {BUSINESS.city} · CEP {BUSINESS.zip}
@@ -94,17 +94,17 @@ export function Footer() {
           const Icon = TRUST_ICONS[index]
           return (
             <div key={badge.title}>
-              <div className="flex items-center justify-center gap-1.5 text-[13px] text-white">
+              <div className="flex items-center justify-center gap-1.5 text-sm text-white">
                 <Icon className="size-4" />
                 {badge.title}
               </div>
-              <div className="mt-1 text-[12px] text-[#8b86b8]">{badge.subtitle}</div>
+              <div className="mt-1 text-xs text-[#8b86b8]">{badge.subtitle}</div>
             </div>
           )
         })}
       </div>
 
-      <div className="mx-auto flex max-w-(--breakpoint-xl) flex-wrap items-center justify-between gap-3 border-t border-[#2a2778] px-6 py-5 text-[11.5px] text-[#8b86b8] md:px-12">
+      <div className="mx-auto flex max-w-(--breakpoint-xl) flex-wrap items-center justify-between gap-3 border-t border-[#2a2778] px-6 py-5 text-xs text-[#8b86b8] md:px-12">
         <span>© {new Date().getFullYear()} {BUSINESS.name}. Todos os direitos reservados.</span>
         <span className="tracking-[0.04em]">
           SITE DESENVOLVIDO POR: <strong className="text-[#c9c5e2]">GPM Grupo Pedro Matos Tecnologia</strong>

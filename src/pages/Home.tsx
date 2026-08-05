@@ -20,13 +20,13 @@ export function Home() {
           transition={{ duration: 0.5 }}
           className="order-2 flex flex-col justify-center gap-6 px-8 py-16 md:order-1 md:px-16"
         >
-          <span className="text-brand-red text-[11px] font-semibold tracking-[0.18em] uppercase">
+          <span className="text-brand-red text-xs font-semibold tracking-[0.18em] uppercase">
             Tradição têxtil mineira
           </span>
-          <h1 className="text-navy-dark font-serif text-4xl leading-[1.05] font-medium md:text-[56px]">
+          <h1 className="text-navy-dark font-serif text-4xl leading-[1.05] font-medium md:text-5xl">
             Tecidos nobres para quem tece histórias.
           </h1>
-          <p className="text-text-body max-w-[480px] text-base leading-relaxed">
+          <p className="text-text-body max-w-[660px] text-2xl leading-relaxed">
             Uma curadoria de linhos, algodões, sedas e aviamentos premium — da vitrine física ao seu
             ateliê, com o mesmo cuidado artesanal de sempre.
           </p>
@@ -44,7 +44,7 @@ export function Home() {
       </section>
 
       <section className="px-6 py-18 text-center md:px-12">
-        <div className="text-text-meta mb-2.5 text-[11px] font-semibold tracking-[0.18em] uppercase">
+        <div className="text-text-meta mb-2.5 text-xs font-semibold tracking-[0.18em] uppercase">
           Categorias
         </div>
         <h2 className="text-navy-dark mb-10 font-serif text-3xl font-medium">Explore por material</h2>
@@ -55,7 +55,7 @@ export function Home() {
         <div className="mx-auto max-w-(--breakpoint-xl)">
           <div className="mb-10 flex items-baseline justify-between">
             <h2 className="font-serif text-3xl font-medium">Destaques da coleção</h2>
-            <Link to="/tecidos" className="text-[13.5px] text-[#e8c9a3]">
+            <Link to="/tecidos" className="text-sm text-[#e8c9a3]">
               Ver todos os tecidos →
             </Link>
           </div>
@@ -70,13 +70,13 @@ export function Home() {
       <section className="mx-auto grid max-w-(--breakpoint-xl) grid-cols-1 items-center gap-14 px-6 py-18 md:grid-cols-2 md:px-12">
         <ImagePlaceholder colors={['#f0e6d4', '#e3d5b8']} className="h-80 rounded-sm" />
         <div>
-          <div className="text-brand-red mb-3 text-[11px] font-semibold tracking-[0.18em] uppercase">
+          <div className="text-brand-red mb-3 text-xs font-semibold tracking-[0.18em] uppercase">
             Sob medida
           </div>
-          <h2 className="text-navy-dark mb-4 font-serif text-[30px] font-medium">
+          <h2 className="text-navy-dark mb-4 font-serif text-3xl font-medium">
             Enxovais e aviamentos para todo projeto
           </h2>
-          <p className="text-text-body mb-5 text-[15px] leading-relaxed">
+          <p className="text-text-body mb-5 text-base leading-relaxed">
             Da linha de cama, mesa e banho aos aviamentos de costura — botões, zíperes, rendas e vieses
             selecionados para durar.
           </p>

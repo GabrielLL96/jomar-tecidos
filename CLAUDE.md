@@ -1,5 +1,9 @@
 # CLAUDE.md — Jomartecidos
 
+## Regra de teste de dev
+
+Sempre que for necessário testar um link de desenvolvimento (ex.: `localhost:5173`), usar o MCP `chrome-devtools` (configurado em `.mcp.json`), não `claude-in-chrome` nem outros métodos ad-hoc.
+
 @C:/Users/Gabriel/Desktop/Obsidian/CLAUDE.md
 
 @C:/Users/Gabriel/Desktop/Obsidian/projetos/trabalho/Jomartecidos/_Context.md

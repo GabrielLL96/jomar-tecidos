@@ -1,45 +1,139 @@
 import { queryOptions } from '@tanstack/react-query'
-import { CATEGORY_DISPLAY, COMPOSITIONS, PRODUCTS, REVIEWS } from './data'
-import type { CategoryCard } from './types'
+import { supabase } from '@/lib/supabase'
+import { CATEGORY_DISPLAY } from './data'
+import type { CategoryCard, Composition, Product, Review } from './types'
 
-const MOCK_DELAY_MS = 300
+const PRODUCT_SELECT =
+  '*, product_compositions(percentage, compositions(id, name)), product_colors(id, label, hex), product_images(url, sort_order)'
 
-function delay<T>(value: T): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value), MOCK_DELAY_MS))
+const COMPOSITION_ORDER = [
+  'Linhos',
+  'Algodões',
+  'Sedas',
+  'Aviamentos',
+  'Rendas',
+  'Algodão Egípcio',
+  'Poliéster',
+  'Nylon',
+]
+
+type ProductRow = {
+  id: string
+  sku: string
+  slug: string
+  name: string
+  category_slug: string
+  description: string
+  price_per_meter: number | string
+  width_m: number | string
+  stock_meters: number | string
+  min_sale_meters: number | string
+  status: Product['status']
+  tag: string | null
+  product_compositions: { percentage: number; compositions: { id: string; name: string } }[]
+  product_colors: { id: string; label: string; hex: string }[]
 }
 
-const VISIBLE_PRODUCTS = PRODUCTS.filter((product) => product.status !== 'draft')
-
-function buildCategoryCards(): CategoryCard[] {
-  return Object.entries(CATEGORY_DISPLAY).map(([id, display]) => {
-    const composition = COMPOSITIONS.find((item) => item.id === id)
-    const count = VISIBLE_PRODUCTS.filter((product) => product.categorySlug === id).length
-    return { id, name: composition?.name ?? id, count, ...display }
-  })
+function adaptProduct(row: ProductRow): Product {
+  const placeholderColors = CATEGORY_DISPLAY[row.category_slug]?.colors ?? ['#e4ddd0', '#d8d0c0']
+  return {
+    id: row.id,
+    sku: row.sku,
+    slug: row.slug,
+    name: row.name,
+    categorySlug: row.category_slug,
+    compositions: row.product_compositions.map((pc) => ({
+      compositionId: pc.compositions.id,
+      percentage: pc.percentage,
+    })),
+    pricePerMeter: Number(row.price_per_meter),
+    widthM: Number(row.width_m),
+    stockMeters: Number(row.stock_meters),
+    minSaleMeters: Number(row.min_sale_meters),
+    status: row.status,
+    tag: row.tag === 'Novo' || row.tag === 'Premium' ? row.tag : undefined,
+    colors: placeholderColors,
+    description: row.description,
+    colorOptions: row.product_colors.map((c) => ({ id: c.id, label: c.label, hex: c.hex })),
+  }
 }
+
+export const compositionsQueryOptions = queryOptions({
+  queryKey: ['compositions'] as const,
+  queryFn: async (): Promise<Composition[]> => {
+    const { data, error } = await supabase.from('compositions').select('id, name')
+    if (error) throw new Error(error.message)
+    return [...data].sort(
+      (a, b) => COMPOSITION_ORDER.indexOf(a.name) - COMPOSITION_ORDER.indexOf(b.name),
+    )
+  },
+  staleTime: 5 * 60 * 1000,
+})
 
 export const categoriesQueryOptions = queryOptions({
   queryKey: ['categories'] as const,
-  queryFn: () => delay(buildCategoryCards()),
-  staleTime: Infinity,
+  queryFn: async (): Promise<CategoryCard[]> => {
+    const { data, error } = await supabase.from('products').select('category_slug').neq('status', 'draft')
+    if (error) throw new Error(error.message)
+
+    return Object.entries(CATEGORY_DISPLAY).map(([id, display]) => ({
+      id,
+      name: display.tag,
+      count: data.filter((row) => row.category_slug === id).length,
+      ...display,
+    }))
+  },
+  staleTime: 60 * 1000,
 })
 
 export const productsQueryOptions = queryOptions({
   queryKey: ['products'] as const,
-  queryFn: () => delay(VISIBLE_PRODUCTS),
-  staleTime: Infinity,
+  queryFn: async (): Promise<Product[]> => {
+    const { data, error } = await supabase
+      .from('products')
+      .select(PRODUCT_SELECT)
+      .neq('status', 'draft')
+    if (error) throw new Error(error.message)
+    return data.map((row) => adaptProduct(row as unknown as ProductRow))
+  },
+  staleTime: 60 * 1000,
 })
 
 export const productQueryOptions = (slug: string) =>
   queryOptions({
     queryKey: ['products', slug] as const,
-    queryFn: () => delay(VISIBLE_PRODUCTS.find((product) => product.slug === slug) ?? null),
-    staleTime: Infinity,
+    queryFn: async (): Promise<Product | null> => {
+      const { data, error } = await supabase
+        .from('products')
+        .select(PRODUCT_SELECT)
+        .eq('slug', slug)
+        .maybeSingle()
+      if (error) throw new Error(error.message)
+      return data ? adaptProduct(data as unknown as ProductRow) : null
+    },
+    staleTime: 60 * 1000,
+    enabled: Boolean(slug),
   })
 
 export const productReviewsQueryOptions = (productId: string) =>
   queryOptions({
     queryKey: ['products', productId, 'reviews'] as const,
-    queryFn: () => delay(REVIEWS.filter((review) => review.productId === productId)),
-    staleTime: Infinity,
+    queryFn: async (): Promise<Review[]> => {
+      const { data, error } = await supabase
+        .from('reviews')
+        .select('id, product_id, author_name, rating, text, created_at')
+        .eq('product_id', productId)
+        .order('created_at', { ascending: false })
+      if (error) throw new Error(error.message)
+      return data.map((row) => ({
+        id: row.id,
+        productId: row.product_id,
+        authorName: row.author_name,
+        rating: row.rating as Review['rating'],
+        text: row.text,
+        createdAt: row.created_at,
+      }))
+    },
+    staleTime: 60 * 1000,
+    enabled: Boolean(productId),
   })

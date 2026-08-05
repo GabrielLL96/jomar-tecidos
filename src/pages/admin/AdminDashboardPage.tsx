@@ -1,7 +1,8 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatPriceBRL } from '@/lib/format'
 import { MOCK_ORDERS, ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/features/orders/data'
-import { PRODUCTS } from '@/features/catalog/data'
+import { useProducts } from '@/features/catalog/hooks'
+import type { Product } from '@/features/catalog/types'
 
 const SALES_BARS = [40, 55, 48, 62, 58, 70, 65, 80, 72, 90, 84, 95, 88, 100]
 const TOP_COMPOSITIONS = [
@@ -11,11 +12,11 @@ const TOP_COMPOSITIONS = [
   { name: 'Sedas', pct: 16 },
 ]
 
-function computeKpis() {
+function computeKpis(products: Product[]) {
   const revenue = MOCK_ORDERS.reduce((total, order) => total + order.total, 0)
   const orderCount = MOCK_ORDERS.length
   const avgTicket = orderCount ? revenue / orderCount : 0
-  const criticalStock = PRODUCTS.filter(
+  const criticalStock = products.filter(
     (product) => product.status === 'low_stock' || product.status === 'out_of_stock',
   ).length
 
@@ -32,7 +33,8 @@ const recentOrders = [...MOCK_ORDERS]
   .slice(0, 5)
 
 export function AdminDashboardPage() {
-  const kpis = computeKpis()
+  const { data: products = [] } = useProducts()
+  const kpis = computeKpis(products)
 
   return (
     <div>

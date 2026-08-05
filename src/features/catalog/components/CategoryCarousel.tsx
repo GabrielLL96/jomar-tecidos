@@ -41,8 +41,8 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
             className="w-[260px] shrink-0 [scroll-snap-align:start]"
           >
             <ImagePlaceholder colors={category.colors} label={category.tag} className="h-[220px] rounded-sm" />
-            <div className="mt-3.5 font-serif text-[19px] text-foreground">{category.name}</div>
-            <div className="text-text-meta mt-0.5 text-[12.5px]">{category.count} tecidos</div>
+            <div className="mt-3.5 font-serif text-lg text-foreground">{category.name}</div>
+            <div className="text-text-meta mt-0.5 text-xs">{category.count} tecidos</div>
           </Link>
         ))}
       </div>

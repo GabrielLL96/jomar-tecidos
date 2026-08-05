@@ -25,7 +25,7 @@ export function ContactPage() {
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-lg) px-6 py-16 md:px-12">
-      <h1 className="text-navy-dark mb-10 font-serif text-[32px] font-medium">Fale com a gente</h1>
+      <h1 className="text-navy-dark mb-10 font-serif text-3xl font-medium">Fale com a gente</h1>
 
       <div className="grid grid-cols-1 gap-14 md:grid-cols-2">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -56,19 +56,19 @@ export function ContactPage() {
             <div className="text-navy-dark mb-1.5 flex items-center gap-2 text-xs font-semibold tracking-[0.06em] uppercase">
               <Phone className="size-3.5" /> Telefone
             </div>
-            <div className="text-[15px] text-[#3a352b]">{BUSINESS.phone}</div>
+            <div className="text-base text-[#3a352b]">{BUSINESS.phone}</div>
           </div>
           <div>
             <div className="text-navy-dark mb-1.5 flex items-center gap-2 text-xs font-semibold tracking-[0.06em] uppercase">
               <MapPin className="size-3.5" /> Endereço
             </div>
-            <div className="text-[15px] text-[#3a352b]">{BUSINESS.address}</div>
+            <div className="text-base text-[#3a352b]">{BUSINESS.address}</div>
           </div>
           <div>
             <div className="text-navy-dark mb-1.5 flex items-center gap-2 text-xs font-semibold tracking-[0.06em] uppercase">
               <Clock className="size-3.5" /> Horário
             </div>
-            <div className="text-[15px] text-[#3a352b]">{BUSINESS.hours}</div>
+            <div className="text-base text-[#3a352b]">{BUSINESS.hours}</div>
           </div>
           <ImagePlaceholder
             colors={['#e9e2d2', '#ded4bb']}

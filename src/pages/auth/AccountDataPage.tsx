@@ -53,7 +53,7 @@ export function AccountDataPage() {
         <Input id="password" type="password" placeholder="••••••••" {...register('password')} />
         {errors.password && <p className="text-destructive text-xs">{errors.password.message}</p>}
       </div>
-      <Button type="submit" className="mt-1.5 h-auto w-fit rounded-sm px-6 py-3 text-[13.5px]">
+      <Button type="submit" className="mt-1.5 h-auto w-fit rounded-sm px-6 py-3 text-sm">
         Salvar alterações
       </Button>
     </form>

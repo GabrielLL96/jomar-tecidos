@@ -114,19 +114,19 @@ export function LoginPage() {
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-sm) px-6 py-20">
-      <h1 className="text-navy-dark mb-8 text-center font-serif text-[30px] font-medium">Minha conta</h1>
+      <h1 className="text-navy-dark mb-8 text-center font-serif text-3xl font-medium">Minha conta</h1>
 
       <Tabs defaultValue="login">
         <TabsList className="border-border mb-7 h-auto w-full gap-0 rounded-none border-b bg-transparent p-0">
           <TabsTrigger
             value="login"
-            className="h-auto flex-1 rounded-none border-b-2 border-transparent py-3 text-[13.5px] data-active:border-navy data-active:bg-transparent data-active:shadow-none"
+            className="h-auto flex-1 rounded-none border-b-2 border-transparent py-3 text-sm data-active:border-navy data-active:bg-transparent data-active:shadow-none"
           >
             Entrar
           </TabsTrigger>
           <TabsTrigger
             value="signup"
-            className="h-auto flex-1 rounded-none border-b-2 border-transparent py-3 text-[13.5px] data-active:border-navy data-active:bg-transparent data-active:shadow-none"
+            className="h-auto flex-1 rounded-none border-b-2 border-transparent py-3 text-sm data-active:border-navy data-active:bg-transparent data-active:shadow-none"
           >
             Criar conta
           </TabsTrigger>

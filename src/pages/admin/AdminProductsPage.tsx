@@ -1,13 +1,12 @@
 import { useMemo, useState } from 'react'
-import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { formatPriceBRL } from '@/lib/format'
-import { COMPOSITIONS, PRODUCTS } from '@/features/catalog/data'
+import { useCompositions, useProducts } from '@/features/catalog/hooks'
 import { formatCompositionLabel } from '@/features/catalog/utils'
-import type { Product, ProductStatus } from '@/features/catalog/types'
+import type { ProductStatus } from '@/features/catalog/types'
 import { AdminProductModal } from './AdminProductModal'
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
@@ -25,7 +24,8 @@ const STATUS_STYLES: Record<ProductStatus, string> = {
 }
 
 export function AdminProductsPage() {
-  const [products, setProducts] = useState<Product[]>(PRODUCTS)
+  const { data: products = [], isLoading } = useProducts()
+  const { data: compositions = [] } = useCompositions()
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
 
@@ -34,12 +34,6 @@ export function AdminProductsPage() {
     if (!query) return products
     return products.filter((product) => product.name.toLowerCase().includes(query))
   }, [products, search])
-
-  const handleSave = (product: Product) => {
-    setProducts((current) => [product, ...current])
-    setModalOpen(false)
-    toast.success(`${product.name} adicionado — não persiste após recarregar a página`)
-  }
 
   return (
     <div>
@@ -66,29 +60,35 @@ export function AdminProductsPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredProducts.map((product) => (
-              <TableRow key={product.id}>
-                <TableCell>
-                  <ImagePlaceholder colors={product.colors} className="size-10 rounded-sm" />
-                </TableCell>
-                <TableCell>{product.name}</TableCell>
-                <TableCell>{formatCompositionLabel(product.compositions, COMPOSITIONS)}</TableCell>
-                <TableCell>{formatPriceBRL(product.pricePerMeter)}</TableCell>
-                <TableCell>{product.stockMeters} m</TableCell>
-                <TableCell>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${STATUS_STYLES[product.status]}`}
-                  >
-                    {STATUS_LABELS[product.status]}
-                  </span>
-                </TableCell>
+            {isLoading ? (
+              <TableRow>
+                <TableCell colSpan={6}>Carregando…</TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredProducts.map((product) => (
+                <TableRow key={product.id}>
+                  <TableCell>
+                    <ImagePlaceholder colors={product.colors} className="size-10 rounded-sm" />
+                  </TableCell>
+                  <TableCell>{product.name}</TableCell>
+                  <TableCell>{formatCompositionLabel(product.compositions, compositions)}</TableCell>
+                  <TableCell>{formatPriceBRL(product.pricePerMeter)}</TableCell>
+                  <TableCell>{product.stockMeters} m</TableCell>
+                  <TableCell>
+                    <span
+                      className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${STATUS_STYLES[product.status]}`}
+                    >
+                      {STATUS_LABELS[product.status]}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>
 
-      <AdminProductModal open={modalOpen} onOpenChange={setModalOpen} onSave={handleSave} />
+      <AdminProductModal open={modalOpen} onOpenChange={setModalOpen} />
     </div>
   )
 }

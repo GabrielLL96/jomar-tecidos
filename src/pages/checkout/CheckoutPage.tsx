@@ -2,17 +2,18 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatPriceBRL } from '@/lib/format'
 import { BUSINESS } from '@/lib/constants'
+import { supabase } from '@/lib/supabase'
 import { useCart } from '@/features/cart/CartContext'
 import { useAddresses } from '@/features/account/AddressesContext'
 import { useOrders } from '@/features/orders/OrdersContext'
-import { COUPONS } from '@/features/orders/data'
-import { calculateDiscount, findCoupon, isCouponValid } from '@/features/orders/coupon-utils'
+import { calculateDiscount, isCouponValid } from '@/features/orders/coupon-utils'
 import type { Coupon } from '@/features/orders/types'
 import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
 
@@ -43,9 +44,27 @@ export function CheckoutPage() {
 
   const paymentMethod = watch('paymentMethod')
 
-  const handleApplyCoupon = () => {
-    const coupon = findCoupon(couponCode, COUPONS)
-    if (!coupon || !isCouponValid(coupon)) {
+  const handleApplyCoupon = async () => {
+    const { data, error } = await supabase
+      .from('coupons')
+      .select('id, code, type, value, max_uses, used_count, expires_at, status')
+      .eq('code', couponCode.trim().toUpperCase())
+      .maybeSingle()
+
+    const coupon: Coupon | null = data
+      ? {
+          id: data.id,
+          code: data.code,
+          type: data.type,
+          value: Number(data.value),
+          maxUses: data.max_uses ?? undefined,
+          usedCount: data.used_count,
+          expiresAt: data.expires_at ?? undefined,
+          status: data.status,
+        }
+      : null
+
+    if (error || !coupon || !isCouponValid(coupon)) {
       setAppliedCoupon(null)
       setCouponError('Cupom inválido ou expirado')
       return
@@ -54,28 +73,32 @@ export function CheckoutPage() {
     setCouponError(null)
   }
 
-  const onSubmit = (data: CheckoutInput) => {
-    const address = addOrFindAddress({
-      label: 'Entrega',
-      street: data.address,
-      city: data.city,
-      state: data.state,
-      zipCode: data.zip,
-    })
+  const onSubmit = async (data: CheckoutInput) => {
+    try {
+      const address = await addOrFindAddress({
+        label: 'Entrega',
+        street: data.address,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zip,
+      })
 
-    const order = createOrder({
-      items,
-      paymentMethod: data.paymentMethod,
-      shippingAddressId: address.id,
-      subtotal,
-      shippingCost: shipping,
-      discountTotal: discount,
-      total,
-      couponId: appliedCoupon?.id,
-    })
+      const order = createOrder({
+        items,
+        paymentMethod: data.paymentMethod,
+        shippingAddressId: address.id,
+        subtotal,
+        shippingCost: shipping,
+        discountTotal: discount,
+        total,
+        couponId: appliedCoupon?.id,
+      })
 
-    clear()
-    navigate(`/pedido/${order.id}`)
+      clear()
+      navigate(`/pedido/${order.id}`)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar o endereço de entrega')
+    }
   }
 
   useEffect(() => {
@@ -88,7 +111,7 @@ export function CheckoutPage() {
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-lg) px-6 py-10 md:px-12">
-      <h1 className="text-navy-dark mb-8 font-serif text-[32px] font-medium">Finalizar compra</h1>
+      <h1 className="text-navy-dark mb-8 font-serif text-3xl font-medium">Finalizar compra</h1>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
@@ -96,7 +119,7 @@ export function CheckoutPage() {
       >
         <div className="flex flex-col gap-7">
           <div>
-            <div className="text-navy-dark mb-3.5 text-[13px] font-semibold tracking-[0.05em] uppercase">
+            <div className="text-navy-dark mb-3.5 text-sm font-semibold tracking-[0.05em] uppercase">
               1. Entrega
             </div>
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
@@ -129,7 +152,7 @@ export function CheckoutPage() {
           </div>
 
           <div>
-            <div className="text-navy-dark mb-3.5 text-[13px] font-semibold tracking-[0.05em] uppercase">
+            <div className="text-navy-dark mb-3.5 text-sm font-semibold tracking-[0.05em] uppercase">
               2. Pagamento
             </div>
             <div className="mb-3.5 flex gap-3">
@@ -139,7 +162,7 @@ export function CheckoutPage() {
                   type="button"
                   onClick={() => setValue('paymentMethod', method.value)}
                   className={cn(
-                    'flex-1 rounded-sm border px-3 py-3 text-center text-[13px]',
+                    'flex-1 rounded-sm border px-3 py-3 text-center text-sm',
                     paymentMethod === method.value
                       ? 'border-navy bg-navy/5 text-navy'
                       : 'border-input text-text-body',
@@ -161,9 +184,9 @@ export function CheckoutPage() {
         </div>
 
         <div className="bg-cream-secondary rounded-sm p-7">
-          <div className="text-navy-dark mb-5 text-[15px] font-semibold">Resumo do pedido</div>
+          <div className="text-navy-dark mb-5 text-base font-semibold">Resumo do pedido</div>
           {items.map((item) => (
-            <div key={item.id} className="text-text-body mb-2.5 flex justify-between text-[13px]">
+            <div key={item.id} className="text-text-body mb-2.5 flex justify-between text-sm">
               <span>
                 {item.name} ({item.meters}m)
               </span>
@@ -176,13 +199,13 @@ export function CheckoutPage() {
               placeholder="Cupom de desconto"
               value={couponCode}
               onChange={(event) => setCouponCode(event.target.value)}
-              className="h-9 text-[13px]"
+              className="h-9 text-sm"
             />
             <Button
               type="button"
               variant="secondary"
               onClick={handleApplyCoupon}
-              className="h-9 rounded-sm px-4 text-[13px]"
+              className="h-9 rounded-sm px-4 text-sm"
             >
               Aplicar
             </Button>
@@ -192,16 +215,16 @@ export function CheckoutPage() {
             <p className="text-navy mb-2 text-xs">Cupom {appliedCoupon.code} aplicado</p>
           )}
 
-          <div className="text-text-body mb-2.5 flex justify-between text-[13px]">
+          <div className="text-text-body mb-2.5 flex justify-between text-sm">
             <span>Subtotal</span>
             <span>{formatPriceBRL(subtotal)}</span>
           </div>
-          <div className="text-text-body mb-2.5 flex justify-between text-[13px]">
+          <div className="text-text-body mb-2.5 flex justify-between text-sm">
             <span>Frete</span>
             <span>{shipping === 0 ? 'Grátis' : formatPriceBRL(shipping)}</span>
           </div>
           {discount > 0 && (
-            <div className="text-brand-red mb-2.5 flex justify-between text-[13px]">
+            <div className="text-brand-red mb-2.5 flex justify-between text-sm">
               <span>Desconto</span>
               <span>-{formatPriceBRL(discount)}</span>
             </div>
@@ -210,7 +233,7 @@ export function CheckoutPage() {
             <span>Total</span>
             <span>{formatPriceBRL(total)}</span>
           </div>
-          <Button type="submit" size="lg" className="mt-5 h-auto w-full rounded-sm py-4 text-[14.5px]">
+          <Button type="submit" size="lg" className="mt-5 h-auto w-full rounded-sm py-4 text-sm">
             Confirmar pedido
           </Button>
         </div>

@@ -515,6 +515,7 @@ export type Database = {
       }
       products: {
         Row: {
+          category_slug: string
           created_at: string
           description: string
           id: string
@@ -523,6 +524,7 @@ export type Database = {
           name: string
           price_per_meter: number
           sku: string
+          slug: string
           status: Database["public"]["Enums"]["product_status"]
           stock_meters: number
           tag: string | null
@@ -530,6 +532,7 @@ export type Database = {
           width_m: number
         }
         Insert: {
+          category_slug: string
           created_at?: string
           description?: string
           id?: string
@@ -538,6 +541,7 @@ export type Database = {
           name: string
           price_per_meter: number
           sku: string
+          slug: string
           status?: Database["public"]["Enums"]["product_status"]
           stock_meters?: number
           tag?: string | null
@@ -545,6 +549,7 @@ export type Database = {
           width_m: number
         }
         Update: {
+          category_slug?: string
           created_at?: string
           description?: string
           id?: string
@@ -553,6 +558,7 @@ export type Database = {
           name?: string
           price_per_meter?: number
           sku?: string
+          slug?: string
           status?: Database["public"]["Enums"]["product_status"]
           stock_meters?: number
           tag?: string | null

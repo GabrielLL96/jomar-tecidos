@@ -17,7 +17,7 @@ export function ImagePlaceholder({ colors, label, className, children }: ImagePl
       }}
     >
       {label && (
-        <span className="bg-navy-dark/85 m-4 rounded-sm px-2 py-1 font-mono text-[10px] text-white">
+        <span className="bg-navy-dark/85 m-4 rounded-sm px-2 py-1 font-mono text-xs text-white">
           {label}
         </span>
       )}

@@ -28,7 +28,7 @@ export function CartPage() {
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-lg) px-6 py-10 md:px-12">
-      <h1 className="text-navy-dark mb-8 font-serif text-[32px] font-medium">Sua sacola</h1>
+      <h1 className="text-navy-dark mb-8 font-serif text-3xl font-medium">Sua sacola</h1>
 
       <div className="grid grid-cols-1 items-start gap-12 lg:grid-cols-[1fr_340px]">
         <div>
@@ -38,12 +38,12 @@ export function CartPage() {
               <div className="flex-1">
                 <div className="flex justify-between">
                   <div>
-                    <div className="text-[15px] font-medium">{item.name}</div>
-                    <div className="text-text-meta mt-0.5 text-[12.5px]">
+                    <div className="text-base font-medium">{item.name}</div>
+                    <div className="text-text-meta mt-0.5 text-xs">
                       {item.colorLabel} · {item.meters}m
                     </div>
                   </div>
-                  <div className="text-navy text-[15px] font-medium">
+                  <div className="text-navy text-base font-medium">
                     {formatPriceBRL(item.meters * item.pricePerMeter)}
                   </div>
                 </div>
@@ -57,7 +57,7 @@ export function CartPage() {
                     >
                       <Minus className="size-3.5" />
                     </button>
-                    <div className="w-10 text-center text-[13px]">{item.meters}m</div>
+                    <div className="w-10 text-center text-sm">{item.meters}m</div>
                     <button
                       type="button"
                       aria-label="Aumentar metragem"
@@ -70,7 +70,7 @@ export function CartPage() {
                   <button
                     type="button"
                     onClick={() => removeItem(item.id)}
-                    className="text-text-meta text-[12.5px]"
+                    className="text-text-meta text-xs"
                   >
                     Remover
                   </button>
@@ -81,12 +81,12 @@ export function CartPage() {
         </div>
 
         <div className="bg-cream-secondary rounded-sm p-7">
-          <div className="text-navy-dark mb-5 text-[15px] font-semibold">Resumo do pedido</div>
-          <div className="text-text-body mb-3 flex justify-between text-[13.5px]">
+          <div className="text-navy-dark mb-5 text-base font-semibold">Resumo do pedido</div>
+          <div className="text-text-body mb-3 flex justify-between text-sm">
             <span>Subtotal</span>
             <span>{formatPriceBRL(subtotal)}</span>
           </div>
-          <div className="text-text-body mb-3 flex justify-between text-[13.5px]">
+          <div className="text-text-body mb-3 flex justify-between text-sm">
             <span>Frete</span>
             <span>{shipping === 0 ? 'Grátis' : formatPriceBRL(shipping)}</span>
           </div>
@@ -97,7 +97,7 @@ export function CartPage() {
           <Button
             onClick={() => navigate('/checkout')}
             size="lg"
-            className="mt-5 h-auto w-full rounded-sm py-4 text-[14.5px]"
+            className="mt-5 h-auto w-full rounded-sm py-4 text-sm"
           >
             Finalizar compra
           </Button>

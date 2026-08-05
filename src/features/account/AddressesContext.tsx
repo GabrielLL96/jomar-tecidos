@@ -1,37 +1,86 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
-import { useSecureStorage } from '@/hooks/useSecureStorage'
-import { MOCK_ADDRESSES } from './data'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useAuth } from '@/features/auth/AuthContext'
 import type { Address } from './types'
 import type { AddressInput } from './schema'
 
-const ADDRESSES_STORAGE_KEY = 'jomar:addresses'
-
 interface AddressesContextValue {
   addresses: Address[]
-  addOrFindAddress: (input: AddressInput) => Address
+  addOrFindAddress: (input: AddressInput) => Promise<Address>
 }
 
 const AddressesContext = createContext<AddressesContextValue | null>(null)
 
-export function AddressesProvider({ children }: { children: ReactNode }) {
-  const { getItem, setItem } = useSecureStorage()
-  const [addresses, setAddresses] = useState<Address[]>(
-    () => getItem<Address[]>(ADDRESSES_STORAGE_KEY, null) ?? MOCK_ADDRESSES,
-  )
-
-  const persist = (next: Address[]) => {
-    setAddresses(next)
-    setItem(ADDRESSES_STORAGE_KEY, next)
+function adaptAddress(row: {
+  id: string
+  label: string
+  street: string
+  city: string
+  state: string
+  zip_code: string
+  is_default: boolean
+}): Address {
+  return {
+    id: row.id,
+    label: row.label,
+    street: row.street,
+    city: row.city,
+    state: row.state,
+    zipCode: row.zip_code,
+    isDefault: row.is_default,
   }
+}
 
-  const addOrFindAddress: AddressesContextValue['addOrFindAddress'] = (input) => {
+export function AddressesProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuth()
+  const [addresses, setAddresses] = useState<Address[]>([])
+
+  useEffect(() => {
+    let active = true
+
+    const load = async () => {
+      if (!user) return []
+      const { data, error } = await supabase
+        .from('addresses')
+        .select('id, label, street, city, state, zip_code, is_default')
+      if (error || !data) return []
+      return data.map(adaptAddress)
+    }
+
+    load().then((result) => {
+      if (active) setAddresses(result)
+    })
+
+    return () => {
+      active = false
+    }
+  }, [user])
+
+  const addOrFindAddress: AddressesContextValue['addOrFindAddress'] = async (input) => {
+    if (!user) throw new Error('Usuário não autenticado')
+
     const existing = addresses.find(
       (address) => address.street === input.street && address.zipCode === input.zipCode,
     )
     if (existing) return existing
 
-    const newAddress: Address = { ...input, id: crypto.randomUUID(), isDefault: addresses.length === 0 }
-    persist([...addresses, newAddress])
+    const { data, error } = await supabase
+      .from('addresses')
+      .insert({
+        user_id: user.id,
+        label: input.label,
+        street: input.street,
+        city: input.city,
+        state: input.state,
+        zip_code: input.zipCode,
+        is_default: addresses.length === 0,
+      })
+      .select('id, label, street, city, state, zip_code, is_default')
+      .single()
+    if (error) throw new Error(error.message)
+
+    const newAddress = adaptAddress(data)
+    setAddresses((current) => [...current, newAddress])
     return newAddress
   }
 

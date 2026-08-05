@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,8 +17,9 @@ import {
 } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { COMPOSITIONS, CATEGORY_DISPLAY } from '@/features/catalog/data'
-import type { Product } from '@/features/catalog/types'
+import { supabase } from '@/lib/supabase'
+import { CATEGORY_DISPLAY } from '@/features/catalog/data'
+import { useCompositions } from '@/features/catalog/hooks'
 
 const decimalPtBR = (val: unknown) => (typeof val === 'string' ? val.replace(',', '.') : val)
 
@@ -36,13 +38,24 @@ type ProductFormOutput = z.output<typeof productFormSchema>
 const COLOR_OPTIONS = ['#e0d3b6', '#cfe0e0', '#e0c7d3', '#8c9a7c', '#4a5a6a', '#c13a2e', '#1c1a5e', '#1a1a1a']
 const CATEGORY_OPTIONS = Object.keys(CATEGORY_DISPLAY)
 
+function slugify(name: string) {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(new RegExp('[̀-ͯ]', 'g'), '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
+
 interface AdminProductModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSave: (product: Product) => void
 }
 
-export function AdminProductModal({ open, onOpenChange, onSave }: AdminProductModalProps) {
+export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps) {
+  const queryClient = useQueryClient()
+  const { data: compositions = [] } = useCompositions()
+
   const {
     register,
     handleSubmit,
@@ -57,6 +70,7 @@ export function AdminProductModal({ open, onOpenChange, onSave }: AdminProductMo
 
   const [compositionPct, setCompositionPct] = useState<Record<string, number>>({})
   const [selectedColors, setSelectedColors] = useState<string[]>([])
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     if (!open) {
@@ -83,7 +97,7 @@ export function AdminProductModal({ open, onOpenChange, onSave }: AdminProductMo
 
   const compositionTotal = Object.values(compositionPct).reduce((total, pct) => total + pct, 0)
 
-  const onSubmit = (data: ProductFormOutput) => {
+  const onSubmit = async (data: ProductFormOutput) => {
     const compositionIds = Object.keys(compositionPct)
     if (compositionIds.length === 0) {
       toast.error('Selecione ao menos uma composição')
@@ -98,37 +112,53 @@ export function AdminProductModal({ open, onOpenChange, onSave }: AdminProductMo
       return
     }
 
-    const id = crypto.randomUUID()
-    const product: Product = {
-      id,
-      sku: `ADM-${id.slice(0, 8).toUpperCase()}`,
-      slug: data.name
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(new RegExp('[̀-ͯ]', 'g'), '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, ''),
-      name: data.name,
-      categorySlug: data.categorySlug,
-      compositions: compositionIds.map((compositionId) => ({
-        compositionId,
-        percentage: compositionPct[compositionId],
-      })),
-      pricePerMeter: data.pricePerMeter,
-      widthM: data.widthM,
-      stockMeters: data.stockMeters,
-      minSaleMeters: 0.5,
-      status: data.stockMeters > 0 ? 'active' : 'out_of_stock',
-      colors: [selectedColors[0], selectedColors[1] ?? selectedColors[0]],
-      description: data.description ?? '',
-      colorOptions: selectedColors.map((hex, index) => ({
-        id: `color-${id}-${index}`,
-        label: `Cor ${index + 1}`,
-        hex,
-      })),
-    }
+    setIsSaving(true)
+    try {
+      const { data: created, error: productError } = await supabase
+        .from('products')
+        .insert({
+          sku: `ADM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+          slug: slugify(data.name),
+          name: data.name,
+          category_slug: data.categorySlug,
+          description: data.description ?? '',
+          price_per_meter: data.pricePerMeter,
+          width_m: data.widthM,
+          stock_meters: data.stockMeters,
+          min_sale_meters: 0.5,
+          status: data.stockMeters > 0 ? 'active' : 'out_of_stock',
+        })
+        .select('id')
+        .single()
+      if (productError) throw new Error(productError.message)
 
-    onSave(product)
+      const { error: compositionsError } = await supabase.from('product_compositions').insert(
+        compositionIds.map((compositionId) => ({
+          product_id: created.id,
+          composition_id: compositionId,
+          percentage: compositionPct[compositionId],
+        })),
+      )
+      if (compositionsError) throw new Error(compositionsError.message)
+
+      const { error: colorsError } = await supabase.from('product_colors').insert(
+        selectedColors.map((hex, index) => ({
+          product_id: created.id,
+          label: `Cor ${index + 1}`,
+          hex,
+        })),
+      )
+      if (colorsError) throw new Error(colorsError.message)
+
+      await queryClient.invalidateQueries({ queryKey: ['products'] })
+      await queryClient.invalidateQueries({ queryKey: ['categories'] })
+      toast.success(`${data.name} cadastrado`)
+      onOpenChange(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar o produto')
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   return (
@@ -175,7 +205,7 @@ export function AdminProductModal({ open, onOpenChange, onSave }: AdminProductMo
               </span>
             </div>
             <div className="flex flex-col gap-2 rounded-md border border-[#ede8de] p-3">
-              {COMPOSITIONS.map((composition) => {
+              {compositions.map((composition) => {
                 const checked = composition.id in compositionPct
                 return (
                   <div key={composition.id} className="flex items-center gap-2.5">
@@ -256,7 +286,9 @@ export function AdminProductModal({ open, onOpenChange, onSave }: AdminProductMo
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button type="submit">Salvar produto</Button>
+            <Button type="submit" disabled={isSaving}>
+              {isSaving ? 'Salvando…' : 'Salvar produto'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

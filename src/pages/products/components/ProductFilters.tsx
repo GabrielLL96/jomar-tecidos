@@ -36,7 +36,7 @@ export function ProductFilters({
         {materials.map((material) => (
           <label
             key={material.label}
-            className="text-text-body-dark mb-2.5 flex items-center gap-2 text-[13.5px]"
+            className="text-text-body-dark mb-2.5 flex items-center gap-2 text-sm"
           >
             <input
               type="checkbox"

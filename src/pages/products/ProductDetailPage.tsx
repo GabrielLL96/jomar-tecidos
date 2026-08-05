@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { formatPriceBRL } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import { useProduct, useProductReviews } from '@/features/catalog/hooks'
-import { COMPOSITIONS, PRODUCT_CARE_DEFAULT, PRODUCT_DELIVERY_DEFAULT } from '@/features/catalog/data'
+import { useCompositions, useProduct, useProductReviews } from '@/features/catalog/hooks'
+import { PRODUCT_CARE_DEFAULT, PRODUCT_DELIVERY_DEFAULT } from '@/features/catalog/data'
 import { formatCompositionBreakdown, formatCompositionLabel, formatWidthM } from '@/features/catalog/utils'
 import { useCart } from '@/features/cart/CartContext'
 import { useFavorites } from '@/features/favorites/FavoritesContext'
@@ -17,6 +17,7 @@ export function ProductDetailPage() {
   const { slug = '' } = useParams()
   const { data: product, isLoading } = useProduct(slug)
   const { data: reviews = [] } = useProductReviews(product?.id ?? '')
+  const { data: compositions = [] } = useCompositions()
   const { addItem } = useCart()
   const { isFavorite, toggleFavorite } = useFavorites()
 
@@ -61,7 +62,7 @@ export function ProductDetailPage() {
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-xl) px-6 py-10 md:px-12">
-      <div className="text-text-meta mb-6 text-[12.5px]">
+      <div className="text-text-meta mb-6 text-xs">
         <Link to="/">Início</Link> / <Link to="/tecidos">Tecidos</Link> / {product.name}
       </div>
 
@@ -89,33 +90,33 @@ export function ProductDetailPage() {
         </div>
 
         <div>
-          <div className="text-brand-red mb-2 text-[11px] font-semibold tracking-[0.14em] uppercase">
-            {formatCompositionLabel(product.compositions, COMPOSITIONS)}
+          <div className="text-brand-red mb-2 text-xs font-semibold tracking-[0.14em] uppercase">
+            {formatCompositionLabel(product.compositions, compositions)}
           </div>
-          <h1 className="text-navy-dark mb-3 font-serif text-[32px] font-medium">{product.name}</h1>
-          <div className="mb-2 flex items-center gap-3 text-[22px] font-medium">
+          <h1 className="text-navy-dark mb-3 font-serif text-3xl font-medium">{product.name}</h1>
+          <div className="mb-2 flex items-center gap-3 text-2xl font-medium">
             {formatPriceBRL(product.pricePerMeter)}{' '}
-            <span className="text-text-meta text-[13px] font-normal">/ metro</span>
+            <span className="text-text-meta text-sm font-normal">/ metro</span>
             {averageRating !== null && (
-              <span className="text-text-meta flex items-center gap-1 text-[13px] font-normal">
+              <span className="text-text-meta flex items-center gap-1 text-sm font-normal">
                 <Star className="size-3.5 fill-current text-[#d4a03c]" />
                 {averageRating.toFixed(1)} ({reviews.length})
               </span>
             )}
           </div>
           {outOfStock ? (
-            <div className="bg-foreground mb-5 inline-block rounded-sm px-2.5 py-1 text-[11px] tracking-[0.05em] text-white uppercase">
+            <div className="bg-foreground mb-5 inline-block rounded-sm px-2.5 py-1 text-xs tracking-[0.05em] text-white uppercase">
               Esgotado
             </div>
           ) : product.status === 'low_stock' ? (
-            <div className="bg-navy mb-5 inline-block rounded-sm px-2.5 py-1 text-[11px] tracking-[0.05em] text-white uppercase">
+            <div className="bg-navy mb-5 inline-block rounded-sm px-2.5 py-1 text-xs tracking-[0.05em] text-white uppercase">
               Últimas unidades
             </div>
           ) : null}
-          <p className="text-text-body mb-6 text-[14.5px] leading-relaxed">{product.description}</p>
+          <p className="text-text-body mb-6 text-sm leading-relaxed">{product.description}</p>
 
           <div className="mb-5">
-            <div className="text-navy-dark mb-2.5 text-[12.5px] font-semibold">
+            <div className="text-navy-dark mb-2.5 text-xs font-semibold">
               Cor: {selectedColor.label}
             </div>
             <div className="flex gap-2.5">
@@ -138,7 +139,7 @@ export function ProductDetailPage() {
           </div>
 
           <div className="mb-6">
-            <div className="text-navy-dark mb-2.5 text-[12.5px] font-semibold">Quantidade (metros)</div>
+            <div className="text-navy-dark mb-2.5 text-xs font-semibold">Quantidade (metros)</div>
             <div className="border-input flex w-fit items-center rounded-sm border">
               <button
                 type="button"
@@ -148,7 +149,7 @@ export function ProductDetailPage() {
               >
                 <Minus className="size-4" />
               </button>
-              <div className="w-14 text-center text-[15px]">{meters}m</div>
+              <div className="w-14 text-center text-base">{meters}m</div>
               <button
                 type="button"
                 aria-label="Aumentar metragem"
@@ -165,7 +166,7 @@ export function ProductDetailPage() {
               onClick={handleAddToCart}
               disabled={outOfStock}
               size="lg"
-              className="h-auto flex-1 rounded-sm px-6 py-4 text-[14.5px]"
+              className="h-auto flex-1 rounded-sm px-6 py-4 text-sm"
             >
               {outOfStock ? 'Produto esgotado' : `Adicionar à sacola — ${formatPriceBRL(subtotal)}`}
             </Button>
@@ -189,20 +190,20 @@ export function ProductDetailPage() {
               <TabsTrigger value="cuidados">Cuidados</TabsTrigger>
               <TabsTrigger value="avaliacoes">Avaliações ({reviews.length})</TabsTrigger>
             </TabsList>
-            <TabsContent value="composicao" className="text-text-body text-[13px] leading-relaxed">
-              {formatCompositionBreakdown(product.compositions, COMPOSITIONS)} · Largura{' '}
+            <TabsContent value="composicao" className="text-text-body text-sm leading-relaxed">
+              {formatCompositionBreakdown(product.compositions, compositions)} · Largura{' '}
               {formatWidthM(product.widthM)}
-              <div className="text-text-meta mt-2 text-[12px]">SKU: {product.sku}</div>
+              <div className="text-text-meta mt-2 text-xs">SKU: {product.sku}</div>
             </TabsContent>
-            <TabsContent value="entrega" className="text-text-body text-[13px] leading-relaxed">
+            <TabsContent value="entrega" className="text-text-body text-sm leading-relaxed">
               {PRODUCT_DELIVERY_DEFAULT}
             </TabsContent>
-            <TabsContent value="cuidados" className="text-text-body text-[13px] leading-relaxed">
+            <TabsContent value="cuidados" className="text-text-body text-sm leading-relaxed">
               {PRODUCT_CARE_DEFAULT}
             </TabsContent>
             <TabsContent value="avaliacoes" className="flex flex-col gap-4">
               {reviews.length === 0 ? (
-                <p className="text-text-body text-[13px] leading-relaxed">
+                <p className="text-text-body text-sm leading-relaxed">
                   Este produto ainda não tem avaliações.
                 </p>
               ) : (
@@ -220,9 +221,9 @@ export function ProductDetailPage() {
                           />
                         ))}
                       </div>
-                      <span className="text-navy-dark text-[13px] font-semibold">{review.authorName}</span>
+                      <span className="text-navy-dark text-sm font-semibold">{review.authorName}</span>
                     </div>
-                    <p className="text-text-body text-[13px] leading-relaxed">{review.text}</p>
+                    <p className="text-text-body text-sm leading-relaxed">{review.text}</p>
                   </div>
                 ))
               )}

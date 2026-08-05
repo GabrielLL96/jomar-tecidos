@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useProducts } from '@/features/catalog/hooks'
-import { COMPOSITIONS } from '@/features/catalog/data'
+import { useCompositions, useProducts } from '@/features/catalog/hooks'
 import { formatCompositionLabel } from '@/features/catalog/utils'
 import { ProductCard } from '@/features/catalog/components/ProductCard'
 import { ProductFilters } from './components/ProductFilters'
@@ -12,6 +11,7 @@ export function ProductsPage() {
   const busca = searchParams.get('busca')?.trim().toLowerCase()
 
   const { data: products } = useProducts()
+  const { data: compositions = [] } = useCompositions()
   const [selectedMaterials, setSelectedMaterials] = useState<string[]>([])
   const [selectedColors, setSelectedColors] = useState<string[]>([])
   const [maxPrice, setMaxPrice] = useState<number | null>(null)
@@ -26,11 +26,11 @@ export function ProductsPage() {
     if (!products) return []
     const counts = new Map<string, number>()
     for (const product of products) {
-      const label = formatCompositionLabel(product.compositions, COMPOSITIONS)
+      const label = formatCompositionLabel(product.compositions, compositions)
       counts.set(label, (counts.get(label) ?? 0) + 1)
     }
     return Array.from(counts.entries()).map(([label, count]) => ({ label, count }))
-  }, [products])
+  }, [products, compositions])
 
   const colors = useMemo(() => {
     if (!products) return []
@@ -48,7 +48,7 @@ export function ProductsPage() {
       if (busca && !product.name.toLowerCase().includes(busca)) return false
       if (
         selectedMaterials.length &&
-        !selectedMaterials.includes(formatCompositionLabel(product.compositions, COMPOSITIONS))
+        !selectedMaterials.includes(formatCompositionLabel(product.compositions, compositions))
       )
         return false
       if (selectedColors.length && !product.colorOptions.some((option) => selectedColors.includes(option.hex)))
@@ -56,7 +56,7 @@ export function ProductsPage() {
       if (maxPrice !== null && product.pricePerMeter > maxPrice) return false
       return true
     })
-  }, [products, categoria, busca, selectedMaterials, selectedColors, maxPrice])
+  }, [products, compositions, categoria, busca, selectedMaterials, selectedColors, maxPrice])
 
   const toggleMaterial = (label: string) =>
     setSelectedMaterials((prev) => (prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]))
@@ -66,10 +66,10 @@ export function ProductsPage() {
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-2xl) px-6 py-10 md:px-12">
-      <div className="text-text-meta mb-2 text-[12.5px]">
+      <div className="text-text-meta mb-2 text-xs">
         <Link to="/">Início</Link> / Tecidos
       </div>
-      <h1 className="text-navy-dark mb-8 font-serif text-[34px] font-medium">Nossa coleção de tecidos</h1>
+      <h1 className="text-navy-dark mb-8 font-serif text-4xl font-medium">Nossa coleção de tecidos</h1>
 
       <div className="grid grid-cols-1 gap-10 md:grid-cols-[230px_1fr]">
         <ProductFilters
@@ -85,7 +85,7 @@ export function ProductsPage() {
         />
 
         <div>
-          <div className="text-text-meta mb-5 flex items-center justify-between text-[13px]">
+          <div className="text-text-meta mb-5 flex items-center justify-between text-sm">
             <span>{filtered.length} tecidos encontrados</span>
           </div>
           {filtered.length === 0 ? (

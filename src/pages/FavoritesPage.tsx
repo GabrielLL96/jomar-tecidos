@@ -11,7 +11,7 @@ export function FavoritesPage() {
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-xl) px-6 py-10 md:px-12">
-      <h1 className="text-navy-dark mb-8 font-serif text-[32px] font-medium">Meus favoritos</h1>
+      <h1 className="text-navy-dark mb-8 font-serif text-3xl font-medium">Meus favoritos</h1>
 
       {favorites.length === 0 ? (
         <div className="text-center">

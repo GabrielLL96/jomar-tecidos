@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,10 +19,14 @@ export function AccountAddressesPage() {
     formState: { errors },
   } = useForm<AddressInput>({ resolver: zodResolver(addressSchema) })
 
-  const onSubmit = (input: AddressInput) => {
-    addOrFindAddress(input)
-    reset()
-    setShowForm(false)
+  const onSubmit = async (input: AddressInput) => {
+    try {
+      await addOrFindAddress(input)
+      reset()
+      setShowForm(false)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar o endereço')
+    }
   }
 
   return (
@@ -30,7 +35,7 @@ export function AccountAddressesPage() {
         <Button
           type="button"
           onClick={() => setShowForm((value) => !value)}
-          className="h-auto rounded-sm px-5 py-2.5 text-[13px]"
+          className="h-auto rounded-sm px-5 py-2.5 text-sm"
         >
           {showForm ? 'Cancelar' : '+ Novo endereço'}
         </Button>
@@ -67,7 +72,7 @@ export function AccountAddressesPage() {
             {errors.zipCode && <p className="text-destructive text-xs">{errors.zipCode.message}</p>}
           </div>
           <div className="flex items-end sm:col-span-2">
-            <Button type="submit" className="h-auto w-full rounded-sm py-2.5 text-[13px] sm:w-fit">
+            <Button type="submit" className="h-auto w-full rounded-sm py-2.5 text-sm sm:w-fit">
               Salvar endereço
             </Button>
           </div>
@@ -77,15 +82,15 @@ export function AccountAddressesPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {addresses.map((address) => (
           <div key={address.id} className="border-border rounded-md border bg-white p-5">
-            <div className="text-navy-dark mb-1.5 flex items-center gap-2 text-[13.5px] font-semibold">
+            <div className="text-navy-dark mb-1.5 flex items-center gap-2 text-sm font-semibold">
               {address.label}
               {address.isDefault && (
-                <span className="bg-cream-secondary text-text-meta rounded-sm px-1.5 py-0.5 text-[10px] uppercase">
+                <span className="bg-cream-secondary text-text-meta rounded-sm px-1.5 py-0.5 text-xs uppercase">
                   Padrão
                 </span>
               )}
             </div>
-            <div className="text-text-body text-[13px] leading-relaxed">
+            <div className="text-text-body text-sm leading-relaxed">
               {address.street}
               <br />
               {address.city} - {address.state}, {address.zipCode}
