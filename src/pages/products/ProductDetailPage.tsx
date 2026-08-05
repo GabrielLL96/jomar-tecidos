@@ -183,7 +183,7 @@ export function ProductDetailPage() {
           </div>
 
           <Tabs defaultValue="composicao" className="border-border border-t pt-5">
-            <TabsList>
+            <TabsList className="w-full max-w-full justify-start overflow-x-auto overflow-y-hidden">
               <TabsTrigger value="composicao">Composição</TabsTrigger>
               <TabsTrigger value="entrega">Entrega</TabsTrigger>
               <TabsTrigger value="cuidados">Cuidados</TabsTrigger>
