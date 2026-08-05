@@ -1,59 +1,137 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
-import { useSecureStorage } from '@/hooks/useSecureStorage'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { supabase } from '@/lib/supabase'
 import type { LoginInput, SignupInput } from './schema'
-
-const AUTH_STORAGE_KEY = 'jomar:auth-user'
+import type { UserRole } from './types'
 
 interface AuthUser {
+  id: string
   name: string
   email: string
   phone?: string
+  role: UserRole
+}
+
+interface UpdateProfileInput {
+  name?: string
+  email?: string
+  phone?: string
+  password?: string
 }
 
 interface AuthContextValue {
   user: AuthUser | null
-  login: (input: LoginInput) => void
-  signup: (input: SignupInput) => void
-  updateProfile: (patch: Partial<Pick<AuthUser, 'name' | 'email' | 'phone'>>) => void
-  logout: () => void
+  isLoading: boolean
+  login: (input: LoginInput) => Promise<void>
+  signup: (input: SignupInput) => Promise<{ requiresEmailConfirmation: boolean }>
+  updateProfile: (patch: UpdateProfileInput) => Promise<void>
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
-function nameFromEmail(email: string) {
-  const prefix = email.split('@')[0].replace(/[._-]+/g, ' ')
-  return prefix.replace(/\b\w/g, (letter) => letter.toUpperCase())
+async function fetchProfile(userId: string): Promise<AuthUser | null> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('id, name, email, phone, role')
+    .eq('id', userId)
+    .single()
+
+  if (error || !data) return null
+
+  return {
+    id: data.id,
+    name: data.name,
+    email: data.email,
+    phone: data.phone ?? undefined,
+    role: data.role,
+  }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { getItem, setItem, removeItem } = useSecureStorage()
-  const [user, setUser] = useState<AuthUser | null>(() => getItem<AuthUser>(AUTH_STORAGE_KEY, null))
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
-  const persist = (nextUser: AuthUser) => {
-    setUser(nextUser)
-    setItem(AUTH_STORAGE_KEY, nextUser)
+  useEffect(() => {
+    let active = true
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!active) return
+
+      if (!session?.user) {
+        setUser(null)
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(true)
+      fetchProfile(session.user.id).then((profile) => {
+        if (active) {
+          setUser(profile)
+          setIsLoading(false)
+        }
+      })
+    })
+
+    return () => {
+      active = false
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  const login: AuthContextValue['login'] = async ({ email, password }) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error) throw new Error(error.message)
   }
 
-  const login: AuthContextValue['login'] = ({ email }) => {
-    persist({ name: nameFromEmail(email), email })
+  const signup: AuthContextValue['signup'] = async ({ name, email, password }) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    })
+    if (error) throw new Error(error.message)
+    return { requiresEmailConfirmation: !data.session }
   }
 
-  const signup: AuthContextValue['signup'] = ({ name, email }) => {
-    persist({ name, email })
-  }
-
-  const updateProfile: AuthContextValue['updateProfile'] = (patch) => {
+  const updateProfile: AuthContextValue['updateProfile'] = async (patch) => {
     if (!user) return
-    persist({ ...user, ...patch })
+
+    if (patch.email || patch.password) {
+      const { error } = await supabase.auth.updateUser({
+        ...(patch.email ? { email: patch.email } : {}),
+        ...(patch.password ? { password: patch.password } : {}),
+      })
+      if (error) throw new Error(error.message)
+    }
+
+    if (patch.name !== undefined || patch.phone !== undefined) {
+      const { error } = await supabase
+        .from('users')
+        .update({
+          ...(patch.name !== undefined ? { name: patch.name } : {}),
+          ...(patch.phone !== undefined ? { phone: patch.phone } : {}),
+        })
+        .eq('id', user.id)
+      if (error) throw new Error(error.message)
+    }
+
+    setUser({
+      ...user,
+      name: patch.name ?? user.name,
+      email: patch.email ?? user.email,
+      phone: patch.phone ?? user.phone,
+    })
   }
 
-  const logout = () => {
+  const logout: AuthContextValue['logout'] = async () => {
+    await supabase.auth.signOut()
     setUser(null)
-    removeItem(AUTH_STORAGE_KEY)
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, signup, updateProfile, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, signup, updateProfile, logout }}>
       {children}
     </AuthContext.Provider>
   )

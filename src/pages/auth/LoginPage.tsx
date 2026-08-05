@@ -19,10 +19,14 @@ function LoginForm() {
     formState: { errors },
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) })
 
-  const onSubmit = (data: LoginInput) => {
-    login(data)
-    toast.success('Login realizado com sucesso')
-    navigate('/conta')
+  const onSubmit = async (data: LoginInput) => {
+    try {
+      await login(data)
+      toast.success('Login realizado com sucesso')
+      navigate('/conta')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível entrar')
+    }
   }
 
   return (
@@ -53,10 +57,18 @@ function SignupForm() {
     formState: { errors },
   } = useForm<SignupInput>({ resolver: zodResolver(signupSchema) })
 
-  const onSubmit = (data: SignupInput) => {
-    signup(data)
-    toast.success('Conta criada com sucesso')
-    navigate('/conta')
+  const onSubmit = async (data: SignupInput) => {
+    try {
+      const { requiresEmailConfirmation } = await signup(data)
+      if (requiresEmailConfirmation) {
+        toast.success('Conta criada! Confirme seu e-mail para poder entrar.')
+        return
+      }
+      toast.success('Conta criada com sucesso')
+      navigate('/conta')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível criar a conta')
+    }
   }
 
   return (
@@ -91,21 +103,18 @@ function SignupForm() {
 }
 
 export function LoginPage() {
-  const { user } = useAuth()
+  const { user, isLoading } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (user) navigate('/conta', { replace: true })
-  }, [user, navigate])
+    if (!isLoading && user) navigate('/conta', { replace: true })
+  }, [user, isLoading, navigate])
 
-  if (user) return null
+  if (isLoading || user) return null
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-sm) px-6 py-20">
-      <h1 className="text-navy-dark mb-2 text-center font-serif text-[30px] font-medium">Minha conta</h1>
-      <p className="text-text-meta mb-8 text-center text-[13.5px]">
-        Ambiente de demonstração — qualquer e-mail e senha válidos entram.
-      </p>
+      <h1 className="text-navy-dark mb-8 text-center font-serif text-[30px] font-medium">Minha conta</h1>
 
       <Tabs defaultValue="login">
         <TabsList className="border-border mb-7 h-auto w-full gap-0 rounded-none border-b bg-transparent p-0">

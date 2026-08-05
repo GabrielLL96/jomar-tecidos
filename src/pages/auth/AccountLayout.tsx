@@ -11,19 +11,19 @@ const ACCOUNT_NAV = [
 ] as const
 
 export function AccountLayout() {
-  const { user, logout } = useAuth()
+  const { user, isLoading, logout } = useAuth()
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (!user) navigate('/conta/entrar', { replace: true })
-  }, [user, navigate])
+    if (!isLoading && !user) navigate('/conta/entrar', { replace: true })
+  }, [user, isLoading, navigate])
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await logout()
     navigate('/')
   }
 
-  if (!user) return null
+  if (isLoading || !user) return null
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-xl) px-6 py-10 md:px-12">

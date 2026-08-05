@@ -20,9 +20,13 @@ export function AccountDataPage() {
 
   if (!user) return null
 
-  const onSubmit = ({ name, email, phone }: AccountDataInput) => {
-    updateProfile({ name, email, phone })
-    toast.success('Dados atualizados com sucesso')
+  const onSubmit = async ({ name, email, phone, password }: AccountDataInput) => {
+    try {
+      await updateProfile({ name, email, phone, ...(password ? { password } : {}) })
+      toast.success('Dados atualizados com sucesso')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível atualizar os dados')
+    }
   }
 
   return (
