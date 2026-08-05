@@ -65,9 +65,9 @@ export function Footer() {
               <Phone className="size-3.5 shrink-0" />
               {BUSINESS.phone}
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex min-w-0 items-center gap-2">
               <Mail className="size-3.5 shrink-0" />
-              {BUSINESS.email}
+              <span className="break-all">{BUSINESS.email}</span>
             </span>
           </div>
           <div className="mt-4 flex gap-2.5">
