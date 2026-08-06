@@ -90,14 +90,16 @@ export function AdminProductsPage() {
 
   return (
     <div>
-      <div className="mb-[18px] flex justify-between gap-2.5">
+      <div className="mb-[18px] flex flex-col gap-2.5 sm:flex-row sm:justify-between">
         <Input
           placeholder="Buscar produto…"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          className="w-[260px]"
+          className="w-full sm:w-[260px]"
         />
-        <Button onClick={openCreateModal}>+ Novo produto</Button>
+        <Button onClick={openCreateModal} className="sm:self-start">
+          + Novo produto
+        </Button>
       </div>
 
       <div className="rounded-md border border-[#e4ddd0] bg-white">

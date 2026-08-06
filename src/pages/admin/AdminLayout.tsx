@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, LogOut, Package, Search, Settings } from 'lucide-react'
+import { LayoutDashboard, LogOut, Menu, Package, Search, Settings, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
+import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
 const ADMIN_NAV = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -23,6 +24,7 @@ export function AdminLayout() {
   const { user, isLoading, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
+  const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     if (isLoading) return
@@ -47,7 +49,7 @@ export function AdminLayout() {
 
   return (
     <div className="bg-cream-secondary flex min-h-svh">
-      <aside className="bg-navy-dark flex w-60 shrink-0 flex-col text-[#c9c5e2]">
+      <aside className="bg-navy-dark hidden w-60 shrink-0 flex-col text-[#c9c5e2] lg:flex">
         <div className="border-b border-[#2a2778] px-[22px] py-6">
           <div className="font-serif text-lg font-semibold text-white">Jomar Admin</div>
           <div className="mt-0.5 text-[10.5px] tracking-[0.1em] text-[#8b86b8] uppercase">
@@ -99,12 +101,22 @@ export function AdminLayout() {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-[#e4ddd0] bg-white px-8 py-[18px]">
-          <div>
-            <h1 className="text-navy-dark font-serif text-[22px] font-semibold">{meta.title}</h1>
-            <div className="mt-0.5 text-[12.5px] text-[#8c8375]">{meta.subtitle}</div>
+        <header className="flex items-center justify-between gap-3 border-b border-[#e4ddd0] bg-white px-4 py-[18px] sm:px-8">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              aria-label="Abrir menu"
+              onClick={() => setMenuOpen(true)}
+              className="text-navy-dark lg:hidden"
+            >
+              <Menu className="size-5" />
+            </button>
+            <div>
+              <h1 className="text-navy-dark font-serif text-[22px] font-semibold">{meta.title}</h1>
+              <div className="mt-0.5 hidden text-[12.5px] text-[#8c8375] sm:block">{meta.subtitle}</div>
+            </div>
           </div>
-          <div className="relative">
+          <div className="relative hidden sm:block">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#a39a8c]" />
             <input
               placeholder="Buscar…"
@@ -113,10 +125,50 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <div className="flex-1 p-8">
+        <div className="flex-1 p-4 sm:p-8">
           <Outlet />
         </div>
       </div>
+
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent side="left" className="bg-navy-dark w-72 border-none text-[#c9c5e2]" showCloseButton={false}>
+          <SheetHeader>
+            <SheetTitle className="font-serif text-lg font-semibold text-white">Jomar Admin</SheetTitle>
+          </SheetHeader>
+          <SheetClose className="absolute top-3 right-3 text-[#c9c5e2]" aria-label="Fechar menu">
+            <X className="size-5" />
+          </SheetClose>
+          <nav className="flex flex-col gap-0.5 px-3">
+            {ADMIN_NAV.map((item) => (
+              <SheetClose asChild key={item.to}>
+                <NavLink
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-[11px] rounded-[5px] px-3 py-2.5 text-[13.5px]',
+                      isActive ? 'bg-navy text-white' : 'text-[#c9c5e2]',
+                    )
+                  }
+                >
+                  <item.icon className="size-[15px]" />
+                  {item.label}
+                </NavLink>
+              </SheetClose>
+            ))}
+          </nav>
+          <SheetFooter>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-[11px] text-[13.5px] text-[#c9c5e2]"
+            >
+              <LogOut className="size-4" />
+              Sair
+            </button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }
