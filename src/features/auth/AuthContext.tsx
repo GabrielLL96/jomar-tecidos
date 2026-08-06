@@ -81,8 +81,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const login: AuthContextValue['login'] = async ({ email, password }) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw new Error(error.message)
+    // best-effort — não deve bloquear o login se falhar
+    void supabase
+      .from('users')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', data.user.id)
   }
 
   const signup: AuthContextValue['signup'] = async ({ name, email, password }) => {

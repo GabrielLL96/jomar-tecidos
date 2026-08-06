@@ -9,6 +9,7 @@ import {
   Package,
   Search,
   Settings,
+  Users,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -20,6 +21,7 @@ const ADMIN_NAV = [
   { to: '/admin/produtos', label: 'Produtos', icon: Package, end: false },
   { to: '/admin/composicoes', label: 'Composições', icon: Layers, end: false },
   { to: '/admin/estoque', label: 'Estoque', icon: Boxes, end: false },
+  { to: '/admin/usuarios', label: 'Usuários', icon: Users, end: false },
   { to: '/admin/configuracoes', label: 'Configurações', icon: Settings, end: false },
 ] as const
 
@@ -28,6 +30,7 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   '/admin/produtos': { title: 'Produtos', subtitle: 'Gerencie o catálogo de tecidos e aviamentos' },
   '/admin/composicoes': { title: 'Composições', subtitle: 'Organize os grupos de composição dos produtos' },
   '/admin/estoque': { title: 'Estoque', subtitle: 'Controle de metragem disponível' },
+  '/admin/usuarios': { title: 'Usuários', subtitle: 'Clientes e equipe interna' },
   '/admin/configuracoes': {
     title: 'Configurações',
     subtitle: 'Conteúdo da home, categorias e informações de contato',
