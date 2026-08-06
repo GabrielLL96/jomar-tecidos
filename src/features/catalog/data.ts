@@ -6,6 +6,17 @@ export const CATEGORY_DISPLAY: Record<string, { tag: string; colors: [string, st
   rendas: { tag: 'renda — guipure', colors: ['#f2efe8', '#e6e0d0'] },
 }
 
+export const SWATCH_COLOR_OPTIONS = [
+  '#e0d3b6',
+  '#cfe0e0',
+  '#e0c7d3',
+  '#8c9a7c',
+  '#4a5a6a',
+  '#c13a2e',
+  '#1c1a5e',
+  '#1a1a1a',
+]
+
 export const PRODUCT_CARE_DEFAULT = 'Lavar a frio, não usar alvejante, secar à sombra.'
 export const PRODUCT_DELIVERY_DEFAULT =
   'Envio em até 2 dias úteis. Corte sob medida — sem devolução após o corte.'

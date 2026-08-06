@@ -20,7 +20,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
-import { CATEGORY_DISPLAY, limitProductImageSelection, MAX_PRODUCT_IMAGES } from '@/features/catalog/data'
+import {
+  CATEGORY_DISPLAY,
+  limitProductImageSelection,
+  MAX_PRODUCT_IMAGES,
+  SWATCH_COLOR_OPTIONS,
+} from '@/features/catalog/data'
 import { useCompositions } from '@/features/catalog/hooks'
 import { uploadProductImage } from '@/features/catalog/productImagesQueries'
 import type { Product } from '@/features/catalog/types'
@@ -46,7 +51,6 @@ type ProductFormInput = z.input<typeof productFormSchema>
 type ProductFormOutput = z.output<typeof productFormSchema>
 type FieldErrors = Partial<Record<keyof ProductFormOutput, unknown>>
 
-const COLOR_OPTIONS = ['#e0d3b6', '#cfe0e0', '#e0c7d3', '#8c9a7c', '#4a5a6a', '#c13a2e', '#1c1a5e', '#1a1a1a']
 const CATEGORY_OPTIONS = Object.keys(CATEGORY_DISPLAY)
 const DADOS_FIELDS: (keyof ProductFormOutput)[] = [
   'name',
@@ -295,6 +299,9 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
 
       await queryClient.invalidateQueries({ queryKey: ['products'] })
       await queryClient.invalidateQueries({ queryKey: ['categories'] })
+      // product_compositions muda a cada save — /admin/composicoes precisa refletir a
+      // classificação por material predominante sem precisar de refresh manual.
+      await queryClient.invalidateQueries({ queryKey: ['compositions'] })
       toast.success(isEditing ? `${data.name} atualizado` : `${data.name} cadastrado`)
       onOpenChange(false)
     } catch (error) {
@@ -380,7 +387,7 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
               <div className="flex flex-col gap-2">
                 <Label>Cores disponíveis</Label>
                 <div className="flex flex-wrap gap-2">
-                  {COLOR_OPTIONS.map((hex) => (
+                  {SWATCH_COLOR_OPTIONS.map((hex) => (
                     <button
                       key={hex}
                       type="button"

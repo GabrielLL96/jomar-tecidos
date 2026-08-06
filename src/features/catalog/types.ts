@@ -1,6 +1,7 @@
 export interface Composition {
   id: string
   name: string
+  color: string | null
 }
 
 export interface ProductComposition {

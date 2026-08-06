@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "type-check": "tsc --noEmit",
+    "type-check": "tsc -b --noEmit",
     "lint": "eslint . --cache",
     "lint:fix": "eslint . --cache --fix",
     "build": "npm run format && npm run type-check && npm run lint && vite build",
@@ -13,7 +13,7 @@
     "preview": "vite preview",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "gen:types": "dotenv -- sh -c \"npx supabase gen types typescript --project-id $VITE_SUPABASE_PROJECT_ID --schema public\" > src/supabase/type.ts",
+    "gen:types": "dotenv -- sh -c \"npx supabase gen types typescript --project-id $VITE_SUPABASE_PROJECT_ID --schema public\" > src/lib/database.types.ts",
     "db:mig:new": "supabase migration new",
     "db:diff": "dotenv -- sh -c 'supabase db diff -f $(date +\"%Y%m%d_%H%M%S\")'",
     "db:push": "supabase db push",

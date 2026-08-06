@@ -6,17 +6,6 @@ import type { CategoryCard, Composition, Product, Review } from './types'
 const PRODUCT_SELECT =
   '*, product_compositions(percentage, compositions(id, name)), product_colors(id, label, hex), product_images(id, url, sort_order)'
 
-const COMPOSITION_ORDER = [
-  'Linhos',
-  'Algodões',
-  'Sedas',
-  'Aviamentos',
-  'Rendas',
-  'Algodão Egípcio',
-  'Poliéster',
-  'Nylon',
-]
-
 type ProductRow = {
   id: string
   sku: string
@@ -68,34 +57,58 @@ function adaptProduct(row: ProductRow): Product {
 export const compositionsQueryOptions = queryOptions({
   queryKey: ['compositions'] as const,
   queryFn: async (): Promise<Composition[]> => {
-    const { data, error } = await supabase.from('compositions').select('id, name')
+    const { data, error } = await supabase
+      .from('compositions')
+      .select('id, name, color')
+      .order('sort_order')
     if (error) throw new Error(error.message)
-    return [...data].sort(
-      (a, b) => COMPOSITION_ORDER.indexOf(a.name) - COMPOSITION_ORDER.indexOf(b.name),
-    )
+    return data
   },
   staleTime: 5 * 60 * 1000,
 })
 
+export type CompositionProductLink = {
+  id: string
+  name: string
+  status: Product['status']
+  percentage: number
+}
+export type AdminComposition = Composition & {
+  sortOrder: number
+  /** Todo produto vinculado (qualquer %), com o percentual de cada — um produto pode
+   *  aparecer em mais de uma composição (composição têxtil mista). */
+  products: CompositionProductLink[]
+}
+
 export const adminCompositionsQueryOptions = queryOptions({
   queryKey: ['compositions', 'admin'] as const,
-  queryFn: async (): Promise<(Composition & { productCount: number })[]> => {
+  queryFn: async (): Promise<AdminComposition[]> => {
     const [{ data: compositions, error: compositionsError }, { data: links, error: linksError }] =
       await Promise.all([
-        supabase.from('compositions').select('id, name'),
-        supabase.from('product_compositions').select('composition_id'),
+        supabase.from('compositions').select('id, name, color, sort_order').order('sort_order'),
+        supabase
+          .from('product_compositions')
+          .select('composition_id, percentage, products(id, name, status)'),
       ])
     if (compositionsError) throw new Error(compositionsError.message)
     if (linksError) throw new Error(linksError.message)
 
-    const counts = new Map<string, number>()
+    const productsByComposition = new Map<string, CompositionProductLink[]>()
     for (const link of links) {
-      counts.set(link.composition_id, (counts.get(link.composition_id) ?? 0) + 1)
+      const list = productsByComposition.get(link.composition_id) ?? []
+      list.push({ ...link.products, percentage: link.percentage })
+      productsByComposition.set(link.composition_id, list)
     }
 
-    return [...compositions]
-      .map((composition) => ({ ...composition, productCount: counts.get(composition.id) ?? 0 }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+    return compositions.map((composition) => ({
+      id: composition.id,
+      name: composition.name,
+      color: composition.color,
+      sortOrder: composition.sort_order,
+      products: (productsByComposition.get(composition.id) ?? []).sort((a, b) =>
+        a.name.localeCompare(b.name, 'pt-BR'),
+      ),
+    }))
   },
   staleTime: 60 * 1000,
 })
