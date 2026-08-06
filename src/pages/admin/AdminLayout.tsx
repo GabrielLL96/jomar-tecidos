@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, LogOut, Menu, Package, Search, Settings, X } from 'lucide-react'
+import { Layers, LayoutDashboard, LogOut, Menu, Package, Search, Settings, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
@@ -8,12 +8,14 @@ import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle }
 const ADMIN_NAV = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/produtos', label: 'Produtos', icon: Package, end: false },
+  { to: '/admin/composicoes', label: 'Composições', icon: Layers, end: false },
   { to: '/admin/configuracoes', label: 'Configurações', icon: Settings, end: false },
 ] as const
 
 const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   '/admin': { title: 'Resumo', subtitle: 'Visão geral do negócio hoje' },
   '/admin/produtos': { title: 'Produtos', subtitle: 'Gerencie o catálogo de tecidos e aviamentos' },
+  '/admin/composicoes': { title: 'Composições', subtitle: 'Organize os grupos de composição dos produtos' },
   '/admin/configuracoes': {
     title: 'Configurações',
     subtitle: 'Conteúdo da home, categorias e informações de contato',

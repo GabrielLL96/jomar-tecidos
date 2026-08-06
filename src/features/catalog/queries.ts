@@ -77,6 +77,29 @@ export const compositionsQueryOptions = queryOptions({
   staleTime: 5 * 60 * 1000,
 })
 
+export const adminCompositionsQueryOptions = queryOptions({
+  queryKey: ['compositions', 'admin'] as const,
+  queryFn: async (): Promise<(Composition & { productCount: number })[]> => {
+    const [{ data: compositions, error: compositionsError }, { data: links, error: linksError }] =
+      await Promise.all([
+        supabase.from('compositions').select('id, name'),
+        supabase.from('product_compositions').select('composition_id'),
+      ])
+    if (compositionsError) throw new Error(compositionsError.message)
+    if (linksError) throw new Error(linksError.message)
+
+    const counts = new Map<string, number>()
+    for (const link of links) {
+      counts.set(link.composition_id, (counts.get(link.composition_id) ?? 0) + 1)
+    }
+
+    return [...compositions]
+      .map((composition) => ({ ...composition, productCount: counts.get(composition.id) ?? 0 }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
+  },
+  staleTime: 60 * 1000,
+})
+
 export const categoriesQueryOptions = queryOptions({
   queryKey: ['categories'] as const,
   queryFn: async (): Promise<CategoryCard[]> => {

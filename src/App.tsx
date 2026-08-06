@@ -18,6 +18,7 @@ import { AccountDataPage } from '@/pages/auth/AccountDataPage'
 import { AdminLayout } from '@/pages/admin/AdminLayout'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminProductsPage } from '@/pages/admin/AdminProductsPage'
+import { AdminCompositionsPage } from '@/pages/admin/AdminCompositionsPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -47,6 +48,7 @@ function App() {
       <Route path="/admin" element={<AdminLayout />}>
         <Route index element={<AdminDashboardPage />} />
         <Route path="produtos" element={<AdminProductsPage />} />
+        <Route path="composicoes" element={<AdminCompositionsPage />} />
         <Route path="configuracoes" element={<AdminSettingsPage />} />
       </Route>
     </Routes>
