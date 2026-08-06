@@ -28,6 +28,7 @@ import {
 } from '@/features/catalog/data'
 import { useCompositions } from '@/features/catalog/hooks'
 import { uploadProductImage } from '@/features/catalog/productImagesQueries'
+import { slugify } from '@/features/catalog/utils'
 import type { Product } from '@/features/catalog/types'
 
 const decimalPtBR = (val: unknown) => (typeof val === 'string' ? val.replace(',', '.') : val)
@@ -59,15 +60,6 @@ const DADOS_FIELDS: (keyof ProductFormOutput)[] = [
   'pricePerMeter',
   'stockMeters',
 ]
-
-function slugify(name: string) {
-  return name
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(new RegExp('[̀-ͯ]', 'g'), '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
-}
 
 interface AdminProductModalProps {
   open: boolean

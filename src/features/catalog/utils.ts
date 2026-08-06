@@ -29,3 +29,12 @@ export function formatWidthM(widthM: number): string {
   if (widthM < 1) return `${Math.round(widthM * 100)}cm`
   return `${widthM.toFixed(2).replace('.', ',')}m`
 }
+
+export function slugify(name: string) {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(new RegExp('[̀-ͯ]', 'g'), '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
