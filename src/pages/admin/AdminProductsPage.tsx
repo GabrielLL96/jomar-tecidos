@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { formatPriceBRL } from '@/lib/format'
 import { supabase } from '@/lib/supabase'
-import { useCompositions, useProducts } from '@/features/catalog/hooks'
+import { useAdminProducts, useCompositions } from '@/features/catalog/hooks'
 import { formatCompositionLabel } from '@/features/catalog/utils'
 import type { Product, ProductStatus } from '@/features/catalog/types'
 import { AdminProductModal } from './AdminProductModal'
@@ -28,11 +28,12 @@ const STATUS_STYLES: Record<ProductStatus, string> = {
 }
 
 export function AdminProductsPage() {
-  const { data: products = [], isLoading } = useProducts()
+  const { data: products = [], isLoading } = useAdminProducts()
   const { data: compositions = [] } = useCompositions()
   const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [imagesModalProduct, setImagesModalProduct] = useState<Product | null>(null)
 
   const filteredProducts = useMemo(() => {
@@ -65,6 +66,28 @@ export function AdminProductsPage() {
     await queryClient.invalidateQueries({ queryKey: ['products'] })
   }
 
+  const toggleActive = async (product: Product) => {
+    const isInactive = product.status === 'draft'
+    const nextStatus = isInactive ? (product.stockMeters > 0 ? 'active' : 'out_of_stock') : 'draft'
+    const { error } = await supabase.from('products').update({ status: nextStatus }).eq('id', product.id)
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+    toast.success(isInactive ? `${product.name} reativado` : `${product.name} inativado`)
+    await queryClient.invalidateQueries({ queryKey: ['products'] })
+  }
+
+  const openCreateModal = () => {
+    setEditingProduct(null)
+    setModalOpen(true)
+  }
+
+  const openEditModal = (product: Product) => {
+    setEditingProduct(product)
+    setModalOpen(true)
+  }
+
   return (
     <div>
       <div className="mb-[18px] flex justify-between gap-2.5">
@@ -74,7 +97,7 @@ export function AdminProductsPage() {
           onChange={(event) => setSearch(event.target.value)}
           className="w-[260px]"
         />
-        <Button onClick={() => setModalOpen(true)}>+ Novo produto</Button>
+        <Button onClick={openCreateModal}>+ Novo produto</Button>
       </div>
 
       <div className="rounded-md border border-[#e4ddd0] bg-white">
@@ -98,54 +121,72 @@ export function AdminProductsPage() {
                 <TableCell colSpan={9}>Carregando…</TableCell>
               </TableRow>
             ) : (
-              filteredProducts.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell>
-                    <ImagePlaceholder
-                      colors={product.colors}
-                      src={product.images[0]?.url}
-                      alt={product.name}
-                      className="size-10 rounded-sm"
-                    />
-                  </TableCell>
-                  <TableCell>{product.name}</TableCell>
-                  <TableCell>{formatCompositionLabel(product.compositions, compositions)}</TableCell>
-                  <TableCell>{formatPriceBRL(product.pricePerMeter)}</TableCell>
-                  <TableCell>{product.stockMeters} m</TableCell>
-                  <TableCell>
-                    <span
-                      className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${STATUS_STYLES[product.status]}`}
-                    >
-                      {STATUS_LABELS[product.status]}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={product.tag === 'Novo'}
-                      onChange={() => toggleNew(product)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={product.isBestseller}
-                      onChange={() => toggleBestseller(product)}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm" onClick={() => setImagesModalProduct(product)}>
-                      Imagens
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+              filteredProducts.map((product) => {
+                const isInactive = product.status === 'draft'
+                return (
+                  <TableRow key={product.id} className={isInactive ? 'opacity-60' : undefined}>
+                    <TableCell>
+                      <ImagePlaceholder
+                        colors={product.colors}
+                        src={product.images[0]?.url}
+                        alt={product.name}
+                        className="size-10 rounded-sm"
+                      />
+                    </TableCell>
+                    <TableCell>{product.name}</TableCell>
+                    <TableCell>{formatCompositionLabel(product.compositions, compositions)}</TableCell>
+                    <TableCell>{formatPriceBRL(product.pricePerMeter)}</TableCell>
+                    <TableCell>{product.stockMeters} m</TableCell>
+                    <TableCell>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-[11.5px] font-semibold ${STATUS_STYLES[product.status]}`}
+                      >
+                        {STATUS_LABELS[product.status]}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={product.tag === 'Novo'}
+                        onChange={() => toggleNew(product)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        checked={product.isBestseller}
+                        onChange={() => toggleBestseller(product)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1.5">
+                        <Button variant="outline" size="sm" onClick={() => openEditModal(product)}>
+                          Editar
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setImagesModalProduct(product)}>
+                          Imagens
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => toggleActive(product)}>
+                          {isInactive ? 'Ativar' : 'Inativar'}
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             )}
           </TableBody>
         </Table>
       </div>
 
-      <AdminProductModal open={modalOpen} onOpenChange={setModalOpen} />
+      <AdminProductModal
+        open={modalOpen}
+        onOpenChange={(nextOpen) => {
+          setModalOpen(nextOpen)
+          if (!nextOpen) setEditingProduct(null)
+        }}
+        product={editingProduct}
+      />
       <ProductImagesModal
         product={imagesModalProduct}
         onOpenChange={(open) => !open && setImagesModalProduct(null)}

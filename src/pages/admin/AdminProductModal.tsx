@@ -22,6 +22,7 @@ import { supabase } from '@/lib/supabase'
 import { CATEGORY_DISPLAY } from '@/features/catalog/data'
 import { useCompositions } from '@/features/catalog/hooks'
 import { uploadProductImage } from '@/features/catalog/productImagesQueries'
+import type { Product } from '@/features/catalog/types'
 
 const decimalPtBR = (val: unknown) => (typeof val === 'string' ? val.replace(',', '.') : val)
 
@@ -58,9 +59,11 @@ function slugify(name: string) {
 interface AdminProductModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
+  product?: Product | null
 }
 
-export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps) {
+export function AdminProductModal({ open, onOpenChange, product = null }: AdminProductModalProps) {
+  const isEditing = product !== null
   const queryClient = useQueryClient()
   const { data: compositions = [] } = useCompositions()
 
@@ -91,8 +94,26 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
       setTag('none')
       setIsBestseller(false)
       setPendingImages([])
+      return
     }
-  }, [open, reset])
+
+    if (product) {
+      reset({
+        name: product.name,
+        categorySlug: product.categorySlug,
+        widthM: String(product.widthM).replace('.', ','),
+        pricePerMeter: String(product.pricePerMeter).replace('.', ','),
+        stockMeters: String(product.stockMeters).replace('.', ','),
+        description: product.description,
+      })
+      setCompositionPct(
+        Object.fromEntries(product.compositions.map((c) => [c.compositionId, c.percentage])),
+      )
+      setSelectedColors(product.colorOptions.map((c) => c.hex))
+      setTag(product.tag ?? 'none')
+      setIsBestseller(product.isBestseller)
+    }
+  }, [open, product, reset])
 
   const toggleComposition = (id: string) => {
     setCompositionPct((current) => {
@@ -136,29 +157,71 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
 
     setIsSaving(true)
     try {
-      const { data: created, error: productError } = await supabase
-        .from('products')
-        .insert({
-          sku: `ADM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
-          slug: slugify(data.name),
-          name: data.name,
-          category_slug: data.categorySlug,
-          description: data.description ?? '',
-          price_per_meter: data.pricePerMeter,
-          width_m: data.widthM,
-          stock_meters: data.stockMeters,
-          min_sale_meters: 0.5,
-          status: data.stockMeters > 0 ? 'active' : 'out_of_stock',
-          tag: tag === 'none' ? null : tag,
-          is_bestseller: isBestseller,
-        })
-        .select('id')
-        .single()
-      if (productError) throw new Error(productError.message)
+      const productId = isEditing
+        ? product.id
+        : await (async () => {
+            const { data: created, error: productError } = await supabase
+              .from('products')
+              .insert({
+                sku: `ADM-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+                slug: slugify(data.name),
+                name: data.name,
+                category_slug: data.categorySlug,
+                description: data.description ?? '',
+                price_per_meter: data.pricePerMeter,
+                width_m: data.widthM,
+                stock_meters: data.stockMeters,
+                min_sale_meters: 0.5,
+                status: data.stockMeters > 0 ? 'active' : 'out_of_stock',
+                tag: tag === 'none' ? null : tag,
+                is_bestseller: isBestseller,
+              })
+              .select('id')
+              .single()
+            if (productError) throw new Error(productError.message)
+            return created.id
+          })()
+
+      if (isEditing) {
+        const { error: productError } = await supabase
+          .from('products')
+          .update({
+            name: data.name,
+            category_slug: data.categorySlug,
+            description: data.description ?? '',
+            price_per_meter: data.pricePerMeter,
+            width_m: data.widthM,
+            stock_meters: data.stockMeters,
+            // status de inativo é controlado só pelo toggle Ativar/Inativar da tabela —
+            // editar outros campos nunca deve reativar um produto inativado de propósito.
+            status:
+              product.status === 'draft'
+                ? 'draft'
+                : data.stockMeters > 0
+                  ? 'active'
+                  : 'out_of_stock',
+            tag: tag === 'none' ? null : tag,
+            is_bestseller: isBestseller,
+          })
+          .eq('id', productId)
+        if (productError) throw new Error(productError.message)
+
+        const { error: deleteCompositionsError } = await supabase
+          .from('product_compositions')
+          .delete()
+          .eq('product_id', productId)
+        if (deleteCompositionsError) throw new Error(deleteCompositionsError.message)
+
+        const { error: deleteColorsError } = await supabase
+          .from('product_colors')
+          .delete()
+          .eq('product_id', productId)
+        if (deleteColorsError) throw new Error(deleteColorsError.message)
+      }
 
       const { error: compositionsError } = await supabase.from('product_compositions').insert(
         compositionIds.map((compositionId) => ({
-          product_id: created.id,
+          product_id: productId,
           composition_id: compositionId,
           percentage: compositionPct[compositionId],
         })),
@@ -167,7 +230,7 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
 
       const { error: colorsError } = await supabase.from('product_colors').insert(
         selectedColors.map((hex, index) => ({
-          product_id: created.id,
+          product_id: productId,
           label: `Cor ${index + 1}`,
           hex,
         })),
@@ -175,12 +238,12 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
       if (colorsError) throw new Error(colorsError.message)
 
       for (let index = 0; index < pendingImages.length; index += 1) {
-        await uploadProductImage(created.id, pendingImages[index], index)
+        await uploadProductImage(productId, pendingImages[index], index)
       }
 
       await queryClient.invalidateQueries({ queryKey: ['products'] })
       await queryClient.invalidateQueries({ queryKey: ['categories'] })
-      toast.success(`${data.name} cadastrado`)
+      toast.success(isEditing ? `${data.name} atualizado` : `${data.name} cadastrado`)
       onOpenChange(false)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível salvar o produto')
@@ -193,7 +256,9 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[88vh] max-w-[640px] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="font-serif text-xl">Novo produto</DialogTitle>
+          <DialogTitle className="font-serif text-xl">
+            {isEditing ? 'Editar produto' : 'Novo produto'}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -329,42 +394,47 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
             </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label>Imagens do produto</Label>
-            <div className="flex flex-wrap gap-2.5">
-              {pendingImages.map((file, index) => (
-                <div key={`${file.name}-${index}`} className="relative size-16 shrink-0">
-                  <img
-                    src={pendingImageUrls[index]}
-                    alt=""
-                    className="size-16 rounded-sm border border-[#e4ddd0] object-cover"
+          {!isEditing && (
+            <div className="flex flex-col gap-2">
+              <Label>Imagens do produto</Label>
+              <div className="flex flex-wrap gap-2.5">
+                {pendingImages.map((file, index) => (
+                  <div key={`${file.name}-${index}`} className="relative size-16 shrink-0">
+                    <img
+                      src={pendingImageUrls[index]}
+                      alt=""
+                      className="size-16 rounded-sm border border-[#e4ddd0] object-cover"
+                    />
+                    <button
+                      type="button"
+                      aria-label="Remover imagem"
+                      onClick={() => setPendingImages((current) => current.filter((_, i) => i !== index))}
+                      className="bg-foreground absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full text-white"
+                    >
+                      <X className="size-3" />
+                    </button>
+                  </div>
+                ))}
+                <label className="flex size-16 shrink-0 cursor-pointer items-center justify-center rounded-sm border border-dashed border-[#d8d0c0] text-[11px] text-[#a39a8c]">
+                  + Adicionar
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    multiple
+                    className="hidden"
+                    onChange={(event) => {
+                      const files = Array.from(event.target.files ?? [])
+                      setPendingImages((current) => [...current, ...files])
+                      event.target.value = ''
+                    }}
                   />
-                  <button
-                    type="button"
-                    aria-label="Remover imagem"
-                    onClick={() => setPendingImages((current) => current.filter((_, i) => i !== index))}
-                    className="bg-foreground absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full text-white"
-                  >
-                    <X className="size-3" />
-                  </button>
-                </div>
-              ))}
-              <label className="flex size-16 shrink-0 cursor-pointer items-center justify-center rounded-sm border border-dashed border-[#d8d0c0] text-[11px] text-[#a39a8c]">
-                + Adicionar
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  multiple
-                  className="hidden"
-                  onChange={(event) => {
-                    const files = Array.from(event.target.files ?? [])
-                    setPendingImages((current) => [...current, ...files])
-                    event.target.value = ''
-                  }}
-                />
-              </label>
+                </label>
+              </div>
+              <p className="text-text-meta text-xs">
+                Pra gerenciar imagens depois de criado, use o botão "Imagens" na tabela.
+              </p>
             </div>
-          </div>
+          )}
 
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="description">Descrição</Label>
@@ -381,7 +451,7 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
               Cancelar
             </Button>
             <Button type="submit" disabled={isSaving}>
-              {isSaving ? 'Salvando…' : 'Salvar produto'}
+              {isSaving ? 'Salvando…' : isEditing ? 'Salvar alterações' : 'Salvar produto'}
             </Button>
           </DialogFooter>
         </form>

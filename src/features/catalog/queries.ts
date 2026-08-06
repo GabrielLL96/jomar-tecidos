@@ -106,6 +106,18 @@ export const productsQueryOptions = queryOptions({
   staleTime: 60 * 1000,
 })
 
+// Sem o filtro de `draft` — usado só pelo admin, que precisa ver (e reativar)
+// produtos inativados. A loja e a Home usam `productsQueryOptions` acima.
+export const adminProductsQueryOptions = queryOptions({
+  queryKey: ['products', 'admin'] as const,
+  queryFn: async (): Promise<Product[]> => {
+    const { data, error } = await supabase.from('products').select(PRODUCT_SELECT)
+    if (error) throw new Error(error.message)
+    return data.map((row) => adaptProduct(row as unknown as ProductRow))
+  },
+  staleTime: 60 * 1000,
+})
+
 export const productQueryOptions = (slug: string) =>
   queryOptions({
     queryKey: ['products', slug] as const,
@@ -114,6 +126,7 @@ export const productQueryOptions = (slug: string) =>
         .from('products')
         .select(PRODUCT_SELECT)
         .eq('slug', slug)
+        .neq('status', 'draft')
         .maybeSingle()
       if (error) throw new Error(error.message)
       return data ? adaptProduct(data as unknown as ProductRow) : null
