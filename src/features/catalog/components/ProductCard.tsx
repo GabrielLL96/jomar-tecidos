@@ -25,6 +25,8 @@ export function ProductCard({ product, variant = 'light' }: ProductCardProps) {
       <Link to={`/tecidos/${product.slug}`}>
         <ImagePlaceholder
           colors={product.colors}
+          src={product.images[0]?.url}
+          alt={product.name}
           className={cn('h-[190px] rounded-sm md:h-[210px]', outOfStock && 'opacity-60')}
         >
           {outOfStock ? (

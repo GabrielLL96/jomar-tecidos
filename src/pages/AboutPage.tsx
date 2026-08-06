@@ -1,7 +1,8 @@
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
-import { BUSINESS } from '@/lib/constants'
+import { useBusinessInfo } from '@/features/site-settings/hooks'
 
 export function AboutPage() {
+  const business = useBusinessInfo()
   return (
     <main>
       <ImagePlaceholder colors={['#131047', '#1c1a5e']} className="flex h-[280px] items-center justify-center">
@@ -13,7 +14,7 @@ export function AboutPage() {
 
         <div className="mx-auto flex w-full max-w-(--breakpoint-sm) flex-col gap-5 px-6 md:px-8">
           <p className="text-base leading-relaxed text-[#3a352b]">
-            A <strong>{BUSINESS.name}</strong> é uma loja especializada em tecidos finos e enxovais de
+            A <strong>{business.name}</strong> é uma loja especializada em tecidos finos e enxovais de
             qualidade, localizada em Minas Gerais. Com tradição no mercado têxtil, oferecemos uma vasta
             seleção de tecidos nacionais e importados para todos os gostos e necessidades.
           </p>

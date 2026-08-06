@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
+import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +21,7 @@ import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { CATEGORY_DISPLAY } from '@/features/catalog/data'
 import { useCompositions } from '@/features/catalog/hooks'
+import { uploadProductImage } from '@/features/catalog/productImagesQueries'
 
 const decimalPtBR = (val: unknown) => (typeof val === 'string' ? val.replace(',', '.') : val)
 
@@ -31,6 +33,12 @@ const productFormSchema = z.object({
   stockMeters: z.preprocess(decimalPtBR, z.coerce.number().min(0, 'Informe o estoque inicial')),
   description: z.string().optional(),
 })
+
+const TAG_OPTIONS = [
+  { value: 'none', label: 'Nenhum' },
+  { value: 'Novo', label: 'Novo' },
+  { value: 'Premium', label: 'Premium' },
+] as const
 
 type ProductFormInput = z.input<typeof productFormSchema>
 type ProductFormOutput = z.output<typeof productFormSchema>
@@ -70,6 +78,9 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
 
   const [compositionPct, setCompositionPct] = useState<Record<string, number>>({})
   const [selectedColors, setSelectedColors] = useState<string[]>([])
+  const [tag, setTag] = useState<(typeof TAG_OPTIONS)[number]['value']>('none')
+  const [isBestseller, setIsBestseller] = useState(false)
+  const [pendingImages, setPendingImages] = useState<File[]>([])
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
@@ -77,6 +88,9 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
       reset()
       setCompositionPct({})
       setSelectedColors([])
+      setTag('none')
+      setIsBestseller(false)
+      setPendingImages([])
     }
   }, [open, reset])
 
@@ -96,6 +110,14 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
   }
 
   const compositionTotal = Object.values(compositionPct).reduce((total, pct) => total + pct, 0)
+
+  const pendingImageUrls = useMemo(
+    () => pendingImages.map((file) => URL.createObjectURL(file)),
+    [pendingImages],
+  )
+  useEffect(() => {
+    return () => pendingImageUrls.forEach((url) => URL.revokeObjectURL(url))
+  }, [pendingImageUrls])
 
   const onSubmit = async (data: ProductFormOutput) => {
     const compositionIds = Object.keys(compositionPct)
@@ -127,6 +149,8 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
           stock_meters: data.stockMeters,
           min_sale_meters: 0.5,
           status: data.stockMeters > 0 ? 'active' : 'out_of_stock',
+          tag: tag === 'none' ? null : tag,
+          is_bestseller: isBestseller,
         })
         .select('id')
         .single()
@@ -149,6 +173,10 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
         })),
       )
       if (colorsError) throw new Error(colorsError.message)
+
+      for (let index = 0; index < pendingImages.length; index += 1) {
+        await uploadProductImage(created.id, pendingImages[index], index)
+      }
 
       await queryClient.invalidateQueries({ queryKey: ['products'] })
       await queryClient.invalidateQueries({ queryKey: ['categories'] })
@@ -269,6 +297,72 @@ export function AdminProductModal({ open, onOpenChange }: AdminProductModalProps
                   )}
                 />
               ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label>Selo</Label>
+              <Select value={tag} onValueChange={(value) => setTag(value as typeof tag)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TAG_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>Destaque</Label>
+              <label className="border-input flex h-9 cursor-pointer items-center gap-2 rounded-md border px-3 text-[13px]">
+                <input
+                  type="checkbox"
+                  checked={isBestseller}
+                  onChange={(event) => setIsBestseller(event.target.checked)}
+                />
+                Mais vendido
+              </label>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label>Imagens do produto</Label>
+            <div className="flex flex-wrap gap-2.5">
+              {pendingImages.map((file, index) => (
+                <div key={`${file.name}-${index}`} className="relative size-16 shrink-0">
+                  <img
+                    src={pendingImageUrls[index]}
+                    alt=""
+                    className="size-16 rounded-sm border border-[#e4ddd0] object-cover"
+                  />
+                  <button
+                    type="button"
+                    aria-label="Remover imagem"
+                    onClick={() => setPendingImages((current) => current.filter((_, i) => i !== index))}
+                    className="bg-foreground absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full text-white"
+                  >
+                    <X className="size-3" />
+                  </button>
+                </div>
+              ))}
+              <label className="flex size-16 shrink-0 cursor-pointer items-center justify-center rounded-sm border border-dashed border-[#d8d0c0] text-[11px] text-[#a39a8c]">
+                + Adicionar
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  multiple
+                  className="hidden"
+                  onChange={(event) => {
+                    const files = Array.from(event.target.files ?? [])
+                    setPendingImages((current) => [...current, ...files])
+                    event.target.value = ''
+                  }}
+                />
+              </label>
             </div>
           </div>
 

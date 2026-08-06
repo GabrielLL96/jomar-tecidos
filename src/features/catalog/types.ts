@@ -14,6 +14,12 @@ export interface ColorOption {
   hex: string
 }
 
+export interface ProductImage {
+  id: string
+  url: string
+  sortOrder: number
+}
+
 export type ProductStatus = 'active' | 'low_stock' | 'out_of_stock' | 'draft'
 
 export interface Product {
@@ -29,9 +35,11 @@ export interface Product {
   minSaleMeters: number
   status: ProductStatus
   tag?: 'Novo' | 'Premium'
+  isBestseller: boolean
   colors: [string, string]
   description: string
   colorOptions: ColorOption[]
+  images: ProductImage[]
 }
 
 export interface CategoryCard {
@@ -39,6 +47,7 @@ export interface CategoryCard {
   name: string
   tag: string
   colors: [string, string]
+  imageUrl?: string
   count: number
 }
 

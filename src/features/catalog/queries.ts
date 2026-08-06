@@ -4,7 +4,7 @@ import { CATEGORY_DISPLAY } from './data'
 import type { CategoryCard, Composition, Product, Review } from './types'
 
 const PRODUCT_SELECT =
-  '*, product_compositions(percentage, compositions(id, name)), product_colors(id, label, hex), product_images(url, sort_order)'
+  '*, product_compositions(percentage, compositions(id, name)), product_colors(id, label, hex), product_images(id, url, sort_order)'
 
 const COMPOSITION_ORDER = [
   'Linhos',
@@ -30,12 +30,17 @@ type ProductRow = {
   min_sale_meters: number | string
   status: Product['status']
   tag: string | null
+  is_bestseller: boolean
   product_compositions: { percentage: number; compositions: { id: string; name: string } }[]
   product_colors: { id: string; label: string; hex: string }[]
+  product_images: { id: string; url: string; sort_order: number }[]
 }
 
 function adaptProduct(row: ProductRow): Product {
   const placeholderColors = CATEGORY_DISPLAY[row.category_slug]?.colors ?? ['#e4ddd0', '#d8d0c0']
+  const images = [...row.product_images]
+    .sort((a, b) => a.sort_order - b.sort_order)
+    .map((image) => ({ id: image.id, url: image.url, sortOrder: image.sort_order }))
   return {
     id: row.id,
     sku: row.sku,
@@ -52,9 +57,11 @@ function adaptProduct(row: ProductRow): Product {
     minSaleMeters: Number(row.min_sale_meters),
     status: row.status,
     tag: row.tag === 'Novo' || row.tag === 'Premium' ? row.tag : undefined,
+    isBestseller: row.is_bestseller,
     colors: placeholderColors,
     description: row.description,
     colorOptions: row.product_colors.map((c) => ({ id: c.id, label: c.label, hex: c.hex })),
+    images,
   }
 }
 

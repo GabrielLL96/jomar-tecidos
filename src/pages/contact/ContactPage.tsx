@@ -6,10 +6,11 @@ import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { BUSINESS } from '@/lib/constants'
+import { useBusinessInfo } from '@/features/site-settings/hooks'
 import { contactSchema, type ContactInput } from './schema'
 
 export function ContactPage() {
+  const business = useBusinessInfo()
   const {
     register,
     handleSubmit,
@@ -56,19 +57,19 @@ export function ContactPage() {
             <div className="text-navy-dark mb-1.5 flex items-center gap-2 text-xs font-semibold tracking-[0.06em] uppercase">
               <Phone className="size-3.5" /> Telefone
             </div>
-            <div className="text-base text-[#3a352b]">{BUSINESS.phone}</div>
+            <div className="text-base text-[#3a352b]">{business.phone}</div>
           </div>
           <div>
             <div className="text-navy-dark mb-1.5 flex items-center gap-2 text-xs font-semibold tracking-[0.06em] uppercase">
               <MapPin className="size-3.5" /> Endereço
             </div>
-            <div className="text-base text-[#3a352b]">{BUSINESS.address}</div>
+            <div className="text-base text-[#3a352b]">{business.address}</div>
           </div>
           <div>
             <div className="text-navy-dark mb-1.5 flex items-center gap-2 text-xs font-semibold tracking-[0.06em] uppercase">
               <Clock className="size-3.5" /> Horário
             </div>
-            <div className="text-base text-[#3a352b]">{BUSINESS.hours}</div>
+            <div className="text-base text-[#3a352b]">{business.hours}</div>
           </div>
           <ImagePlaceholder
             colors={['#e9e2d2', '#ded4bb']}

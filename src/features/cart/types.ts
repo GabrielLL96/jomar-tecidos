@@ -7,6 +7,7 @@ export interface CartItem {
   colorLabel: string
   colorHex: string
   stripeColors: [string, string]
+  coverImageUrl?: string
   meters: number
   pricePerMeter: number
 }

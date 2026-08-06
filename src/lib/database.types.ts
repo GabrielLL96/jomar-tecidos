@@ -520,6 +520,7 @@ export type Database = {
           description: string
           id: string
           image_url: string | null
+          is_bestseller: boolean
           min_sale_meters: number
           name: string
           price_per_meter: number
@@ -537,6 +538,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string | null
+          is_bestseller?: boolean
           min_sale_meters?: number
           name: string
           price_per_meter: number
@@ -554,6 +556,7 @@ export type Database = {
           description?: string
           id?: string
           image_url?: string | null
+          is_bestseller?: boolean
           min_sale_meters?: number
           name?: string
           price_per_meter?: number

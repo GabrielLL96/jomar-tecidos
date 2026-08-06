@@ -1,10 +1,11 @@
 import { MessageCircle } from 'lucide-react'
-import { BUSINESS } from '@/lib/constants'
+import { useBusinessInfo } from '@/features/site-settings/hooks'
 
 export function WhatsAppButton() {
+  const business = useBusinessInfo()
   return (
     <a
-      href={BUSINESS.whatsappHref}
+      href={business.whatsappHref}
       title="Fale conosco no WhatsApp"
       target="_blank"
       rel="noreferrer"

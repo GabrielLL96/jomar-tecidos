@@ -1,13 +1,15 @@
 import { Link } from 'react-router-dom'
 import { CreditCard, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Truck } from 'lucide-react'
-import { BUSINESS, TRUST_BADGES } from '@/lib/constants'
+import { TRUST_BADGES } from '@/lib/constants'
 import { InstagramIcon } from '@/components/common/InstagramIcon'
+import { useBusinessInfo } from '@/features/site-settings/hooks'
 
 const TRUST_ICONS = [Truck, CreditCard, MessageCircle, ShieldCheck]
 
 const inertLinkClass = 'text-[#c9c5e2]'
 
 export function Footer() {
+  const business = useBusinessInfo()
   return (
     <footer className="bg-navy-dark mt-auto text-[#c9c5e2]">
       <div className="mx-auto grid max-w-(--breakpoint-xl) grid-cols-2 gap-8 px-6 py-10 md:grid-cols-4 md:px-12">
@@ -55,31 +57,31 @@ export function Footer() {
 
         <div>
           <div className="mb-4 font-serif text-base font-semibold text-white">Contato</div>
-          <div className="mb-2.5 text-sm font-semibold text-white">{BUSINESS.name}</div>
+          <div className="mb-2.5 text-sm font-semibold text-white">{business.name}</div>
           <div className="flex flex-col gap-2 text-sm">
             <span className="flex items-center gap-2">
               <MapPin className="size-3.5 shrink-0" />
-              {BUSINESS.city} · CEP {BUSINESS.zip}
+              {business.city} · CEP {business.zip}
             </span>
             <span className="flex items-center gap-2">
               <Phone className="size-3.5 shrink-0" />
-              {BUSINESS.phone}
+              {business.phone}
             </span>
             <span className="flex min-w-0 items-center gap-2">
               <Mail className="size-3.5 shrink-0" />
-              <span className="break-all">{BUSINESS.email}</span>
+              <span className="break-all">{business.email}</span>
             </span>
           </div>
           <div className="mt-4 flex gap-2.5">
             <a
-              href={BUSINESS.instagramHref}
+              href={business.instagramHref}
               title="Instagram"
               className="flex size-9 items-center justify-center rounded-full border border-[#3a3785]"
             >
               <InstagramIcon className="size-[17px]" />
             </a>
             <a
-              href={BUSINESS.whatsappHref}
+              href={business.whatsappHref}
               title="WhatsApp"
               className="flex size-9 items-center justify-center rounded-full border border-[#3a3785]"
             >
@@ -105,7 +107,7 @@ export function Footer() {
       </div>
 
       <div className="mx-auto flex max-w-(--breakpoint-xl) flex-wrap items-center justify-between gap-3 border-t border-[#2a2778] px-6 py-5 text-xs text-[#8b86b8] md:px-12">
-        <span>© {new Date().getFullYear()} {BUSINESS.name}. Todos os direitos reservados.</span>
+        <span>© {new Date().getFullYear()} {business.name}. Todos os direitos reservados.</span>
         <span className="tracking-[0.04em]">
           SITE DESENVOLVIDO POR: <strong className="text-[#c9c5e2]">GPM Grupo Pedro Matos Tecnologia</strong>
         </span>

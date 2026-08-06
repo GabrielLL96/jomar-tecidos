@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatPriceBRL } from '@/lib/format'
-import { BUSINESS } from '@/lib/constants'
 import { supabase } from '@/lib/supabase'
+import { useBusinessInfo } from '@/features/site-settings/hooks'
 import { useCart } from '@/features/cart/CartContext'
 import { useAddresses } from '@/features/account/AddressesContext'
 import { useOrders } from '@/features/orders/OrdersContext'
@@ -21,13 +21,14 @@ export function CheckoutPage() {
   const { items, subtotal, clear } = useCart()
   const { addOrFindAddress } = useAddresses()
   const { createOrder } = useOrders()
+  const business = useBusinessInfo()
   const navigate = useNavigate()
 
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
   const [couponError, setCouponError] = useState<string | null>(null)
 
-  const shipping = subtotal >= BUSINESS.freeShippingThreshold ? 0 : BUSINESS.flatShippingFee
+  const shipping = subtotal >= business.freeShippingThreshold ? 0 : business.flatShippingFee
   const discount = appliedCoupon ? calculateDiscount(appliedCoupon, subtotal, shipping) : 0
   const total = subtotal + shipping - discount
 

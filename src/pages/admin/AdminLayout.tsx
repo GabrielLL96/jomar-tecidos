@@ -1,17 +1,22 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, LogOut, Package, Search } from 'lucide-react'
+import { LayoutDashboard, LogOut, Package, Search, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
 
 const ADMIN_NAV = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/admin/produtos', label: 'Produtos', icon: Package, end: false },
+  { to: '/admin/configuracoes', label: 'Configurações', icon: Settings, end: false },
 ] as const
 
 const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   '/admin': { title: 'Resumo', subtitle: 'Visão geral do negócio hoje' },
   '/admin/produtos': { title: 'Produtos', subtitle: 'Gerencie o catálogo de tecidos e aviamentos' },
+  '/admin/configuracoes': {
+    title: 'Configurações',
+    subtitle: 'Conteúdo da home, categorias e informações de contato',
+  },
 }
 
 export function AdminLayout() {

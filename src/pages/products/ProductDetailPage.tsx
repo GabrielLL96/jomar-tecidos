@@ -22,6 +22,7 @@ export function ProductDetailPage() {
   const { isFavorite, toggleFavorite } = useFavorites()
 
   const [selectedColorIdx, setSelectedColorIdx] = useState(0)
+  const [selectedImageIdx, setSelectedImageIdx] = useState(0)
   const [meters, setMeters] = useState(2)
 
   if (isLoading) return null
@@ -54,6 +55,7 @@ export function ProductDetailPage() {
       colorLabel: selectedColor.label,
       colorHex: selectedColor.hex,
       stripeColors: product.colors,
+      coverImageUrl: product.images[0]?.url,
       meters,
       pricePerMeter: product.pricePerMeter,
     })
@@ -70,8 +72,28 @@ export function ProductDetailPage() {
         <div>
           <ImagePlaceholder
             colors={[selectedColor.hex, product.colors[1]]}
+            src={product.images[selectedImageIdx]?.url}
+            alt={product.name}
             className="mb-3.5 h-[420px] rounded-sm md:h-[480px]"
           />
+          {product.images.length > 1 && (
+            <div className="mb-3.5 flex gap-2.5">
+              {product.images.map((image, index) => (
+                <button
+                  key={image.id}
+                  type="button"
+                  aria-label={`Ver imagem ${index + 1}`}
+                  onClick={() => setSelectedImageIdx(index)}
+                  className={cn(
+                    'size-16 shrink-0 overflow-hidden rounded-sm',
+                    index === selectedImageIdx ? 'ring-navy ring-2 ring-offset-2' : 'ring-input ring-1',
+                  )}
+                >
+                  <img src={image.url} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex gap-3">
             {product.colorOptions.map((option, index) => (
               <button

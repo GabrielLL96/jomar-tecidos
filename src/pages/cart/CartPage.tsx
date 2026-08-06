@@ -3,14 +3,15 @@ import { Minus, Plus } from 'lucide-react'
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { Button } from '@/components/ui/button'
 import { formatPriceBRL } from '@/lib/format'
-import { BUSINESS } from '@/lib/constants'
+import { useBusinessInfo } from '@/features/site-settings/hooks'
 import { useCart } from '@/features/cart/CartContext'
 
 export function CartPage() {
   const { items, subtotal, updateMeters, removeItem } = useCart()
+  const business = useBusinessInfo()
   const navigate = useNavigate()
 
-  const shipping = subtotal >= BUSINESS.freeShippingThreshold ? 0 : BUSINESS.flatShippingFee
+  const shipping = subtotal >= business.freeShippingThreshold ? 0 : business.flatShippingFee
   const total = subtotal + shipping
 
   if (items.length === 0) {
@@ -34,7 +35,12 @@ export function CartPage() {
         <div>
           {items.map((item) => (
             <div key={item.id} className="border-border flex gap-5 border-b py-5">
-              <ImagePlaceholder colors={item.stripeColors} className="size-24 shrink-0 rounded-sm" />
+              <ImagePlaceholder
+                colors={item.stripeColors}
+                src={item.coverImageUrl}
+                alt={item.name}
+                className="size-24 shrink-0 rounded-sm"
+              />
               <div className="flex-1">
                 <div className="flex justify-between">
                   <div>

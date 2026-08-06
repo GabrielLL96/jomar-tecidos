@@ -1,13 +1,17 @@
 import { useMemo, useState } from 'react'
+import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { formatPriceBRL } from '@/lib/format'
+import { supabase } from '@/lib/supabase'
 import { useCompositions, useProducts } from '@/features/catalog/hooks'
 import { formatCompositionLabel } from '@/features/catalog/utils'
-import type { ProductStatus } from '@/features/catalog/types'
+import type { Product, ProductStatus } from '@/features/catalog/types'
 import { AdminProductModal } from './AdminProductModal'
+import { ProductImagesModal } from './ProductImagesModal'
 
 const STATUS_LABELS: Record<ProductStatus, string> = {
   active: 'Ativo',
@@ -26,14 +30,40 @@ const STATUS_STYLES: Record<ProductStatus, string> = {
 export function AdminProductsPage() {
   const { data: products = [], isLoading } = useProducts()
   const { data: compositions = [] } = useCompositions()
+  const queryClient = useQueryClient()
   const [search, setSearch] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
+  const [imagesModalProduct, setImagesModalProduct] = useState<Product | null>(null)
 
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase()
     if (!query) return products
     return products.filter((product) => product.name.toLowerCase().includes(query))
   }, [products, search])
+
+  const toggleNew = async (product: Product) => {
+    const { error } = await supabase
+      .from('products')
+      .update({ tag: product.tag === 'Novo' ? null : 'Novo' })
+      .eq('id', product.id)
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+    await queryClient.invalidateQueries({ queryKey: ['products'] })
+  }
+
+  const toggleBestseller = async (product: Product) => {
+    const { error } = await supabase
+      .from('products')
+      .update({ is_bestseller: !product.isBestseller })
+      .eq('id', product.id)
+    if (error) {
+      toast.error(error.message)
+      return
+    }
+    await queryClient.invalidateQueries({ queryKey: ['products'] })
+  }
 
   return (
     <div>
@@ -57,18 +87,26 @@ export function AdminProductsPage() {
               <TableHead>Preço/m</TableHead>
               <TableHead>Estoque</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Novo</TableHead>
+              <TableHead>Mais vendido</TableHead>
+              <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6}>Carregando…</TableCell>
+                <TableCell colSpan={9}>Carregando…</TableCell>
               </TableRow>
             ) : (
               filteredProducts.map((product) => (
                 <TableRow key={product.id}>
                   <TableCell>
-                    <ImagePlaceholder colors={product.colors} className="size-10 rounded-sm" />
+                    <ImagePlaceholder
+                      colors={product.colors}
+                      src={product.images[0]?.url}
+                      alt={product.name}
+                      className="size-10 rounded-sm"
+                    />
                   </TableCell>
                   <TableCell>{product.name}</TableCell>
                   <TableCell>{formatCompositionLabel(product.compositions, compositions)}</TableCell>
@@ -81,6 +119,25 @@ export function AdminProductsPage() {
                       {STATUS_LABELS[product.status]}
                     </span>
                   </TableCell>
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={product.tag === 'Novo'}
+                      onChange={() => toggleNew(product)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={product.isBestseller}
+                      onChange={() => toggleBestseller(product)}
+                    />
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="outline" size="sm" onClick={() => setImagesModalProduct(product)}>
+                      Imagens
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             )}
@@ -89,6 +146,10 @@ export function AdminProductsPage() {
       </div>
 
       <AdminProductModal open={modalOpen} onOpenChange={setModalOpen} />
+      <ProductImagesModal
+        product={imagesModalProduct}
+        onOpenChange={(open) => !open && setImagesModalProduct(null)}
+      />
     </div>
   )
 }
