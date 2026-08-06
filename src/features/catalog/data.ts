@@ -9,3 +9,11 @@ export const CATEGORY_DISPLAY: Record<string, { tag: string; colors: [string, st
 export const PRODUCT_CARE_DEFAULT = 'Lavar a frio, não usar alvejante, secar à sombra.'
 export const PRODUCT_DELIVERY_DEFAULT =
   'Envio em até 2 dias úteis. Corte sob medida — sem devolução após o corte.'
+
+export const MAX_PRODUCT_IMAGES = 3
+
+/** Corta `incoming` para caber no limite de `MAX_PRODUCT_IMAGES`, considerando `currentCount` já existente. */
+export function limitProductImageSelection(currentCount: number, incoming: File[]) {
+  const remaining = Math.max(0, MAX_PRODUCT_IMAGES - currentCount)
+  return { accepted: incoming.slice(0, remaining), rejectedCount: Math.max(0, incoming.length - remaining) }
+}

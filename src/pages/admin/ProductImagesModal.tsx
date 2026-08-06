@@ -1,9 +1,11 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { ArrowDown, ArrowUp, Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { cn } from '@/lib/utils'
+import { limitProductImageSelection, MAX_PRODUCT_IMAGES } from '@/features/catalog/data'
 import {
   deleteProductImage,
   reorderProductImages,
@@ -18,7 +20,6 @@ interface ProductImagesModalProps {
 
 export function ProductImagesModal({ product, onOpenChange }: ProductImagesModalProps) {
   const queryClient = useQueryClient()
-  const inputRef = useRef<HTMLInputElement>(null)
   const [images, setImages] = useState<ProductImage[]>(product?.images ?? [])
   const [isUploading, setIsUploading] = useState(false)
   const [loadedProductId, setLoadedProductId] = useState(product?.id)
@@ -31,9 +32,19 @@ export function ProductImagesModal({ product, onOpenChange }: ProductImagesModal
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['products'] })
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files ?? [])
+    const selected = Array.from(event.target.files ?? [])
     event.target.value = ''
-    if (!product || files.length === 0) return
+    if (!product || selected.length === 0) return
+
+    const { accepted: files, rejectedCount } = limitProductImageSelection(images.length, selected)
+    if (rejectedCount > 0) {
+      toast.error(
+        files.length === 0
+          ? `Limite de ${MAX_PRODUCT_IMAGES} imagens por produto atingido`
+          : `Só ${files.length} imagem(ns) enviada(s) — limite de ${MAX_PRODUCT_IMAGES} imagens por produto`,
+      )
+    }
+    if (files.length === 0) return
 
     setIsUploading(true)
     try {
@@ -85,6 +96,9 @@ export function ProductImagesModal({ product, onOpenChange }: ProductImagesModal
       <DialogContent className="max-w-[560px]">
         <DialogHeader>
           <DialogTitle className="font-serif text-xl">Imagens — {product?.name}</DialogTitle>
+          <p className="text-text-meta text-xs">
+            {images.length}/{MAX_PRODUCT_IMAGES} imagens
+          </p>
         </DialogHeader>
 
         <div className="flex flex-col gap-3">
@@ -125,22 +139,29 @@ export function ProductImagesModal({ product, onOpenChange }: ProductImagesModal
             ))
           )}
 
-          <Button
-            type="button"
-            variant="outline"
-            disabled={isUploading}
-            onClick={() => inputRef.current?.click()}
-          >
-            {isUploading ? <Loader2 className="size-4 animate-spin" /> : 'Adicionar imagens'}
-          </Button>
-          <input
-            ref={inputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            multiple
-            className="hidden"
-            onChange={handleUpload}
-          />
+          {images.length >= MAX_PRODUCT_IMAGES ? (
+            <p className="text-text-meta text-xs">
+              Limite de {MAX_PRODUCT_IMAGES} imagens por produto atingido — remova uma pra adicionar outra.
+            </p>
+          ) : (
+            <label
+              className={cn(
+                buttonVariants({ variant: 'outline' }),
+                'cursor-pointer',
+                isUploading && 'pointer-events-none opacity-50',
+              )}
+            >
+              {isUploading ? <Loader2 className="size-4 animate-spin" /> : 'Adicionar imagens'}
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                multiple
+                disabled={isUploading}
+                className="hidden"
+                onChange={handleUpload}
+              />
+            </label>
+          )}
         </div>
 
         <DialogFooter className="border-t border-[#ede8de] pt-5">

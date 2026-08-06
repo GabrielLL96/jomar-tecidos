@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { extractStoragePath } from '@/lib/utils'
 import type { ProductImage } from './types'
 
 const BUCKET = 'product-images'
@@ -9,12 +10,6 @@ function sanitizeFileName(name: string) {
     .normalize('NFD')
     .replace(new RegExp('[̀-ͯ]', 'g'), '')
     .replace(/[^a-z0-9.]+/g, '-')
-}
-
-function extractStoragePath(url: string): string | null {
-  const marker = `/object/public/${BUCKET}/`
-  const index = url.indexOf(marker)
-  return index === -1 ? null : url.slice(index + marker.length)
 }
 
 export async function uploadProductImage(
@@ -42,7 +37,7 @@ export async function deleteProductImage(image: ProductImage): Promise<void> {
   const { error: deleteRowError } = await supabase.from('product_images').delete().eq('id', image.id)
   if (deleteRowError) throw new Error(deleteRowError.message)
 
-  const path = extractStoragePath(image.url)
+  const path = extractStoragePath(BUCKET, image.url)
   if (path) await supabase.storage.from(BUCKET).remove([path])
 }
 

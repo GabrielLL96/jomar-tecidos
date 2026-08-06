@@ -1,16 +1,15 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { ImageUp, Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
-import { cn } from '@/lib/utils'
+import { cn, extractStoragePath } from '@/lib/utils'
 
 interface ImageUploadFieldProps {
   bucket: 'product-images' | 'site-images'
   pathPrefix: string
   value?: string | null
   onChange: (url: string) => void
-  onRemove?: () => void
   disabled?: boolean
   className?: string
 }
@@ -28,12 +27,11 @@ export function ImageUploadField({
   pathPrefix,
   value,
   onChange,
-  onRemove,
   disabled,
   className,
 }: ImageUploadFieldProps) {
-  const inputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const [isRemoving, setIsRemoving] = useState(false)
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -47,11 +45,36 @@ export function ImageUploadField({
       if (error) throw new Error(error.message)
 
       const { data } = supabase.storage.from(bucket).getPublicUrl(path)
+      const previousValue = value
       onChange(data.publicUrl)
+
+      // best-effort: a troca já está confirmada (onChange já rodou), não bloquear
+      // nem reportar erro ao usuário se a imagem antiga não puder ser removida.
+      if (previousValue) {
+        const oldPath = extractStoragePath(bucket, previousValue)
+        if (oldPath) await supabase.storage.from(bucket).remove([oldPath])
+      }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível enviar a imagem')
     } finally {
       setIsUploading(false)
+    }
+  }
+
+  const handleRemove = async () => {
+    if (!value) return
+    setIsRemoving(true)
+    try {
+      const path = extractStoragePath(bucket, value)
+      if (path) {
+        const { error } = await supabase.storage.from(bucket).remove([path])
+        if (error) throw new Error(error.message)
+      }
+      onChange('')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível remover a imagem')
+    } finally {
+      setIsRemoving(false)
     }
   }
 
@@ -67,28 +90,34 @@ export function ImageUploadField({
         </div>
       )}
       <div className="flex gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={disabled || isUploading}
-          onClick={() => inputRef.current?.click()}
+        <label
+          className={cn(
+            buttonVariants({ variant: 'outline', size: 'sm' }),
+            'cursor-pointer',
+            (disabled || isUploading || isRemoving) && 'pointer-events-none opacity-50',
+          )}
         >
           {isUploading ? <Loader2 className="size-4 animate-spin" /> : value ? 'Trocar' : 'Enviar imagem'}
-        </Button>
-        {value && onRemove && (
-          <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={onRemove}>
-            <X className="size-4" />
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            disabled={disabled || isUploading || isRemoving}
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </label>
+        {value && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled || isUploading || isRemoving}
+            onClick={handleRemove}
+          >
+            {isRemoving ? <Loader2 className="size-4 animate-spin" /> : <X className="size-4" />}
           </Button>
         )}
       </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        className="hidden"
-        onChange={handleFileChange}
-      />
     </div>
   )
 }
