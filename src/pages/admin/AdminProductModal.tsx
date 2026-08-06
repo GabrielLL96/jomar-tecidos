@@ -28,7 +28,7 @@ import {
 } from '@/features/catalog/data'
 import { useCompositions } from '@/features/catalog/hooks'
 import { uploadProductImage } from '@/features/catalog/productImagesQueries'
-import { slugify } from '@/features/catalog/utils'
+import { computeStockStatus, slugify } from '@/features/catalog/utils'
 import type { Product } from '@/features/catalog/types'
 
 const decimalPtBR = (val: unknown) => (typeof val === 'string' ? val.replace(',', '.') : val)
@@ -220,7 +220,9 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
                 width_m: data.widthM,
                 stock_meters: data.stockMeters,
                 min_sale_meters: 0.5,
-                status: data.stockMeters > 0 ? 'active' : 'out_of_stock',
+                // produto novo nasce sem min_stock_meters definido (default 0 no
+                // banco) — nunca começa em low_stock, admin define o mínimo depois.
+                status: computeStockStatus('active', data.stockMeters, 0),
                 tag: tag === 'none' ? null : tag,
                 is_bestseller: isBestseller,
               })
@@ -242,12 +244,7 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
             stock_meters: data.stockMeters,
             // status de inativo é controlado só pelo toggle Ativar/Inativar da tabela —
             // editar outros campos nunca deve reativar um produto inativado de propósito.
-            status:
-              product.status === 'draft'
-                ? 'draft'
-                : data.stockMeters > 0
-                  ? 'active'
-                  : 'out_of_stock',
+            status: computeStockStatus(product.status, data.stockMeters, product.minStockMeters),
             tag: tag === 'none' ? null : tag,
             is_bestseller: isBestseller,
           })

@@ -34,6 +34,7 @@ export interface Product {
   widthM: number
   stockMeters: number
   minSaleMeters: number
+  minStockMeters: number
   status: ProductStatus
   tag?: 'Novo' | 'Premium'
   isBestseller: boolean

@@ -1,3 +1,19 @@
+import type { ProductStatus } from './types'
+
+export const STATUS_LABELS: Record<ProductStatus, string> = {
+  active: 'Ativo',
+  low_stock: 'Estoque baixo',
+  out_of_stock: 'Esgotado',
+  draft: 'Rascunho',
+}
+
+export const STATUS_STYLES: Record<ProductStatus, string> = {
+  active: 'bg-[#e2f2e6] text-[#1e7a44]',
+  low_stock: 'bg-[#fbeed4] text-[#a3660a]',
+  out_of_stock: 'bg-[#fbe2df] text-[#b0362b]',
+  draft: 'bg-[#ede8de] text-[#8c8375]',
+}
+
 export const CATEGORY_DISPLAY: Record<string, { tag: string; colors: [string, string] }> = {
   linhos: { tag: 'linho — puro', colors: ['#eee6d6', '#e0d3b6'] },
   algodoes: { tag: 'algodão — liso', colors: ['#e3ecec', '#cfe0e0'] },

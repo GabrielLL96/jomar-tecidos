@@ -19,6 +19,7 @@ import { AdminLayout } from '@/pages/admin/AdminLayout'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminProductsPage } from '@/pages/admin/AdminProductsPage'
 import { AdminCompositionsPage } from '@/pages/admin/AdminCompositionsPage'
+import { AdminStockPage } from '@/pages/admin/AdminStockPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -49,6 +50,7 @@ function App() {
         <Route index element={<AdminDashboardPage />} />
         <Route path="produtos" element={<AdminProductsPage />} />
         <Route path="composicoes" element={<AdminCompositionsPage />} />
+        <Route path="estoque" element={<AdminStockPage />} />
         <Route path="configuracoes" element={<AdminSettingsPage />} />
       </Route>
     </Routes>

@@ -11,28 +11,15 @@ import { cn } from '@/lib/utils'
 import { formatPriceBRL } from '@/lib/format'
 import { supabase } from '@/lib/supabase'
 import { useAdminProducts, useCompositions } from '@/features/catalog/hooks'
-import { formatCompositionLabel, slugify } from '@/features/catalog/utils'
-import type { Product, ProductStatus } from '@/features/catalog/types'
+import { STATUS_LABELS, STATUS_STYLES } from '@/features/catalog/data'
+import { computeStockStatus, formatCompositionLabel, slugify } from '@/features/catalog/utils'
+import type { Product } from '@/features/catalog/types'
 import { AdminProductModal } from './AdminProductModal'
 import { ProductImagesModal } from './ProductImagesModal'
 
 const ALL_COMPOSITIONS = 'all'
 type SortKey = 'name' | 'price' | 'stock' | 'status'
 type SortDirection = 'asc' | 'desc'
-
-const STATUS_LABELS: Record<ProductStatus, string> = {
-  active: 'Ativo',
-  low_stock: 'Estoque baixo',
-  out_of_stock: 'Esgotado',
-  draft: 'Rascunho',
-}
-
-const STATUS_STYLES: Record<ProductStatus, string> = {
-  active: 'bg-[#e2f2e6] text-[#1e7a44]',
-  low_stock: 'bg-[#fbeed4] text-[#a3660a]',
-  out_of_stock: 'bg-[#fbe2df] text-[#b0362b]',
-  draft: 'bg-[#ede8de] text-[#8c8375]',
-}
 
 export function AdminProductsPage() {
   const { data: products = [], isLoading } = useAdminProducts()
@@ -114,7 +101,9 @@ export function AdminProductsPage() {
 
   const toggleActive = async (product: Product) => {
     const isInactive = product.status === 'draft'
-    const nextStatus = isInactive ? (product.stockMeters > 0 ? 'active' : 'out_of_stock') : 'draft'
+    const nextStatus = isInactive
+      ? computeStockStatus('active', product.stockMeters, product.minStockMeters)
+      : 'draft'
     const { error } = await supabase.from('products').update({ status: nextStatus }).eq('id', product.id)
     if (error) {
       toast.error(error.message)

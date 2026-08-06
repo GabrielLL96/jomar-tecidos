@@ -503,6 +503,7 @@ export type Database = {
           image_url: string | null
           is_bestseller: boolean
           min_sale_meters: number
+          min_stock_meters: number
           name: string
           price_per_meter: number
           sku: string
@@ -521,6 +522,7 @@ export type Database = {
           image_url?: string | null
           is_bestseller?: boolean
           min_sale_meters?: number
+          min_stock_meters?: number
           name: string
           price_per_meter: number
           sku: string
@@ -539,6 +541,7 @@ export type Database = {
           image_url?: string | null
           is_bestseller?: boolean
           min_sale_meters?: number
+          min_stock_meters?: number
           name?: string
           price_per_meter?: number
           sku?: string
@@ -610,6 +613,51 @@ export type Database = {
           value?: string
         }
         Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          id: string
+          performed_by_name: string
+          product_id: string
+          quantity: number
+          reason: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          performed_by_name: string
+          product_id: string
+          quantity: number
+          reason: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          performed_by_name?: string
+          product_id?: string
+          quantity?: number
+          reason?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {

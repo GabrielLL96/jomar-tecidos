@@ -17,6 +17,7 @@ type ProductRow = {
   width_m: number | string
   stock_meters: number | string
   min_sale_meters: number | string
+  min_stock_meters: number | string
   status: Product['status']
   tag: string | null
   is_bestseller: boolean
@@ -44,6 +45,7 @@ function adaptProduct(row: ProductRow): Product {
     widthM: Number(row.width_m),
     stockMeters: Number(row.stock_meters),
     minSaleMeters: Number(row.min_sale_meters),
+    minStockMeters: Number(row.min_stock_meters),
     status: row.status,
     tag: row.tag === 'Novo' || row.tag === 'Premium' ? row.tag : undefined,
     isBestseller: row.is_bestseller,
