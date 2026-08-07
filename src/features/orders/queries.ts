@@ -5,10 +5,10 @@ import type { DeliveryStatus, Order, OrderItem } from './types'
 const ORDER_SELECT = `
   id, order_number, status, payment_method, subtotal, shipping_cost, discount_total, total,
   coupon_id, shipping_address_id, cancel_reason, created_at, user_id,
-  users(name, email),
+  users(name, email, phone),
   addresses(label, street, city, state, zip_code),
   order_items(id, product_id, color_id, meters, unit_price, total, products(name), product_colors(label)),
-  deliveries(id, order_id, carrier, tracking_code, status, eta_date),
+  deliveries(id, order_id, carrier, tracking_code, tracking_url, status, eta_date),
   order_status_history(id, status, changed_by_name, created_at)
 `
 
@@ -26,7 +26,7 @@ interface OrderRow {
   cancel_reason: string | null
   created_at: string
   user_id: string
-  users: { name: string; email: string } | null
+  users: { name: string; email: string; phone: string | null } | null
   addresses: { label: string; street: string; city: string; state: string; zip_code: string } | null
   order_items: {
     id: string
@@ -43,10 +43,11 @@ interface OrderRow {
   deliveries: {
     id: string
     order_id: string
-    carrier: string
-    tracking_code: string
+    carrier: string | null
+    tracking_code: string | null
+    tracking_url: string | null
     status: string
-    eta_date: string
+    eta_date: string | null
   } | null
   order_status_history: {
     id: string
@@ -93,15 +94,17 @@ function adaptOrder(row: OrderRow): Order {
       : undefined,
     customerName: row.users?.name,
     customerEmail: row.users?.email,
+    customerPhone: row.users?.phone ?? undefined,
     items,
     delivery: deliveryRow
       ? {
           id: deliveryRow.id,
           orderId: deliveryRow.order_id,
-          carrier: deliveryRow.carrier,
-          trackingCode: deliveryRow.tracking_code,
+          carrier: deliveryRow.carrier ?? undefined,
+          trackingCode: deliveryRow.tracking_code ?? undefined,
+          trackingUrl: deliveryRow.tracking_url ?? undefined,
           status: deliveryRow.status as DeliveryStatus,
-          etaDate: deliveryRow.eta_date,
+          etaDate: deliveryRow.eta_date ?? undefined,
         }
       : undefined,
     statusHistory: [...row.order_status_history]
@@ -122,6 +125,7 @@ export const adminOrdersQueryOptions = queryOptions({
     const { data, error } = await supabase
       .from('orders')
       .select(ORDER_SELECT)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
     if (error) throw new Error(error.message)
     return (data as unknown as OrderRow[]).map(adaptOrder)
@@ -137,6 +141,7 @@ export const myOrdersQueryOptions = (userId: string) =>
         .from('orders')
         .select(ORDER_SELECT)
         .eq('user_id', userId)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
       if (error) throw new Error(error.message)
       return (data as unknown as OrderRow[]).map(adaptOrder)
@@ -149,7 +154,12 @@ export const orderQueryOptions = (id: string) =>
   queryOptions({
     queryKey: ['orders', id] as const,
     queryFn: async (): Promise<Order | null> => {
-      const { data, error } = await supabase.from('orders').select(ORDER_SELECT).eq('id', id).maybeSingle()
+      const { data, error } = await supabase
+        .from('orders')
+        .select(ORDER_SELECT)
+        .eq('id', id)
+        .is('deleted_at', null)
+        .maybeSingle()
       if (error) throw new Error(error.message)
       return data ? adaptOrder(data as unknown as OrderRow) : null
     },

@@ -45,6 +45,7 @@ export interface Order {
   shippingAddress?: OrderShippingAddress
   customerName?: string
   customerEmail?: string
+  customerPhone?: string
   items: OrderItem[]
   delivery?: Delivery
   statusHistory: OrderStatusHistoryEntry[]
@@ -54,10 +55,11 @@ export interface Order {
 export interface Delivery {
   id: string
   orderId: string
-  carrier: string
-  trackingCode: string
+  carrier?: string
+  trackingCode?: string
+  trackingUrl?: string
   status: DeliveryStatus
-  etaDate: string
+  etaDate?: string
 }
 
 export interface Coupon {

@@ -29,9 +29,10 @@ export function AccountOrdersPage() {
               <div className="text-navy w-20 text-right text-sm font-medium">{formatPriceBRL(order.total)}</div>
             </div>
           </div>
-          {order.delivery && (
+          {order.delivery && (order.delivery.carrier || order.delivery.trackingCode) && (
             <div className="text-text-meta mt-2 text-xs">
-              Rastreio: {order.delivery.carrier} · {order.delivery.trackingCode} ·{' '}
+              Rastreio:{' '}
+              {[order.delivery.carrier, order.delivery.trackingCode].filter(Boolean).join(' · ')} ·{' '}
               {DELIVERY_STATUS_LABELS[order.delivery.status]}
             </div>
           )}

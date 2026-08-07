@@ -218,28 +218,31 @@ export type Database = {
       }
       deliveries: {
         Row: {
-          carrier: string
-          eta_date: string
+          carrier: string | null
+          eta_date: string | null
           id: string
           order_id: string
           status: Database["public"]["Enums"]["delivery_status"]
           tracking_code: string
+          tracking_url: string | null
         }
         Insert: {
-          carrier: string
-          eta_date: string
+          carrier?: string | null
+          eta_date?: string | null
           id?: string
           order_id: string
           status?: Database["public"]["Enums"]["delivery_status"]
           tracking_code: string
+          tracking_url?: string | null
         }
         Update: {
-          carrier?: string
-          eta_date?: string
+          carrier?: string | null
+          eta_date?: string | null
           id?: string
           order_id?: string
           status?: Database["public"]["Enums"]["delivery_status"]
           tracking_code?: string
+          tracking_url?: string | null
         }
         Relationships: [
           {
@@ -373,6 +376,7 @@ export type Database = {
           cancel_reason: string | null
           coupon_id: string | null
           created_at: string
+          deleted_at: string | null
           discount_total: number
           id: string
           order_number: string
@@ -388,6 +392,7 @@ export type Database = {
           cancel_reason?: string | null
           coupon_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           discount_total?: number
           id?: string
           order_number?: string
@@ -403,6 +408,7 @@ export type Database = {
           cancel_reason?: string | null
           coupon_id?: string | null
           created_at?: string
+          deleted_at?: string | null
           discount_total?: number
           id?: string
           order_number?: string
@@ -773,6 +779,7 @@ export type Database = {
         Args: { p_coupon_id: string }
         Returns: undefined
       }
+      delete_order: { Args: { p_order_id: string }; Returns: undefined }
       increment_coupon_usage: {
         Args: { p_coupon_id: string }
         Returns: undefined

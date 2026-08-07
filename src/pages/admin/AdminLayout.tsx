@@ -59,7 +59,10 @@ export function AdminLayout() {
 
   if (isLoading || !user || user.role !== 'admin') return null
 
-  const meta = PAGE_META[location.pathname] ?? PAGE_META['/admin']
+  const meta =
+    PAGE_META[location.pathname] ??
+    (location.pathname.startsWith('/admin/vendas/') ? PAGE_META['/admin/vendas'] : undefined) ??
+    PAGE_META['/admin']
 
 
   const handleLogout = async () => {
