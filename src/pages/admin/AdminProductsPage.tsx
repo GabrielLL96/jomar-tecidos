@@ -4,8 +4,21 @@ import { useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { cn } from '@/lib/utils'
 import { formatPriceBRL } from '@/lib/format'
@@ -104,7 +117,10 @@ export function AdminProductsPage() {
     const nextStatus = isInactive
       ? computeStockStatus('active', product.stockMeters, product.minStockMeters)
       : 'draft'
-    const { error } = await supabase.from('products').update({ status: nextStatus }).eq('id', product.id)
+    const { error } = await supabase
+      .from('products')
+      .update({ status: nextStatus })
+      .eq('id', product.id)
     if (error) {
       toast.error(error.message)
       return
@@ -150,9 +166,15 @@ export function AdminProductsPage() {
       }
 
       if (product.colorOptions.length > 0) {
-        const { error: colorsError } = await supabase.from('product_colors').insert(
-          product.colorOptions.map((c) => ({ product_id: created.id, label: c.label, hex: c.hex })),
-        )
+        const { error: colorsError } = await supabase
+          .from('product_colors')
+          .insert(
+            product.colorOptions.map((c) => ({
+              product_id: created.id,
+              label: c.label,
+              hex: c.hex,
+            })),
+          )
         if (colorsError) throw new Error(colorsError.message)
       }
 
@@ -191,10 +213,7 @@ export function AdminProductsPage() {
       <button
         type="button"
         onClick={() => toggleSort(key)}
-        className={cn(
-          'flex items-center gap-1 font-medium',
-          sort?.key === key && 'text-navy-dark',
-        )}
+        className={cn('flex items-center gap-1 font-medium', sort?.key === key && 'text-navy-dark')}
       >
         {label}
         {sortIcon(key)}
@@ -210,10 +229,10 @@ export function AdminProductsPage() {
             placeholder="Buscar produto…"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="w-full sm:w-[260px]"
+            className="w-full bg-white sm:w-[260px]"
           />
           <Select value={compositionFilter} onValueChange={setCompositionFilter}>
-            <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectTrigger className="w-full bg-white sm:w-[200px]">
               <SelectValue placeholder="Todas composições" />
             </SelectTrigger>
             <SelectContent>
@@ -280,7 +299,9 @@ export function AdminProductsPage() {
                       />
                     </TableCell>
                     <TableCell>{product.name}</TableCell>
-                    <TableCell>{formatCompositionLabel(product.compositions, compositions)}</TableCell>
+                    <TableCell>
+                      {formatCompositionLabel(product.compositions, compositions)}
+                    </TableCell>
                     <TableCell>{formatPriceBRL(product.pricePerMeter)}</TableCell>
                     <TableCell>{product.stockMeters} m</TableCell>
                     <TableCell>
@@ -309,7 +330,11 @@ export function AdminProductsPage() {
                         <Button variant="outline" size="sm" onClick={() => openEditModal(product)}>
                           Editar
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => setImagesModalProduct(product)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setImagesModalProduct(product)}
+                        >
                           Imagens
                         </Button>
                         <Button

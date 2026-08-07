@@ -5,9 +5,28 @@ import { AlertTriangle, Download } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/features/auth/AuthContext'
@@ -20,18 +39,27 @@ import type { Product } from '@/features/catalog/types'
 const ALL_COMPOSITIONS = 'all'
 const ALL_STATUSES = 'all'
 const NEEDS_RESTOCK = 'needs_restock'
-type StatusFilter = typeof ALL_STATUSES | typeof NEEDS_RESTOCK | 'low_stock' | 'out_of_stock' | 'active'
+type StatusFilter =
+  typeof ALL_STATUSES | typeof NEEDS_RESTOCK | 'low_stock' | 'out_of_stock' | 'active'
 
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+})
 
-function toCSV(rows: Product[], compositions: Parameters<typeof formatCompositionLabel>[1]): string {
+function toCSV(
+  rows: Product[],
+  compositions: Parameters<typeof formatCompositionLabel>[1],
+): string {
   const escape = (value: string) => `"${value.replace(/"/g, '""')}"`
   const header = ['Produto', 'SKU', 'Composição', 'Estoque (m)', 'Estoque mínimo (m)', 'Status']
   const lines = rows.map((product) =>
     [
       product.name,
       product.sku,
-      product.compositions.length > 0 ? formatCompositionLabel(product.compositions, compositions) : '',
+      product.compositions.length > 0
+        ? formatCompositionLabel(product.compositions, compositions)
+        : '',
       String(product.stockMeters),
       String(product.minStockMeters),
       STATUS_LABELS[product.status],
@@ -129,7 +157,11 @@ export function AdminStockPage() {
 
     setIsAdjusting(true)
     try {
-      const newStatus = computeStockStatus(adjustingProduct.status, newStock, adjustingProduct.minStockMeters)
+      const newStatus = computeStockStatus(
+        adjustingProduct.status,
+        newStock,
+        adjustingProduct.minStockMeters,
+      )
       const { error: productError } = await supabase
         .from('products')
         .update({ stock_meters: newStock, status: newStatus })
@@ -188,7 +220,8 @@ export function AdminStockPage() {
           className="mb-[18px] flex w-full items-center gap-2.5 rounded-md border border-[#f0c9a8] bg-[#fbeed4] px-4 py-3 text-left text-[13px] text-[#8c5a0a]"
         >
           <AlertTriangle className="size-4 shrink-0" />
-          {needsRestockCount} {needsRestockCount === 1 ? 'item precisa' : 'itens precisam'} de reposição
+          {needsRestockCount} {needsRestockCount === 1 ? 'item precisa' : 'itens precisam'} de
+          reposição
         </button>
       )}
 
@@ -198,10 +231,13 @@ export function AdminStockPage() {
             placeholder="Buscar por nome ou SKU…"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            className="w-full sm:w-[240px]"
+            className="w-full bg-white sm:w-[240px]"
           />
-          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
-            <SelectTrigger className="w-full sm:w-[160px]">
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+          >
+            <SelectTrigger className="w-full bg-white sm:w-[160px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -213,7 +249,7 @@ export function AdminStockPage() {
             </SelectContent>
           </Select>
           <Select value={compositionFilter} onValueChange={setCompositionFilter}>
-            <SelectTrigger className="w-full sm:w-[200px]">
+            <SelectTrigger className="w-full bg-white sm:w-[200px]">
               <SelectValue placeholder="Todas composições" />
             </SelectTrigger>
             <SelectContent>
@@ -256,7 +292,9 @@ export function AdminStockPage() {
             ) : filteredProducts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-8 text-center">
-                  <p className="text-text-meta text-sm">Nenhum produto encontrado para os filtros aplicados.</p>
+                  <p className="text-text-meta text-sm">
+                    Nenhum produto encontrado para os filtros aplicados.
+                  </p>
                   <Button
                     variant="outline"
                     size="sm"
@@ -309,7 +347,11 @@ export function AdminStockPage() {
                       <Button variant="outline" size="sm" onClick={() => openAdjust(product)}>
                         Ajustar
                       </Button>
-                      <Button variant="outline" size="sm" onClick={() => setHistoryProduct(product)}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setHistoryProduct(product)}
+                      >
                         Histórico
                       </Button>
                     </div>

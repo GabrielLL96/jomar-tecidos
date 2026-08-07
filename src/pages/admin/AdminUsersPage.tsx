@@ -4,22 +4,49 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useAdminUsers, useUserAddresses } from '@/features/users/hooks'
-import { ROLE_LABELS, STAFF_ROLES, USER_STATUS_LABELS, USER_STATUS_STYLES } from '@/features/users/data'
+import {
+  ROLE_LABELS,
+  STAFF_ROLES,
+  USER_STATUS_LABELS,
+  USER_STATUS_STYLES,
+} from '@/features/users/data'
 import type { UserRole } from '@/features/auth/types'
 import type { AdminUser, UserStatus } from '@/features/users/types'
 
 const ALL_ROLES = 'all'
 const ALL_STATUSES = 'all'
 
-const lastLoginFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const lastLoginFormatter = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+})
 
 export function AdminUsersPage() {
   const { user: currentUser } = useAuth()
@@ -100,7 +127,11 @@ export function AdminUsersPage() {
 
   return (
     <div>
-      <Tabs value={tab} onValueChange={(value) => setTab(value as typeof tab)} className="mb-[18px]">
+      <Tabs
+        value={tab}
+        onValueChange={(value) => setTab(value as typeof tab)}
+        className="mb-[18px]"
+      >
         <TabsList>
           <TabsTrigger value="clientes">Clientes</TabsTrigger>
           <TabsTrigger value="equipe">Equipe interna</TabsTrigger>
@@ -112,11 +143,11 @@ export function AdminUsersPage() {
           placeholder="Buscar por nome ou e-mail…"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          className="w-full sm:w-[260px]"
+          className="w-full bg-white sm:w-[260px]"
         />
         {tab === 'equipe' && (
           <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-full sm:w-[160px]">
+            <SelectTrigger className="w-full bg-white sm:w-[160px]">
               <SelectValue placeholder="Papel" />
             </SelectTrigger>
             <SelectContent>
@@ -130,7 +161,7 @@ export function AdminUsersPage() {
           </Select>
         )}
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full sm:w-[140px]">
+          <SelectTrigger className="w-full bg-white sm:w-[140px]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -161,7 +192,9 @@ export function AdminUsersPage() {
             ) : filteredUsers.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-8 text-center">
-                  <p className="text-text-meta text-sm">Nenhum usuário encontrado para os filtros aplicados.</p>
+                  <p className="text-text-meta text-sm">
+                    Nenhum usuário encontrado para os filtros aplicados.
+                  </p>
                 </TableCell>
               </TableRow>
             ) : (
@@ -183,7 +216,9 @@ export function AdminUsersPage() {
                       </span>
                     </TableCell>
                     <TableCell>
-                      {user.lastLoginAt ? lastLoginFormatter.format(new Date(user.lastLoginAt)) : 'Nunca'}
+                      {user.lastLoginAt
+                        ? lastLoginFormatter.format(new Date(user.lastLoginAt))
+                        : 'Nunca'}
                     </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1.5">
@@ -197,7 +232,9 @@ export function AdminUsersPage() {
                           size="sm"
                           onClick={() => openEdit(user)}
                           disabled={isSelf}
-                          title={isSelf ? 'Não é possível editar a própria conta por aqui' : undefined}
+                          title={
+                            isSelf ? 'Não é possível editar a própria conta por aqui' : undefined
+                          }
                         >
                           Editar
                         </Button>
@@ -234,7 +271,10 @@ export function AdminUsersPage() {
             </div>
             <div className="flex flex-col gap-2">
               <Label>Status</Label>
-              <Select value={editStatus} onValueChange={(value) => setEditStatus(value as UserStatus)}>
+              <Select
+                value={editStatus}
+                onValueChange={(value) => setEditStatus(value as UserStatus)}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -297,7 +337,10 @@ export function AdminUsersPage() {
               ) : (
                 <ul className="flex flex-col gap-2">
                   {addresses.map((address) => (
-                    <li key={address.id} className="rounded-md border border-[#ede8de] p-3 text-[13px]">
+                    <li
+                      key={address.id}
+                      className="rounded-md border border-[#ede8de] p-3 text-[13px]"
+                    >
                       <div className="flex items-center gap-1.5 font-medium">
                         {address.label}
                         {address.isDefault && (
@@ -316,10 +359,12 @@ export function AdminUsersPage() {
             </div>
 
             <div>
-              <div className="text-navy-dark mb-2 text-[13.5px] font-semibold">Pedidos e favoritos</div>
+              <div className="text-navy-dark mb-2 text-[13.5px] font-semibold">
+                Pedidos e favoritos
+              </div>
               <p className="text-text-meta text-sm">
-                Sem dado real disponível — pedidos e favoritos hoje são simulados localmente no navegador
-                de cada cliente, não chegam ao servidor.
+                Sem dado real disponível — pedidos e favoritos hoje são simulados localmente no
+                navegador de cada cliente, não chegam ao servidor.
               </p>
             </div>
           </div>
