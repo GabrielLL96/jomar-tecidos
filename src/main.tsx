@@ -9,7 +9,6 @@ import { AuthProvider } from '@/features/auth/AuthContext'
 import { FavoritesProvider } from '@/features/favorites/FavoritesContext'
 import { CartProvider } from '@/features/cart/CartContext'
 import { AddressesProvider } from '@/features/account/AddressesContext'
-import { OrdersProvider } from '@/features/orders/OrdersContext'
 import App from './App.tsx'
 import './index.css'
 
@@ -19,14 +18,12 @@ createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <FavoritesProvider>
           <AddressesProvider>
-            <OrdersProvider>
-              <CartProvider>
-                <BrowserRouter>
-                  <App />
-                </BrowserRouter>
-                <Toaster richColors position="top-right" />
-              </CartProvider>
-            </OrdersProvider>
+            <CartProvider>
+              <BrowserRouter>
+                <App />
+              </BrowserRouter>
+              <Toaster richColors position="top-right" />
+            </CartProvider>
           </AddressesProvider>
         </FavoritesProvider>
       </AuthProvider>

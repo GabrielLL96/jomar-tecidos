@@ -1,8 +1,10 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatPriceBRL } from '@/lib/format'
-import { MOCK_ORDERS, ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/features/orders/data'
+import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/features/orders/data'
+import { useAdminOrders } from '@/features/orders/hooks'
 import { useProducts } from '@/features/catalog/hooks'
 import type { Product } from '@/features/catalog/types'
+import type { Order } from '@/features/orders/types'
 
 const SALES_BARS = [40, 55, 48, 62, 58, 70, 65, 80, 72, 90, 84, 95, 88, 100]
 const TOP_COMPOSITIONS = [
@@ -12,29 +14,27 @@ const TOP_COMPOSITIONS = [
   { name: 'Sedas', pct: 16 },
 ]
 
-function computeKpis(products: Product[]) {
-  const revenue = MOCK_ORDERS.reduce((total, order) => total + order.total, 0)
-  const orderCount = MOCK_ORDERS.length
+function computeKpis(products: Product[], orders: Order[]) {
+  const revenue = orders.reduce((total, order) => total + order.total, 0)
+  const orderCount = orders.length
   const avgTicket = orderCount ? revenue / orderCount : 0
   const criticalStock = products.filter(
     (product) => product.status === 'low_stock' || product.status === 'out_of_stock',
   ).length
 
   return [
-    { label: 'Faturamento (pedidos mock)', value: formatPriceBRL(revenue) },
+    { label: 'Faturamento (total)', value: formatPriceBRL(revenue) },
     { label: 'Pedidos', value: String(orderCount) },
     { label: 'Ticket médio', value: formatPriceBRL(avgTicket) },
     { label: 'Estoque crítico', value: `${criticalStock} ${criticalStock === 1 ? 'item' : 'itens'}` },
   ]
 }
 
-const recentOrders = [...MOCK_ORDERS]
-  .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
-  .slice(0, 5)
-
 export function AdminDashboardPage() {
   const { data: products = [] } = useProducts()
-  const kpis = computeKpis(products)
+  const { data: orders = [] } = useAdminOrders()
+  const kpis = computeKpis(products, orders)
+  const recentOrders = orders.slice(0, 5)
 
   return (
     <div>

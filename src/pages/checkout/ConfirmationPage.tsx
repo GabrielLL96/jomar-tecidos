@@ -2,12 +2,11 @@ import { Check } from 'lucide-react'
 import { Link, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { formatPriceBRL } from '@/lib/format'
-import { useOrders } from '@/features/orders/OrdersContext'
+import { useOrder } from '@/features/orders/hooks'
 
 export function ConfirmationPage() {
   const { id } = useParams()
-  const { orders } = useOrders()
-  const order = orders.find((item) => item.id === id)
+  const { data: order } = useOrder(id)
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-sm) px-6 py-24 text-center">

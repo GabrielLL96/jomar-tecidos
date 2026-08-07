@@ -1,13 +1,13 @@
 import { useAuth } from '@/features/auth/AuthContext'
 import { useFavorites } from '@/features/favorites/FavoritesContext'
 import { useAddresses } from '@/features/account/AddressesContext'
-import { useOrders } from '@/features/orders/OrdersContext'
+import { useMyOrders } from '@/features/orders/hooks'
 
 export function AccountSummaryPage() {
   const { user } = useAuth()
   const { favoriteIds } = useFavorites()
   const { addresses } = useAddresses()
-  const { orders } = useOrders()
+  const { data: orders = [] } = useMyOrders(user?.id)
 
   if (!user) return null
 

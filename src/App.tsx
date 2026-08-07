@@ -20,6 +20,7 @@ import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminProductsPage } from '@/pages/admin/AdminProductsPage'
 import { AdminCompositionsPage } from '@/pages/admin/AdminCompositionsPage'
 import { AdminStockPage } from '@/pages/admin/AdminStockPage'
+import { AdminSalesPage } from '@/pages/admin/AdminSalesPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -52,6 +53,7 @@ function App() {
         <Route path="produtos" element={<AdminProductsPage />} />
         <Route path="composicoes" element={<AdminCompositionsPage />} />
         <Route path="estoque" element={<AdminStockPage />} />
+        <Route path="vendas" element={<AdminSalesPage />} />
         <Route path="usuarios" element={<AdminUsersPage />} />
         <Route path="configuracoes" element={<AdminSettingsPage />} />
       </Route>

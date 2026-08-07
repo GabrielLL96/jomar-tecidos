@@ -15,6 +15,21 @@ export interface OrderItem {
   total: number
 }
 
+export interface OrderStatusHistoryEntry {
+  id: string
+  status: OrderStatus
+  changedByName: string
+  createdAt: string
+}
+
+export interface OrderShippingAddress {
+  label: string
+  street: string
+  city: string
+  state: string
+  zipCode: string
+}
+
 export interface Order {
   id: string
   orderNumber: string
@@ -25,8 +40,14 @@ export interface Order {
   discountTotal: number
   total: number
   couponId?: string
+  cancelReason?: string
   shippingAddressId: string
+  shippingAddress?: OrderShippingAddress
+  customerName?: string
+  customerEmail?: string
   items: OrderItem[]
+  delivery?: Delivery
+  statusHistory: OrderStatusHistoryEntry[]
   createdAt: string
 }
 

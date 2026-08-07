@@ -7,6 +7,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Receipt,
   Search,
   Settings,
   Users,
@@ -21,6 +22,7 @@ const ADMIN_NAV = [
   { to: '/admin/produtos', label: 'Produtos', icon: Package, end: false },
   { to: '/admin/composicoes', label: 'Composições', icon: Layers, end: false },
   { to: '/admin/estoque', label: 'Estoque', icon: Boxes, end: false },
+  { to: '/admin/vendas', label: 'Vendas', icon: Receipt, end: false },
   { to: '/admin/usuarios', label: 'Usuários', icon: Users, end: false },
   { to: '/admin/configuracoes', label: 'Configurações', icon: Settings, end: false },
 ] as const
@@ -30,6 +32,7 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   '/admin/produtos': { title: 'Produtos', subtitle: 'Gerencie o catálogo de tecidos e aviamentos' },
   '/admin/composicoes': { title: 'Composições', subtitle: 'Organize os grupos de composição dos produtos' },
   '/admin/estoque': { title: 'Estoque', subtitle: 'Controle de metragem disponível' },
+  '/admin/vendas': { title: 'Vendas', subtitle: 'Pedidos e faturamento' },
   '/admin/usuarios': { title: 'Usuários', subtitle: 'Clientes e equipe interna' },
   '/admin/configuracoes': {
     title: 'Configurações',

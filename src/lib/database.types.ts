@@ -336,8 +336,41 @@ export type Database = {
           },
         ]
       }
+      order_status_history: {
+        Row: {
+          changed_by_name: string
+          created_at: string
+          id: string
+          order_id: string
+          status: Database["public"]["Enums"]["order_status"]
+        }
+        Insert: {
+          changed_by_name: string
+          created_at?: string
+          id?: string
+          order_id: string
+          status: Database["public"]["Enums"]["order_status"]
+        }
+        Update: {
+          changed_by_name?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
+          cancel_reason: string | null
           coupon_id: string | null
           created_at: string
           discount_total: number
@@ -352,11 +385,12 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cancel_reason?: string | null
           coupon_id?: string | null
           created_at?: string
           discount_total?: number
           id?: string
-          order_number: string
+          order_number?: string
           payment_method: Database["public"]["Enums"]["payment_method"]
           shipping_address_id: string
           shipping_cost?: number
@@ -366,6 +400,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cancel_reason?: string | null
           coupon_id?: string | null
           created_at?: string
           discount_total?: number
@@ -733,6 +768,14 @@ export type Database = {
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]
+      }
+      decrement_coupon_usage: {
+        Args: { p_coupon_id: string }
+        Returns: undefined
+      }
+      increment_coupon_usage: {
+        Args: { p_coupon_id: string }
+        Returns: undefined
       }
     }
     Enums: {

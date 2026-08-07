@@ -29,6 +29,8 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { downloadCSV } from '@/lib/csv'
+import { toDateOnly } from '@/lib/format'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useAdminProducts, useCompositions } from '@/features/catalog/hooks'
 import { useStockMovements } from '@/features/stock/hooks'
@@ -68,16 +70,6 @@ function toCSV(
       .join(','),
   )
   return [header.map(escape).join(','), ...lines].join('\n')
-}
-
-function downloadCSV(csv: string) {
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `estoque-${new Date().toISOString().slice(0, 10)}.csv`
-  link.click()
-  URL.revokeObjectURL(url)
 }
 
 export function AdminStockPage() {
@@ -264,7 +256,9 @@ export function AdminStockPage() {
         </div>
         <Button
           variant="outline"
-          onClick={() => downloadCSV(toCSV(filteredProducts, compositions))}
+          onClick={() =>
+            downloadCSV(toCSV(filteredProducts, compositions), `estoque-${toDateOnly(new Date())}.csv`)
+          }
           className="sm:self-start"
         >
           <Download className="size-4" />
