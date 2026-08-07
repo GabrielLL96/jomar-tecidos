@@ -1,7 +1,6 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
-import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -16,52 +15,34 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAdminCompositions } from '@/features/catalog/hooks'
-import { SWATCH_COLOR_OPTIONS } from '@/features/catalog/data'
 import type { AdminComposition } from '@/features/catalog/queries'
 
 export function AdminCompositionsPage() {
   const { data: compositions = [], isLoading } = useAdminCompositions()
   const queryClient = useQueryClient()
 
-  const [search, setSearch] = useState('')
   const [formOpen, setFormOpen] = useState(false)
   const [editingComposition, setEditingComposition] = useState<AdminComposition | null>(null)
   const [name, setName] = useState('')
-  const [color, setColor] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [deletingComposition, setDeletingComposition] = useState<AdminComposition | null>(null)
   const [reassignTargetId, setReassignTargetId] = useState<string>('')
   const [isDeleting, setIsDeleting] = useState(false)
-  const [expandedId, setExpandedId] = useState<string | null>(null)
-
-  const filteredCompositions = useMemo(() => {
-    const query = search.trim().toLowerCase()
-    if (!query) return compositions
-    return compositions.filter((composition) => composition.name.toLowerCase().includes(query))
-  }, [compositions, search])
-  const isFiltered = search.trim().length > 0
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['compositions'] })
 
   const openCreate = () => {
     setEditingComposition(null)
     setName('')
-    setColor(null)
     setFormOpen(true)
   }
 
   const openEdit = (composition: AdminComposition) => {
     setEditingComposition(composition)
     setName(composition.name)
-    setColor(composition.color)
     setFormOpen(true)
-  }
-
-  const toggleExpanded = (id: string) => {
-    setExpandedId((current) => (current === id ? null : id))
   }
 
   const handleSave = async () => {
@@ -71,10 +52,9 @@ export function AdminCompositionsPage() {
     setIsSaving(true)
     try {
       const { error } = editingComposition
-        ? await supabase.from('compositions').update({ name: trimmed, color }).eq('id', editingComposition.id)
+        ? await supabase.from('compositions').update({ name: trimmed }).eq('id', editingComposition.id)
         : await supabase.from('compositions').insert({
             name: trimmed,
-            color,
             // novo item sempre vai pro fim da lista — sem isso, o default 0 da coluna
             // faria toda composição criada pular pro topo da ordenação.
             sort_order:
@@ -94,23 +74,6 @@ export function AdminCompositionsPage() {
     } finally {
       setIsSaving(false)
     }
-  }
-
-  const handleMove = async (composition: AdminComposition, direction: 'up' | 'down') => {
-    const index = compositions.findIndex((c) => c.id === composition.id)
-    const targetIndex = direction === 'up' ? index - 1 : index + 1
-    if (targetIndex < 0 || targetIndex >= compositions.length) return
-    const target = compositions[targetIndex]
-
-    const [{ error: errorA }, { error: errorB }] = await Promise.all([
-      supabase.from('compositions').update({ sort_order: target.sortOrder }).eq('id', composition.id),
-      supabase.from('compositions').update({ sort_order: composition.sortOrder }).eq('id', target.id),
-    ])
-    if (errorA || errorB) {
-      toast.error('Não foi possível reordenar')
-      return
-    }
-    await invalidate()
   }
 
   const openDelete = (composition: AdminComposition) => {
@@ -182,108 +145,46 @@ export function AdminCompositionsPage() {
 
   return (
     <div>
-      <div className="mb-[18px] flex flex-col gap-2.5 sm:flex-row sm:justify-between">
-        <Input
-          placeholder="Buscar composição…"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          className="w-full sm:w-[260px]"
-        />
-        <Button onClick={openCreate} className="sm:self-start">
-          + Nova composição
-        </Button>
+      <div className="mb-[18px] flex justify-end">
+        <Button onClick={openCreate}>+ Nova composição</Button>
       </div>
 
       {isLoading ? (
         <p className="text-text-meta text-sm">Carregando…</p>
       ) : compositions.length === 0 ? (
         <p className="text-text-meta text-sm">Nenhuma composição cadastrada ainda.</p>
-      ) : filteredCompositions.length === 0 ? (
-        <p className="text-text-meta text-sm">Nenhuma composição encontrada para "{search}".</p>
       ) : (
-        <div className="flex flex-col gap-2.5">
-          {filteredCompositions.map((composition) => {
-            const isExpanded = expandedId === composition.id
-            const hasProducts = composition.products.length > 0
-            const index = compositions.findIndex((c) => c.id === composition.id)
-            return (
-              <div key={composition.id} className="rounded-md border border-[#e4ddd0] bg-white p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col">
-                    <button
-                      type="button"
-                      aria-label="Mover para cima"
-                      disabled={isFiltered || index === 0}
-                      onClick={() => handleMove(composition, 'up')}
-                      className="text-[#a39a8c] disabled:opacity-30"
-                    >
-                      <ChevronUp className="size-3.5" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Mover para baixo"
-                      disabled={isFiltered || index === compositions.length - 1}
-                      onClick={() => handleMove(composition, 'down')}
-                      className="text-[#a39a8c] disabled:opacity-30"
-                    >
-                      <ChevronDown className="size-3.5" />
-                    </button>
-                  </div>
-
-                  <span
-                    className="size-4 shrink-0 rounded-full ring-1 ring-[#d8d0c0]"
-                    style={{ backgroundColor: composition.color ?? 'transparent' }}
-                  />
-
-                  <div className="min-w-0 flex-1">
-                    <div className="text-navy-dark text-[14.5px] font-semibold">{composition.name}</div>
-                    <button
-                      type="button"
-                      onClick={() => hasProducts && toggleExpanded(composition.id)}
-                      disabled={!hasProducts}
-                      className={cn(
-                        'mt-0.5 flex items-center gap-1 text-[12.5px] text-[#8c8375]',
-                        hasProducts && 'cursor-pointer hover:text-navy-dark',
-                      )}
-                    >
-                      {composition.products.length}{' '}
-                      {composition.products.length === 1 ? 'produto' : 'produtos'}
-                      {hasProducts &&
-                        (isExpanded ? (
-                          <ChevronUp className="size-3.5" />
-                        ) : (
-                          <ChevronDown className="size-3.5" />
-                        ))}
-                    </button>
-                  </div>
-
-                  <div className="flex shrink-0 gap-1.5">
-                    <Button variant="outline" size="sm" onClick={() => openEdit(composition)}>
-                      Editar
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => openDelete(composition)}>
-                      Excluir
-                    </Button>
-                  </div>
+        <div className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+          {compositions.map((composition) => (
+            <div
+              key={composition.id}
+              className="flex items-center justify-between rounded-md border border-[#e4ddd0] bg-white p-5"
+            >
+              <div>
+                <div className="text-navy-dark text-[14.5px] font-semibold">{composition.name}</div>
+                <div className="mt-1 text-[12.5px] text-[#8c8375]">
+                  {composition.products.length}{' '}
+                  {composition.products.length === 1 ? 'produto' : 'produtos'}
                 </div>
-                {isExpanded && (
-                  <ul className="mt-3 flex flex-col gap-1 border-t border-[#ede8de] pt-3 pl-[46px]">
-                    {composition.products.map((product) => (
-                      <li key={product.id} className="flex justify-between text-[13px] text-[#3a352b]">
-                        <span>
-                          {product.name}
-                          {product.status === 'draft' && (
-                            <span className="ml-1.5 text-[11.5px] text-[#a3660a]">(inativo)</span>
-                          )}
-                        </span>
-                        <span className="text-[#8c8375]">{product.percentage}%</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </div>
-            )
-          })}
+              <div className="flex shrink-0 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => openEdit(composition)}
+                  className="text-navy text-[12.5px] hover:text-primary"
+                >
+                  Editar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openDelete(composition)}
+                  className="text-destructive text-[12.5px] hover:opacity-80"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
@@ -292,40 +193,21 @@ export function AdminCompositionsPage() {
           <DialogHeader>
             <DialogTitle>{editingComposition ? 'Editar composição' : 'Nova composição'}</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="compositionName">Nome</Label>
-              <Input
-                id="compositionName"
-                placeholder="Ex: Viscose"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Enter') {
-                    event.preventDefault()
-                    handleSave()
-                  }
-                }}
-                autoFocus
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label>Cor de identificação (opcional)</Label>
-              <div className="flex flex-wrap gap-2">
-                {SWATCH_COLOR_OPTIONS.map((hex) => (
-                  <button
-                    key={hex}
-                    type="button"
-                    onClick={() => setColor((current) => (current === hex ? null : hex))}
-                    style={{ backgroundColor: hex }}
-                    className={cn(
-                      'size-[26px] rounded-full',
-                      color === hex ? 'ring-navy ring-2 ring-offset-2' : 'ring-1 ring-[#d8d0c0]',
-                    )}
-                  />
-                ))}
-              </div>
-            </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="compositionName">Nome</Label>
+            <Input
+              id="compositionName"
+              placeholder="Ex: Viscose"
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  handleSave()
+                }
+              }}
+              autoFocus
+            />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setFormOpen(false)}>
@@ -338,7 +220,10 @@ export function AdminCompositionsPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deletingComposition} onOpenChange={(open) => !open && setDeletingComposition(null)}>
+      <AlertDialog
+        open={!!deletingComposition}
+        onOpenChange={(open) => !open && setDeletingComposition(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir "{deletingComposition?.name}"?</AlertDialogTitle>
