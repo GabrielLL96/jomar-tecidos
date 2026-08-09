@@ -771,6 +771,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_order: {
+        Args: {
+          p_coupon_id?: string
+          p_items?: Json
+          p_payment_method: Database["public"]["Enums"]["payment_method"]
+          p_shipping_address_id: string
+          p_shipping_cost?: number
+        }
+        Returns: {
+          id: string
+          order_number: string
+        }[]
+      }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["user_role"]

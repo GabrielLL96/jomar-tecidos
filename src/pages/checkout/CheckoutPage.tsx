@@ -16,7 +16,6 @@ import { useCart } from '@/features/cart/CartContext'
 import { useAddresses } from '@/features/account/AddressesContext'
 import { calculateDiscount, isCouponValid } from '@/features/orders/coupon-utils'
 import type { Coupon } from '@/features/orders/types'
-import { computeStockStatus } from '@/features/catalog/utils'
 import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
 
 export function CheckoutPage() {
@@ -92,77 +91,28 @@ export function CheckoutPage() {
         zipCode: data.zip,
       })
 
-      const { data: orderRow, error: orderError } = await supabase
-        .from('orders')
-        .insert({
-          user_id: user.id,
-          status: 'paid',
-          payment_method: data.paymentMethod,
-          subtotal,
-          shipping_cost: shipping,
-          discount_total: discount,
-          total,
-          coupon_id: appliedCoupon?.id,
-          shipping_address_id: address.id,
-        })
-        .select('id, order_number')
-        .single()
+      // Pedido inteiro (order + items + baixa de estoque + cupom + histórico)
+      // é criado numa função security definer única (create_order, migration
+      // 20260809000000) — roda em transação real: qualquer falha no meio
+      // (estoque insuficiente, produto removido, cupom inválido) desfaz tudo,
+      // em vez de deixar um pedido órfão com 0 itens (bug real documentado em
+      // ADR-012/_Feedback.md). unit_price também não é mais enviado pelo
+      // client — a função sempre lê o preço real de products.
+      const { data: orderRows, error: orderError } = await supabase.rpc('create_order', {
+        p_shipping_address_id: address.id,
+        p_payment_method: data.paymentMethod,
+        p_coupon_id: appliedCoupon?.id,
+        p_shipping_cost: shipping,
+        p_items: items.map((item) => ({
+          product_id: item.productId,
+          color_id: item.colorId ?? null,
+          meters: item.meters,
+        })),
+      })
       if (orderError) throw new Error(orderError.message)
 
-      const { error: itemsError } = await supabase.from('order_items').insert(
-        items.map((item) => ({
-          order_id: orderRow.id,
-          product_id: item.productId,
-          color_id: item.colorId,
-          meters: item.meters,
-          unit_price: item.pricePerMeter,
-          total: item.meters * item.pricePerMeter,
-        })),
-      )
-      if (itemsError) throw new Error(itemsError.message)
-
-      const { error: historyError } = await supabase.from('order_status_history').insert({
-        order_id: orderRow.id,
-        status: 'paid',
-        changed_by_name: user.name,
-      })
-      if (historyError) throw new Error(historyError.message)
-
-      // decremento de estoque é read-then-write client-side (não atômico) — mesmo
-      // padrão já usado no ajuste manual de AdminStockPage, não uma exceção nova.
-      for (const item of items) {
-        const { data: product, error: productError } = await supabase
-          .from('products')
-          .select('stock_meters, min_stock_meters, status')
-          .eq('id', item.productId)
-          .single()
-        if (productError) throw new Error(productError.message)
-
-        const newStock = Number(product.stock_meters) - item.meters
-        const newStatus = computeStockStatus(product.status, newStock, Number(product.min_stock_meters))
-
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ stock_meters: newStock, status: newStatus })
-          .eq('id', item.productId)
-        if (updateError) throw new Error(updateError.message)
-
-        const { error: movementError } = await supabase.from('stock_movements').insert({
-          product_id: item.productId,
-          quantity: -item.meters,
-          reason: `Venda #${orderRow.order_number}`,
-          user_id: user.id,
-          performed_by_name: user.name,
-        })
-        if (movementError) throw new Error(movementError.message)
-      }
-
-      if (appliedCoupon) {
-        const { error: couponError } = await supabase.rpc('increment_coupon_usage', {
-          p_coupon_id: appliedCoupon.id,
-        })
-        if (couponError) throw new Error(couponError.message)
-      }
+      const orderRow = orderRows?.[0]
+      if (!orderRow) throw new Error('Pedido não pôde ser criado')
 
       clear()
       await queryClient.invalidateQueries({ queryKey: ['products'] })
