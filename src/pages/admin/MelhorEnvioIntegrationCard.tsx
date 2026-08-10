@@ -94,10 +94,15 @@ export function MelhorEnvioIntegrationCard() {
           <Input value={clientId} onChange={(event) => setClientId(event.target.value)} />
         </div>
         <div className="flex flex-col gap-1.5">
-          <Label>Client Secret</Label>
+          <div className="flex items-center justify-between">
+            <Label>Client Secret</Label>
+            {status?.secretConfigured && (
+              <span className="text-[11px] font-semibold text-[#1e7a44]">✓ Configurado</span>
+            )}
+          </div>
           <Input
             type="password"
-            placeholder={status?.connectedAt ? '•••• já configurado — digite pra substituir' : ''}
+            placeholder={status?.secretConfigured ? '•••• já configurado — digite pra substituir' : ''}
             value={clientSecret}
             onChange={(event) => setClientSecret(event.target.value)}
           />

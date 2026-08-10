@@ -3,6 +3,7 @@ export interface MelhorEnvioStatus {
   redirectUri: string | null
   connectedAt: string | null
   tokenExpiresAt: string | null
+  secretConfigured: boolean
 }
 
 export interface ShippingQuoteItemInput {

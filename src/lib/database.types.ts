@@ -862,6 +862,7 @@ export type Database = {
         Args: { p_coupon_id: string }
         Returns: undefined
       }
+      melhor_envio_secret_configured: { Args: never; Returns: boolean }
     }
     Enums: {
       campaign_channel: "instagram_ads" | "google_ads" | "email" | "whatsapp"
