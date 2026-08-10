@@ -97,11 +97,13 @@ export function Home() {
       )}
 
       <section className="mx-auto grid max-w-(--breakpoint-xl) grid-cols-1 items-center gap-14 px-6 py-18 md:grid-cols-2 md:px-12">
-        <ImagePlaceholder
-          colors={['#f0e6d4', '#e3d5b8']}
-          src={settings.home_banner2_image_url || undefined}
-          className="h-80 rounded-sm"
-        />
+        <Link to="/tecidos" aria-label={settings.home_banner2_cta_label}>
+          <ImagePlaceholder
+            colors={['#f0e6d4', '#e3d5b8']}
+            src={settings.home_banner2_image_url || undefined}
+            className="h-80 rounded-sm"
+          />
+        </Link>
         <div>
           <div className="text-brand-red mb-3 text-xs font-semibold tracking-[0.18em] uppercase">
             {settings.home_banner2_eyebrow}

@@ -1,4 +1,5 @@
 import { Route, Routes } from 'react-router-dom'
+import { ScrollToTop } from '@/components/common/ScrollToTop'
 import { RootLayout } from '@/components/layout/RootLayout'
 import { Home } from '@/pages/Home'
 import { ProductsPage } from '@/pages/products/ProductsPage'
@@ -31,41 +32,44 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 
 function App() {
   return (
-    <Routes>
-      <Route element={<RootLayout />}>
-        <Route path="/" element={<Home />} />
-        <Route path="/tecidos" element={<ProductsPage />} />
-        <Route path="/tecidos/:slug" element={<ProductDetailPage />} />
-        <Route path="/carrinho" element={<CartPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/pedido/:id" element={<ConfirmationPage />} />
-        <Route path="/sobre" element={<AboutPage />} />
-        <Route path="/contato" element={<ContactPage />} />
-        <Route path="/favoritos" element={<FavoritesPage />} />
-        <Route path="/conta/entrar" element={<LoginPage />} />
-        <Route path="/conta" element={<AccountLayout />}>
-          <Route index element={<AccountSummaryPage />} />
-          <Route path="pedidos" element={<AccountOrdersPage />} />
-          <Route path="enderecos" element={<AccountAddressesPage />} />
-          <Route path="dados" element={<AccountDataPage />} />
+    <>
+      <ScrollToTop />
+      <Routes>
+        <Route element={<RootLayout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/tecidos" element={<ProductsPage />} />
+          <Route path="/tecidos/:slug" element={<ProductDetailPage />} />
+          <Route path="/carrinho" element={<CartPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/pedido/:id" element={<ConfirmationPage />} />
+          <Route path="/sobre" element={<AboutPage />} />
+          <Route path="/contato" element={<ContactPage />} />
+          <Route path="/favoritos" element={<FavoritesPage />} />
+          <Route path="/conta/entrar" element={<LoginPage />} />
+          <Route path="/conta" element={<AccountLayout />}>
+            <Route index element={<AccountSummaryPage />} />
+            <Route path="pedidos" element={<AccountOrdersPage />} />
+            <Route path="enderecos" element={<AccountAddressesPage />} />
+            <Route path="dados" element={<AccountDataPage />} />
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
-        <Route path="*" element={<NotFoundPage />} />
-      </Route>
 
-      <Route path="/admin" element={<AdminLayout />}>
-        <Route index element={<AdminDashboardPage />} />
-        <Route path="produtos" element={<AdminProductsPage />} />
-        <Route path="composicoes" element={<AdminCompositionsPage />} />
-        <Route path="estoque" element={<AdminStockPage />} />
-        <Route path="vendas" element={<AdminSalesPage />} />
-        <Route path="vendas/:id" element={<AdminSalesOrderDetailPage />} />
-        <Route path="entregas" element={<AdminDeliveriesPage />} />
-        <Route path="usuarios" element={<AdminUsersPage />} />
-        <Route path="relatorios" element={<AdminReportsPage />} />
-        <Route path="configuracoes" element={<AdminSettingsPage />} />
-        <Route path="melhor-envio/callback" element={<AdminMelhorEnvioCallbackPage />} />
-      </Route>
-    </Routes>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboardPage />} />
+          <Route path="produtos" element={<AdminProductsPage />} />
+          <Route path="composicoes" element={<AdminCompositionsPage />} />
+          <Route path="estoque" element={<AdminStockPage />} />
+          <Route path="vendas" element={<AdminSalesPage />} />
+          <Route path="vendas/:id" element={<AdminSalesOrderDetailPage />} />
+          <Route path="entregas" element={<AdminDeliveriesPage />} />
+          <Route path="usuarios" element={<AdminUsersPage />} />
+          <Route path="relatorios" element={<AdminReportsPage />} />
+          <Route path="configuracoes" element={<AdminSettingsPage />} />
+          <Route path="melhor-envio/callback" element={<AdminMelhorEnvioCallbackPage />} />
+        </Route>
+      </Routes>
+    </>
   )
 }
 
