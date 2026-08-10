@@ -208,6 +208,35 @@ export function AdminSettingsPage() {
         </div>
       </SettingsCard>
 
+      <SettingsCard title="Frete">
+        <div className="flex flex-col gap-1.5">
+          <Label>Texto da promobar (barra no topo do site)</Label>
+          <Input
+            placeholder="Frete grátis para compras acima de R$ 350,00"
+            value={form.promobar_text}
+            onChange={(event) => setField('promobar_text', event.target.value)}
+          />
+          <p className="text-text-meta text-xs">
+            Texto livre — não é gerado a partir do valor abaixo. Se mudar o valor mínimo, atualize
+            este texto manualmente pra não anunciar um número diferente do que o checkout realmente
+            usa.
+          </p>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label>Valor mínimo para frete grátis (R$)</Label>
+          <Input
+            inputMode="decimal"
+            placeholder="350"
+            value={form.free_shipping_threshold}
+            onChange={(event) => setField('free_shipping_threshold', event.target.value)}
+          />
+          <p className="text-text-meta text-xs">
+            Usado de verdade no cálculo do frete no carrinho/checkout (não aparece na promobar
+            sozinho — só o texto acima é exibido).
+          </p>
+        </div>
+      </SettingsCard>
+
       <MelhorEnvioIntegrationCard />
 
       <div className="flex justify-end">

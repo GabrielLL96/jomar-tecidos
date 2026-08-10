@@ -23,6 +23,8 @@ export interface SiteSettings {
   footer_zip: string
   footer_hours: string
   footer_instagram_href: string
+  free_shipping_threshold: string
+  promobar_text: string
 }
 
 export type SiteSettingKey = keyof SiteSettings
