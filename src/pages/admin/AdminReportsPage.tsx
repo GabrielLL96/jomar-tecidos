@@ -5,6 +5,7 @@ import { useAdminCoupons, useAdminOrders } from '@/features/orders/hooks'
 import { useAdminProducts, useCompositions } from '@/features/catalog/hooks'
 import { useAdminUsers } from '@/features/users/hooks'
 import { buildStockCSV } from '@/features/catalog/utils'
+import { couponValueLabel } from '@/features/orders/coupon-utils'
 import {
   COUPON_STATUS_LABELS,
   COUPON_TYPE_LABELS,
@@ -18,12 +19,6 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = Object.fromEntries(
 
 const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' })
-
-function couponValueLabel(type: string, value: number) {
-  if (type === 'percentage') return `${value}%`
-  if (type === 'free_shipping') return 'Frete grátis'
-  return formatPriceBRL(value)
-}
 
 // fim do dia local da previsão, pra comparar contra um timestamp real —
 // nunca `new Date(dateOnly)` direto (vira UTC meia-noite, desloca a data em

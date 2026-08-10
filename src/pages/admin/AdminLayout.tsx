@@ -11,6 +11,7 @@ import {
   Receipt,
   Search,
   Settings,
+  Tag,
   Truck,
   Users,
   X,
@@ -26,6 +27,7 @@ const ADMIN_NAV = [
   { to: '/admin/estoque', label: 'Estoque', icon: Boxes, end: false },
   { to: '/admin/vendas', label: 'Vendas', icon: Receipt, end: false },
   { to: '/admin/entregas', label: 'Entregas', icon: Truck, end: false },
+  { to: '/admin/cupons', label: 'Cupons', icon: Tag, end: false },
   { to: '/admin/usuarios', label: 'Usuários', icon: Users, end: false },
   { to: '/admin/relatorios', label: 'Relatórios', icon: BarChart3, end: false },
   { to: '/admin/configuracoes', label: 'Configurações', icon: Settings, end: false },
@@ -38,6 +40,7 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   '/admin/estoque': { title: 'Estoque', subtitle: 'Controle de metragem disponível' },
   '/admin/vendas': { title: 'Vendas', subtitle: 'Pedidos e faturamento' },
   '/admin/entregas': { title: 'Entregas', subtitle: 'Acompanhamento logístico' },
+  '/admin/cupons': { title: 'Cupons e Promoções', subtitle: 'Descontos ativos e histórico' },
   '/admin/usuarios': { title: 'Usuários', subtitle: 'Clientes e equipe interna' },
   '/admin/relatorios': { title: 'Relatórios', subtitle: 'Exportações e análises' },
   '/admin/configuracoes': {

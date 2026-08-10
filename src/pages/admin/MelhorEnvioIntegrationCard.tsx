@@ -11,6 +11,7 @@ import { MELHOR_ENVIO_SETTINGS_ID } from '@/features/melhor-envio/queries'
 import { buildAuthorizeUrl } from '@/features/melhor-envio/service'
 
 const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const WEBHOOK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/melhor-envio-webhook`
 
 function SettingsCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -106,6 +107,16 @@ export function MelhorEnvioIntegrationCard() {
           <Input value={redirectUri} onChange={(event) => setRedirectUri(event.target.value)} />
           <p className="text-text-meta text-xs">
             Precisa ser exatamente igual ao cadastrado no painel da Melhor Envio (Integrações {'>'} Área Dev.)
+          </p>
+        </div>
+        <div className="col-span-2 flex flex-col gap-1.5">
+          <Label>URL do webhook</Label>
+          <Input value={WEBHOOK_URL} readOnly onFocus={(event) => event.target.select()} />
+          <p className="text-text-meta text-xs">
+            Cadastre essa URL em Integrações {'>'} Área Dev. {'>'} Webhooks no painel da Melhor Envio pra
+            receber atualizações de status de etiqueta em tempo real. Só recebe eventos de etiquetas
+            geradas por este app — sem efeito enquanto nenhuma etiqueta é comprada (fora do escopo
+            desta fase).
           </p>
         </div>
       </div>

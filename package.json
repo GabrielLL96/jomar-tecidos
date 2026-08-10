@@ -23,6 +23,7 @@
     "fn:deploy": "supabase functions deploy meta-catalog-feed --no-verify-jwt",
     "fn:deploy:melhor-envio-oauth-exchange": "supabase functions deploy melhor-envio-oauth-exchange",
     "fn:deploy:melhor-envio-shipping-calculate": "supabase functions deploy melhor-envio-shipping-calculate",
+    "fn:deploy:melhor-envio-webhook": "supabase functions deploy melhor-envio-webhook --no-verify-jwt",
     "fn:deploy:all": "supabase functions deploy"
   },
   "dependencies": {
@@ -68,6 +69,7 @@
     "supabase": "^2.111.0",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.65.0",
-    "vite": "^8.1.1"
+    "vite": "^8.1.1",
+    "vite-plugin-mkcert": "^2.1.0"
   }
 }

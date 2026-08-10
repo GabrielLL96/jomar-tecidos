@@ -11,6 +11,8 @@ import { AboutPage } from '@/pages/AboutPage'
 import { ContactPage } from '@/pages/contact/ContactPage'
 import { FavoritesPage } from '@/pages/FavoritesPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { AccountLayout } from '@/pages/auth/AccountLayout'
 import { AccountSummaryPage } from '@/pages/auth/AccountSummaryPage'
 import { AccountOrdersPage } from '@/pages/auth/AccountOrdersPage'
@@ -25,6 +27,7 @@ import { AdminSalesPage } from '@/pages/admin/AdminSalesPage'
 import { AdminSalesOrderDetailPage } from '@/pages/admin/AdminSalesOrderDetailPage'
 import { AdminDeliveriesPage } from '@/pages/admin/AdminDeliveriesPage'
 import { AdminReportsPage } from '@/pages/admin/AdminReportsPage'
+import { AdminCouponsPage } from '@/pages/admin/AdminCouponsPage'
 import { AdminMelhorEnvioCallbackPage } from '@/pages/admin/AdminMelhorEnvioCallbackPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
@@ -46,6 +49,8 @@ function App() {
           <Route path="/contato" element={<ContactPage />} />
           <Route path="/favoritos" element={<FavoritesPage />} />
           <Route path="/conta/entrar" element={<LoginPage />} />
+          <Route path="/conta/esqueci-senha" element={<ForgotPasswordPage />} />
+          <Route path="/conta/redefinir-senha" element={<ResetPasswordPage />} />
           <Route path="/conta" element={<AccountLayout />}>
             <Route index element={<AccountSummaryPage />} />
             <Route path="pedidos" element={<AccountOrdersPage />} />
@@ -63,6 +68,7 @@ function App() {
           <Route path="vendas" element={<AdminSalesPage />} />
           <Route path="vendas/:id" element={<AdminSalesOrderDetailPage />} />
           <Route path="entregas" element={<AdminDeliveriesPage />} />
+          <Route path="cupons" element={<AdminCouponsPage />} />
           <Route path="usuarios" element={<AdminUsersPage />} />
           <Route path="relatorios" element={<AdminReportsPage />} />
           <Route path="configuracoes" element={<AdminSettingsPage />} />

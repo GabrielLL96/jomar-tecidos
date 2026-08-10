@@ -221,6 +221,8 @@ export type Database = {
           carrier: string | null
           eta_date: string | null
           id: string
+          melhor_envio_protocol: string | null
+          melhor_envio_shipment_id: string | null
           order_id: string
           status: Database["public"]["Enums"]["delivery_status"]
           tracking_code: string
@@ -230,6 +232,8 @@ export type Database = {
           carrier?: string | null
           eta_date?: string | null
           id?: string
+          melhor_envio_protocol?: string | null
+          melhor_envio_shipment_id?: string | null
           order_id: string
           status?: Database["public"]["Enums"]["delivery_status"]
           tracking_code: string
@@ -239,6 +243,8 @@ export type Database = {
           carrier?: string | null
           eta_date?: string | null
           id?: string
+          melhor_envio_protocol?: string | null
+          melhor_envio_shipment_id?: string | null
           order_id?: string
           status?: Database["public"]["Enums"]["delivery_status"]
           tracking_code?: string

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -37,7 +37,12 @@ function LoginForm() {
         {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="password">Senha</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password">Senha</Label>
+          <Link to="/conta/esqueci-senha" className="text-navy text-xs">
+            Esqueci minha senha
+          </Link>
+        </div>
         <Input id="password" type="password" {...register('password')} />
         {errors.password && <p className="text-destructive text-xs">{errors.password.message}</p>}
       </div>

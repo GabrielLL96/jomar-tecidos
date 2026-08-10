@@ -1,3 +1,4 @@
+import { formatPriceBRL } from '@/lib/format'
 import type { Coupon } from './types'
 
 export function findCoupon(code: string, coupons: Coupon[]): Coupon | null {
@@ -17,4 +18,10 @@ export function calculateDiscount(coupon: Coupon, subtotal: number, shippingCost
   if (coupon.type === 'fixed') return Math.min(coupon.value, subtotal)
   if (coupon.type === 'free_shipping') return shippingCost
   return 0
+}
+
+export function couponValueLabel(type: Coupon['type'], value: number): string {
+  if (type === 'percentage') return `${value}%`
+  if (type === 'free_shipping') return 'Grátis'
+  return formatPriceBRL(value)
 }

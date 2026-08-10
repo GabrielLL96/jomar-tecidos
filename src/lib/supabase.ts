@@ -10,7 +10,10 @@ export const supabase = createClient<Database>(
       storage: secureCookieStorage,
       persistSession: true,
       autoRefreshToken: true,
-      detectSessionInUrl: false,
+      // true: obrigatório pro link de "esqueci minha senha" (e magic
+      // link/convite) funcionar — sem isso o client nunca troca o
+      // code/token da URL por uma sessão de recovery de verdade.
+      detectSessionInUrl: true,
     },
   },
 )
