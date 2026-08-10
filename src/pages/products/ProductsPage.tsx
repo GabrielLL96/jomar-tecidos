@@ -9,6 +9,7 @@ export function ProductsPage() {
   const [searchParams] = useSearchParams()
   const categoria = searchParams.get('categoria')
   const busca = searchParams.get('busca')?.trim().toLowerCase()
+  const novidades = searchParams.get('novidades') === '1'
 
   const { data: products } = useProducts()
   const { data: compositions = [] } = useCompositions()
@@ -45,6 +46,7 @@ export function ProductsPage() {
     if (!products) return []
     return products.filter((product) => {
       if (categoria && product.categorySlug !== categoria) return false
+      if (novidades && product.tag !== 'Novo') return false
       if (busca && !product.name.toLowerCase().includes(busca)) return false
       if (
         selectedMaterials.length &&
@@ -56,7 +58,7 @@ export function ProductsPage() {
       if (maxPrice !== null && product.pricePerMeter > maxPrice) return false
       return true
     })
-  }, [products, compositions, categoria, busca, selectedMaterials, selectedColors, maxPrice])
+  }, [products, compositions, categoria, novidades, busca, selectedMaterials, selectedColors, maxPrice])
 
   const toggleMaterial = (label: string) =>
     setSelectedMaterials((prev) => (prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]))

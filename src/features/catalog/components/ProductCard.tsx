@@ -29,6 +29,14 @@ export function ProductCard({ product, variant = 'light' }: ProductCardProps) {
           alt={product.name}
           className={cn('h-[190px] rounded-sm md:h-[210px]', outOfStock && 'opacity-60')}
         >
+          {product.images[1] && (
+            <img
+              src={product.images[1].url}
+              alt=""
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+            />
+          )}
           {outOfStock ? (
             <span className="bg-foreground absolute top-2.5 left-2.5 rounded-sm px-2 py-1 text-xs tracking-[0.05em] text-white uppercase">
               Esgotado

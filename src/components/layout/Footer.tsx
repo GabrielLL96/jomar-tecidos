@@ -28,7 +28,9 @@ export function Footer() {
         <div>
           <div className="mb-4 font-serif text-base font-semibold text-white">Informações</div>
           <div className="flex flex-col gap-2.5 text-sm">
-            <span className={inertLinkClass}>Novidades</span>
+            <Link to="/tecidos?novidades=1" className={inertLinkClass}>
+              Novidades
+            </Link>
             <span className={inertLinkClass}>Política de Segurança</span>
             <span className={inertLinkClass}>Política de Privacidade</span>
             <Link to="/tecidos" className={inertLinkClass}>

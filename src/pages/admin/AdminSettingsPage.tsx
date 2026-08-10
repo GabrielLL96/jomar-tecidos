@@ -210,16 +210,27 @@ export function AdminSettingsPage() {
 
       <SettingsCard title="Frete">
         <div className="flex flex-col gap-1.5">
-          <Label>Texto da promobar (barra no topo do site)</Label>
+          <Label>Frases da promobar (barra no topo do site)</Label>
           <Input
-            placeholder="Frete grátis para compras acima de R$ 350,00"
-            value={form.promobar_text}
-            onChange={(event) => setField('promobar_text', event.target.value)}
+            placeholder="Frase 1 — ex: Frete grátis para compras acima de R$ 350,00"
+            value={form.promobar_text_1}
+            onChange={(event) => setField('promobar_text_1', event.target.value)}
+          />
+          <Input
+            placeholder="Frase 2 (opcional)"
+            value={form.promobar_text_2}
+            onChange={(event) => setField('promobar_text_2', event.target.value)}
+          />
+          <Input
+            placeholder="Frase 3 (opcional)"
+            value={form.promobar_text_3}
+            onChange={(event) => setField('promobar_text_3', event.target.value)}
           />
           <p className="text-text-meta text-xs">
-            Texto livre — não é gerado a partir do valor abaixo. Se mudar o valor mínimo, atualize
-            este texto manualmente pra não anunciar um número diferente do que o checkout realmente
-            usa.
+            Texto livre — não é gerado a partir do valor abaixo. Frases 2 e 3 são opcionais; com mais
+            de uma preenchida, a barra troca de frase a cada 10 segundos. Se mudar o valor mínimo,
+            atualize as frases manualmente pra não anunciar um número diferente do que o checkout
+            realmente usa.
           </p>
         </div>
         <div className="flex flex-col gap-1.5">

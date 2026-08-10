@@ -32,7 +32,9 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   footer_hours: BUSINESS.hours,
   footer_instagram_href: BUSINESS.instagramHref,
   free_shipping_threshold: String(BUSINESS.freeShippingThreshold),
-  promobar_text: `Frete grátis para compras acima de ${formatPriceBRL(BUSINESS.freeShippingThreshold)}`,
+  promobar_text_1: `Frete grátis para compras acima de ${formatPriceBRL(BUSINESS.freeShippingThreshold)}`,
+  promobar_text_2: '',
+  promobar_text_3: '',
 }
 
 export const siteSettingsQueryOptions = queryOptions({

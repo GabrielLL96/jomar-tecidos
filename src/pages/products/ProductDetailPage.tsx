@@ -75,6 +75,7 @@ export function ProductDetailPage() {
             src={product.images[selectedImageIdx]?.url}
             alt={product.name}
             className="mb-3.5 h-[420px] rounded-sm md:h-[480px]"
+            zoomOnHover
           />
           {product.images.length > 1 && (
             <div className="mb-3.5 flex gap-2.5">
