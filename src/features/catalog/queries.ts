@@ -18,6 +18,10 @@ type ProductRow = {
   stock_meters: number | string
   min_sale_meters: number | string
   min_stock_meters: number | string
+  weight_grams: number | null
+  package_height_cm: number | string | null
+  package_width_cm: number | string | null
+  package_length_cm: number | string | null
   status: Product['status']
   tag: string | null
   is_bestseller: boolean
@@ -46,6 +50,10 @@ function adaptProduct(row: ProductRow): Product {
     stockMeters: Number(row.stock_meters),
     minSaleMeters: Number(row.min_sale_meters),
     minStockMeters: Number(row.min_stock_meters),
+    weightGrams: row.weight_grams ?? undefined,
+    packageHeightCm: row.package_height_cm !== null ? Number(row.package_height_cm) : undefined,
+    packageWidthCm: row.package_width_cm !== null ? Number(row.package_width_cm) : undefined,
+    packageLengthCm: row.package_length_cm !== null ? Number(row.package_length_cm) : undefined,
     status: row.status,
     tag: row.tag === 'Novo' || row.tag === 'Premium' ? row.tag : undefined,
     isBestseller: row.is_bestseller,

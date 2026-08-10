@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
+  BarChart3,
   Boxes,
   Layers,
   LayoutDashboard,
@@ -10,6 +11,7 @@ import {
   Receipt,
   Search,
   Settings,
+  Truck,
   Users,
   X,
 } from 'lucide-react'
@@ -23,7 +25,9 @@ const ADMIN_NAV = [
   { to: '/admin/composicoes', label: 'Composições', icon: Layers, end: false },
   { to: '/admin/estoque', label: 'Estoque', icon: Boxes, end: false },
   { to: '/admin/vendas', label: 'Vendas', icon: Receipt, end: false },
+  { to: '/admin/entregas', label: 'Entregas', icon: Truck, end: false },
   { to: '/admin/usuarios', label: 'Usuários', icon: Users, end: false },
+  { to: '/admin/relatorios', label: 'Relatórios', icon: BarChart3, end: false },
   { to: '/admin/configuracoes', label: 'Configurações', icon: Settings, end: false },
 ] as const
 
@@ -33,11 +37,14 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   '/admin/composicoes': { title: 'Composições', subtitle: 'Organize os grupos de composição dos produtos' },
   '/admin/estoque': { title: 'Estoque', subtitle: 'Controle de metragem disponível' },
   '/admin/vendas': { title: 'Vendas', subtitle: 'Pedidos e faturamento' },
+  '/admin/entregas': { title: 'Entregas', subtitle: 'Acompanhamento logístico' },
   '/admin/usuarios': { title: 'Usuários', subtitle: 'Clientes e equipe interna' },
+  '/admin/relatorios': { title: 'Relatórios', subtitle: 'Exportações e análises' },
   '/admin/configuracoes': {
     title: 'Configurações',
     subtitle: 'Conteúdo da home, categorias e informações de contato',
   },
+  '/admin/melhor-envio/callback': { title: 'Melhor Envio', subtitle: 'Conectando integração' },
 }
 
 export function AdminLayout() {

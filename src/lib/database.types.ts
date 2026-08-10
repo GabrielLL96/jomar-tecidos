@@ -287,6 +287,53 @@ export type Database = {
         }
         Relationships: []
       }
+      melhor_envio_settings: {
+        Row: {
+          access_token: string | null
+          client_id: string | null
+          client_secret: string | null
+          connected_at: string | null
+          connected_by: string | null
+          id: string
+          redirect_uri: string | null
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string | null
+          client_id?: string | null
+          client_secret?: string | null
+          connected_at?: string | null
+          connected_by?: string | null
+          id?: string
+          redirect_uri?: string | null
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string | null
+          client_id?: string | null
+          client_secret?: string | null
+          connected_at?: string | null
+          connected_by?: string | null
+          id?: string
+          redirect_uri?: string | null
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "melhor_envio_settings_connected_by_fkey"
+            columns: ["connected_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           color_id: string | null
@@ -546,6 +593,9 @@ export type Database = {
           min_sale_meters: number
           min_stock_meters: number
           name: string
+          package_height_cm: number | null
+          package_length_cm: number | null
+          package_width_cm: number | null
           price_per_meter: number
           sku: string
           slug: string
@@ -553,6 +603,7 @@ export type Database = {
           stock_meters: number
           tag: string | null
           updated_at: string
+          weight_grams: number | null
           width_m: number
         }
         Insert: {
@@ -565,6 +616,9 @@ export type Database = {
           min_sale_meters?: number
           min_stock_meters?: number
           name: string
+          package_height_cm?: number | null
+          package_length_cm?: number | null
+          package_width_cm?: number | null
           price_per_meter: number
           sku: string
           slug: string
@@ -572,6 +626,7 @@ export type Database = {
           stock_meters?: number
           tag?: string | null
           updated_at?: string
+          weight_grams?: number | null
           width_m: number
         }
         Update: {
@@ -584,6 +639,9 @@ export type Database = {
           min_sale_meters?: number
           min_stock_meters?: number
           name?: string
+          package_height_cm?: number | null
+          package_length_cm?: number | null
+          package_width_cm?: number | null
           price_per_meter?: number
           sku?: string
           slug?: string
@@ -591,6 +649,7 @@ export type Database = {
           stock_meters?: number
           tag?: string | null
           updated_at?: string
+          weight_grams?: number | null
           width_m?: number
         }
         Relationships: []

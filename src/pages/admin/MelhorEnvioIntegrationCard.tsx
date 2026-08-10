@@ -1,0 +1,123 @@
+import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { supabase } from '@/lib/supabase'
+import type { TablesUpdate } from '@/lib/database.types'
+import { useMelhorEnvioStatus } from '@/features/melhor-envio/hooks'
+import { MELHOR_ENVIO_SETTINGS_ID } from '@/features/melhor-envio/queries'
+import { buildAuthorizeUrl } from '@/features/melhor-envio/service'
+
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+
+function SettingsCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-md border border-[#e4ddd0] bg-white p-6">
+      <h2 className="text-navy-dark mb-4 font-serif text-lg font-medium">{title}</h2>
+      <div className="flex flex-col gap-4">{children}</div>
+    </div>
+  )
+}
+
+export function MelhorEnvioIntegrationCard() {
+  const queryClient = useQueryClient()
+  const { data: status } = useMelhorEnvioStatus()
+  const [clientId, setClientId] = useState('')
+  const [clientSecret, setClientSecret] = useState('')
+  const [redirectUri, setRedirectUri] = useState(`${window.location.origin}/admin/melhor-envio/callback`)
+  const [isSaving, setIsSaving] = useState(false)
+  const syncedStatus = useRef(false)
+
+  useEffect(() => {
+    if (syncedStatus.current || !status) return
+    syncedStatus.current = true
+    setClientId(status.clientId ?? '')
+    setRedirectUri(status.redirectUri ?? `${window.location.origin}/admin/melhor-envio/callback`)
+  }, [status])
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      // UPDATE puro, nunca upsert: a linha singleton já é semeada por
+      // migration (20260810130100) — upsert exigiria SELECT de tabela
+      // inteira pra resolver o ON CONFLICT, o que devolveria client_secret
+      // pro client. UPDATE não precisa de SELECT nenhum do chamador.
+      const payload: TablesUpdate<'melhor_envio_settings'> = {
+        client_id: clientId,
+        redirect_uri: redirectUri,
+      }
+      // client_secret só entra se o admin digitou um valor novo — campo
+      // sempre nasce vazio (GRANT nunca devolve o secret salvo), então
+      // mandar string vazia aqui apagaria um secret já configurado.
+      if (clientSecret.trim()) payload.client_secret = clientSecret.trim()
+
+      const { error } = await supabase
+        .from('melhor_envio_settings')
+        .update(payload)
+        .eq('id', MELHOR_ENVIO_SETTINGS_ID)
+      if (error) throw new Error(error.message)
+      setClientSecret('')
+      await queryClient.invalidateQueries({ queryKey: ['melhor-envio', 'status'] })
+      toast.success('Integração salva')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível salvar')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleConnect = () => {
+    if (!clientId.trim() || !redirectUri.trim()) {
+      toast.error('Preencha e salve client_id e redirect_uri antes de conectar')
+      return
+    }
+    window.location.href = buildAuthorizeUrl(clientId.trim(), redirectUri.trim())
+  }
+
+  return (
+    <SettingsCard title="Integrações">
+      <div>
+        <div className="text-navy-dark text-sm font-semibold">Melhor Envio (sandbox)</div>
+        <p className="text-text-meta mt-1 text-xs">
+          {status?.connectedAt
+            ? `Conectado em ${dateTimeFormatter.format(new Date(status.connectedAt))}`
+            : 'Não conectado'}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label>Client ID</Label>
+          <Input value={clientId} onChange={(event) => setClientId(event.target.value)} />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label>Client Secret</Label>
+          <Input
+            type="password"
+            placeholder={status?.connectedAt ? '•••• já configurado — digite pra substituir' : ''}
+            value={clientSecret}
+            onChange={(event) => setClientSecret(event.target.value)}
+          />
+        </div>
+        <div className="col-span-2 flex flex-col gap-1.5">
+          <Label>Redirect URI</Label>
+          <Input value={redirectUri} onChange={(event) => setRedirectUri(event.target.value)} />
+          <p className="text-text-meta text-xs">
+            Precisa ser exatamente igual ao cadastrado no painel da Melhor Envio (Integrações {'>'} Área Dev.)
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button type="button" onClick={handleSave} disabled={isSaving} variant="secondary">
+          {isSaving ? 'Salvando…' : 'Salvar integração'}
+        </Button>
+        <Button type="button" onClick={handleConnect}>
+          Conectar com Melhor Envio
+        </Button>
+      </div>
+    </SettingsCard>
+  )
+}

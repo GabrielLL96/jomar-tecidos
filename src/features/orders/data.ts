@@ -1,4 +1,4 @@
-import type { DeliveryStatus, OrderStatus } from './types'
+import type { CouponStatus, CouponType, DeliveryStatus, OrderStatus } from './types'
 
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   pending: 'Aguardando pagamento',
@@ -21,4 +21,17 @@ export const DELIVERY_STATUS_LABELS: Record<DeliveryStatus, string> = {
   in_transit: 'A caminho',
   delivered: 'Entregue',
   delayed: 'Atrasado',
+}
+
+export const COUPON_TYPE_LABELS: Record<CouponType, string> = {
+  percentage: 'Percentual',
+  fixed: 'Valor fixo',
+  free_shipping: 'Frete grátis',
+}
+
+export const COUPON_STATUS_LABELS: Record<CouponStatus, string> = {
+  active: 'Ativo',
+  scheduled: 'Agendado',
+  expired: 'Expirado',
+  depleted: 'Esgotado',
 }

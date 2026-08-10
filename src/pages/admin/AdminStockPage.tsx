@@ -35,7 +35,7 @@ import { useAuth } from '@/features/auth/AuthContext'
 import { useAdminProducts, useCompositions } from '@/features/catalog/hooks'
 import { useStockMovements } from '@/features/stock/hooks'
 import { STATUS_LABELS, STATUS_STYLES } from '@/features/catalog/data'
-import { computeStockStatus, formatCompositionLabel } from '@/features/catalog/utils'
+import { buildStockCSV, computeStockStatus, formatCompositionLabel } from '@/features/catalog/utils'
 import type { Product } from '@/features/catalog/types'
 
 const ALL_COMPOSITIONS = 'all'
@@ -48,29 +48,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
   dateStyle: 'short',
   timeStyle: 'short',
 })
-
-function toCSV(
-  rows: Product[],
-  compositions: Parameters<typeof formatCompositionLabel>[1],
-): string {
-  const escape = (value: string) => `"${value.replace(/"/g, '""')}"`
-  const header = ['Produto', 'SKU', 'Composição', 'Estoque (m)', 'Estoque mínimo (m)', 'Status']
-  const lines = rows.map((product) =>
-    [
-      product.name,
-      product.sku,
-      product.compositions.length > 0
-        ? formatCompositionLabel(product.compositions, compositions)
-        : '',
-      String(product.stockMeters),
-      String(product.minStockMeters),
-      STATUS_LABELS[product.status],
-    ]
-      .map(escape)
-      .join(','),
-  )
-  return [header.map(escape).join(','), ...lines].join('\n')
-}
 
 export function AdminStockPage() {
   const { user } = useAuth()
@@ -257,7 +234,7 @@ export function AdminStockPage() {
         <Button
           variant="outline"
           onClick={() =>
-            downloadCSV(toCSV(filteredProducts, compositions), `estoque-${toDateOnly(new Date())}.csv`)
+            downloadCSV(buildStockCSV(filteredProducts, compositions), `estoque-${toDateOnly(new Date())}.csv`)
           }
           className="sm:self-start"
         >

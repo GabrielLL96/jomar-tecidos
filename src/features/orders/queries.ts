@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import type { DeliveryStatus, Order, OrderItem } from './types'
+import type { Coupon, DeliveryStatus, Order, OrderItem } from './types'
 
 const ORDER_SELECT = `
   id, order_number, status, payment_method, subtotal, shipping_cost, discount_total, total,
@@ -149,6 +149,28 @@ export const myOrdersQueryOptions = (userId: string) =>
     staleTime: 30 * 1000,
     enabled: Boolean(userId),
   })
+
+export const adminCouponsQueryOptions = queryOptions({
+  queryKey: ['coupons', 'admin'] as const,
+  queryFn: async (): Promise<Coupon[]> => {
+    const { data, error } = await supabase
+      .from('coupons')
+      .select('id, code, type, value, max_uses, used_count, expires_at, status')
+      .order('code', { ascending: true })
+    if (error) throw new Error(error.message)
+    return data.map((row) => ({
+      id: row.id,
+      code: row.code,
+      type: row.type,
+      value: Number(row.value),
+      maxUses: row.max_uses ?? undefined,
+      usedCount: row.used_count,
+      expiresAt: row.expires_at ?? undefined,
+      status: row.status,
+    }))
+  },
+  staleTime: 30 * 1000,
+})
 
 export const orderQueryOptions = (id: string) =>
   queryOptions({

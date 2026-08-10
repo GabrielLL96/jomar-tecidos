@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageUploadField } from '@/components/common/ImageUploadField'
+import { MelhorEnvioIntegrationCard } from './MelhorEnvioIntegrationCard'
 import { supabase } from '@/lib/supabase'
 import { CATEGORY_DISPLAY } from '@/features/catalog/data'
 import { useSiteSettings } from '@/features/site-settings/hooks'
@@ -206,6 +207,8 @@ export function AdminSettingsPage() {
           </div>
         </div>
       </SettingsCard>
+
+      <MelhorEnvioIntegrationCard />
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={isSaving}>

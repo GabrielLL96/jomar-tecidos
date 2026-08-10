@@ -21,6 +21,8 @@
     "sb:login": "dotenv -- sh -c 'supabase login --token $SUPABASE_ACCESS_TOKEN'",
     "sb:link": "supabase link --project-ref",
     "fn:deploy": "supabase functions deploy meta-catalog-feed --no-verify-jwt",
+    "fn:deploy:melhor-envio-oauth-exchange": "supabase functions deploy melhor-envio-oauth-exchange",
+    "fn:deploy:melhor-envio-shipping-calculate": "supabase functions deploy melhor-envio-shipping-calculate",
     "fn:deploy:all": "supabase functions deploy"
   },
   "dependencies": {

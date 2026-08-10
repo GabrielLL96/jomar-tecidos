@@ -36,6 +36,12 @@ export interface Product {
   minSaleMeters: number
   minStockMeters: number
   status: ProductStatus
+  // dados de pacote pra cotação de frete (Melhor Envio) — nullable de
+  // propósito, produto antigo pode não ter (ver migration 20260810120100).
+  weightGrams?: number
+  packageHeightCm?: number
+  packageWidthCm?: number
+  packageLengthCm?: number
   tag?: 'Novo' | 'Premium'
   isBestseller: boolean
   colors: [string, string]

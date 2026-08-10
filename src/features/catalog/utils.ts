@@ -1,4 +1,6 @@
-import type { Composition, ProductComposition, ProductStatus } from './types'
+import { buildCSV } from '@/lib/csv'
+import { STATUS_LABELS } from './data'
+import type { Composition, Product, ProductComposition, ProductStatus } from './types'
 
 function dominantComposition(compositions: ProductComposition[]): ProductComposition {
   return [...compositions].sort((a, b) => b.percentage - a.percentage)[0]
@@ -46,6 +48,20 @@ export function computeStockStatus(
   if (stockMeters <= 0) return 'out_of_stock'
   if (minStockMeters > 0 && stockMeters <= minStockMeters) return 'low_stock'
   return 'active'
+}
+
+export function buildStockCSV(products: Product[], compositions: Composition[]): string {
+  return buildCSV(
+    ['Produto', 'SKU', 'Composição', 'Estoque (m)', 'Estoque mínimo (m)', 'Status'],
+    products.map((product) => [
+      product.name,
+      product.sku,
+      product.compositions.length > 0 ? formatCompositionLabel(product.compositions, compositions) : '',
+      String(product.stockMeters),
+      String(product.minStockMeters),
+      STATUS_LABELS[product.status],
+    ]),
+  )
 }
 
 export function slugify(name: string) {

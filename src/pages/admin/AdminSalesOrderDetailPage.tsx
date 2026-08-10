@@ -291,7 +291,7 @@ export function AdminSalesOrderDetailPage() {
     <div>
       <Link
         to="/admin/vendas"
-        className="text-navy mb-4 inline-flex items-center gap-1.5 text-sm hover:underline"
+        className="text-navy mb-4 inline-flex items-center gap-1.5 rounded-md border border-[#e4ddd0] bg-white px-3 py-2 text-sm hover:underline"
       >
         <ArrowLeft className="size-3.5" /> Voltar para Vendas
       </Link>

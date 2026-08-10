@@ -16,6 +16,9 @@ import { useCart } from '@/features/cart/CartContext'
 import { useAddresses } from '@/features/account/AddressesContext'
 import { calculateDiscount, isCouponValid } from '@/features/orders/coupon-utils'
 import type { Coupon } from '@/features/orders/types'
+import { useProducts } from '@/features/catalog/hooks'
+import { calculateShipping } from '@/features/melhor-envio/service'
+import type { ShippingQuoteOption } from '@/features/melhor-envio/types'
 import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
 
 export function CheckoutPage() {
@@ -24,15 +27,30 @@ export function CheckoutPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const business = useBusinessInfo()
+  const { data: products = [] } = useProducts()
   const navigate = useNavigate()
 
   const [couponCode, setCouponCode] = useState('')
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
   const [couponError, setCouponError] = useState<string | null>(null)
 
-  const shipping = subtotal >= business.freeShippingThreshold ? 0 : business.flatShippingFee
+  const [shippingOptions, setShippingOptions] = useState<ShippingQuoteOption[]>([])
+  const [selectedShippingServiceId, setSelectedShippingServiceId] = useState<number | null>(null)
+  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false)
+  const [shippingQuoteError, setShippingQuoteError] = useState<string | null>(null)
+
+  const isFreeShipping = subtotal >= business.freeShippingThreshold
+  const selectedShippingOption = shippingOptions.find((option) => option.serviceId === selectedShippingServiceId)
+  // sem cotação real escolhida, cai na taxa fixa (fallback já usado antes desta
+  // feature existir) — nunca trava o checkout esperando integração conectada.
+  const shipping = isFreeShipping ? 0 : (selectedShippingOption?.price ?? business.flatShippingFee)
   const discount = appliedCoupon ? calculateDiscount(appliedCoupon, subtotal, shipping) : 0
   const total = subtotal + shipping - discount
+
+  const cartItemsMissingShippingData = items.some((item) => {
+    const product = products.find((p) => p.id === item.productId)
+    return !product?.weightGrams || !product.packageHeightCm || !product.packageWidthCm || !product.packageLengthCm
+  })
 
   const {
     register,
@@ -46,6 +64,38 @@ export function CheckoutPage() {
   })
 
   const paymentMethod = watch('paymentMethod')
+  const zip = watch('zip')
+
+  const handleCalculateShipping = async () => {
+    setIsCalculatingShipping(true)
+    setShippingQuoteError(null)
+    try {
+      // weightGrams do produto é peso por metro — a linha do carrinho pesa
+      // isso vezes os metros comprados. Altura/largura/comprimento da
+      // embalagem NÃO escalam por metro (caixa/rolo padrão do produto).
+      const quoteItems = items.map((item) => {
+        const product = products.find((p) => p.id === item.productId)
+        return {
+          weightGrams: Math.ceil((product?.weightGrams ?? 0) * item.meters),
+          heightCm: product?.packageHeightCm ?? 0,
+          widthCm: product?.packageWidthCm ?? 0,
+          lengthCm: product?.packageLengthCm ?? 0,
+          quantity: 1,
+        }
+      })
+      const options = await calculateShipping(zip, quoteItems)
+      if (options.length === 0) {
+        setShippingQuoteError('Nenhuma transportadora disponível pra este CEP')
+        return
+      }
+      setShippingOptions(options)
+      setSelectedShippingServiceId(options[0].serviceId)
+    } catch (error) {
+      setShippingQuoteError(error instanceof Error ? error.message : 'Não foi possível cotar o frete')
+    } finally {
+      setIsCalculatingShipping(false)
+    }
+  }
 
   const handleApplyCoupon = async () => {
     const { data, error } = await supabase
@@ -240,10 +290,58 @@ export function CheckoutPage() {
             <span>Subtotal</span>
             <span>{formatPriceBRL(subtotal)}</span>
           </div>
-          <div className="text-text-body mb-2.5 flex justify-between text-sm">
-            <span>Frete</span>
-            <span>{shipping === 0 ? 'Grátis' : formatPriceBRL(shipping)}</span>
-          </div>
+          {isFreeShipping ? (
+            <div className="text-text-body mb-2.5 flex justify-between text-sm">
+              <span>Frete</span>
+              <span>Grátis</span>
+            </div>
+          ) : (
+            <div className="mb-2.5">
+              <div className="text-text-body mb-1.5 flex justify-between text-sm">
+                <span>Frete</span>
+                <span>
+                  {formatPriceBRL(shipping)}
+                  {!selectedShippingOption && ' (estimado)'}
+                </span>
+              </div>
+              {cartItemsMissingShippingData ? (
+                <p className="text-text-meta text-xs">
+                  Cotação real indisponível pra este pedido — usando taxa estimada.
+                </p>
+              ) : shippingOptions.length > 0 ? (
+                <div className="flex flex-col gap-1.5">
+                  {shippingOptions.map((option) => (
+                    <label
+                      key={option.serviceId}
+                      className="flex items-center gap-2 text-xs text-[#3a352b]"
+                    >
+                      <input
+                        type="radio"
+                        name="shippingOption"
+                        checked={selectedShippingServiceId === option.serviceId}
+                        onChange={() => setSelectedShippingServiceId(option.serviceId)}
+                      />
+                      {option.carrierName} {option.serviceName} — {formatPriceBRL(option.price)}
+                      {option.deliveryDays ? ` (${option.deliveryDays} dias úteis)` : ''}
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleCalculateShipping}
+                  disabled={isCalculatingShipping || zip?.replace(/\D/g, '').length !== 8}
+                  className="h-8 rounded-sm px-3 text-xs"
+                >
+                  {isCalculatingShipping ? 'Calculando…' : 'Calcular frete'}
+                </Button>
+              )}
+              {shippingQuoteError && (
+                <p className="text-destructive mt-1 text-xs">{shippingQuoteError}</p>
+              )}
+            </div>
+          )}
           {discount > 0 && (
             <div className="text-brand-red mb-2.5 flex justify-between text-sm">
               <span>Desconto</span>

@@ -22,6 +22,9 @@ import { AdminCompositionsPage } from '@/pages/admin/AdminCompositionsPage'
 import { AdminStockPage } from '@/pages/admin/AdminStockPage'
 import { AdminSalesPage } from '@/pages/admin/AdminSalesPage'
 import { AdminSalesOrderDetailPage } from '@/pages/admin/AdminSalesOrderDetailPage'
+import { AdminDeliveriesPage } from '@/pages/admin/AdminDeliveriesPage'
+import { AdminReportsPage } from '@/pages/admin/AdminReportsPage'
+import { AdminMelhorEnvioCallbackPage } from '@/pages/admin/AdminMelhorEnvioCallbackPage'
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -56,8 +59,11 @@ function App() {
         <Route path="estoque" element={<AdminStockPage />} />
         <Route path="vendas" element={<AdminSalesPage />} />
         <Route path="vendas/:id" element={<AdminSalesOrderDetailPage />} />
+        <Route path="entregas" element={<AdminDeliveriesPage />} />
         <Route path="usuarios" element={<AdminUsersPage />} />
+        <Route path="relatorios" element={<AdminReportsPage />} />
         <Route path="configuracoes" element={<AdminSettingsPage />} />
+        <Route path="melhor-envio/callback" element={<AdminMelhorEnvioCallbackPage />} />
       </Route>
     </Routes>
   )

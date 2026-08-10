@@ -33,12 +33,28 @@ import type { Product } from '@/features/catalog/types'
 
 const decimalPtBR = (val: unknown) => (typeof val === 'string' ? val.replace(',', '.') : val)
 
+// campo numérico opcional (peso/dimensão de embalagem) — string vazia vira
+// undefined antes do coerce, senão Number('') = 0 marcaria "0g" como valor
+// válido em vez de "não preenchido".
+const decimalPtBROptional = (val: unknown) => {
+  if (typeof val !== 'string') return val
+  const trimmed = val.trim()
+  return trimmed ? trimmed.replace(',', '.') : undefined
+}
+
 const productFormSchema = z.object({
   name: z.string().min(3, 'Informe o nome do produto'),
   categorySlug: z.string().min(1, 'Selecione uma categoria'),
   widthM: z.preprocess(decimalPtBR, z.coerce.number().positive('Informe uma largura válida')),
   pricePerMeter: z.preprocess(decimalPtBR, z.coerce.number().positive('Informe um preço válido')),
   stockMeters: z.preprocess(decimalPtBR, z.coerce.number().min(0, 'Informe o estoque inicial')),
+  weightGrams: z.preprocess(decimalPtBROptional, z.coerce.number().positive('Peso inválido').optional()),
+  packageHeightCm: z.preprocess(decimalPtBROptional, z.coerce.number().positive('Altura inválida').optional()),
+  packageWidthCm: z.preprocess(decimalPtBROptional, z.coerce.number().positive('Largura inválida').optional()),
+  packageLengthCm: z.preprocess(
+    decimalPtBROptional,
+    z.coerce.number().positive('Comprimento inválido').optional(),
+  ),
   description: z.string().optional(),
 })
 
@@ -116,6 +132,13 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
         widthM: String(product.widthM).replace('.', ','),
         pricePerMeter: String(product.pricePerMeter).replace('.', ','),
         stockMeters: String(product.stockMeters).replace('.', ','),
+        weightGrams: product.weightGrams !== undefined ? String(product.weightGrams) : '',
+        packageHeightCm:
+          product.packageHeightCm !== undefined ? String(product.packageHeightCm).replace('.', ',') : '',
+        packageWidthCm:
+          product.packageWidthCm !== undefined ? String(product.packageWidthCm).replace('.', ',') : '',
+        packageLengthCm:
+          product.packageLengthCm !== undefined ? String(product.packageLengthCm).replace('.', ',') : '',
         description: product.description,
       })
       setCompositionPct(
@@ -186,6 +209,15 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
   }
 
   const onSubmit = async (data: ProductFormOutput) => {
+    if (
+      !isEditing &&
+      (!data.weightGrams || !data.packageHeightCm || !data.packageWidthCm || !data.packageLengthCm)
+    ) {
+      setActiveTab('dados')
+      toast.error('Preencha peso e dimensões da embalagem (necessário pra cotação de frete)')
+      return
+    }
+
     const compositionIds = Object.keys(compositionPct)
     if (compositionIds.length === 0) {
       setActiveTab('composicao')
@@ -219,6 +251,10 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
                 price_per_meter: data.pricePerMeter,
                 width_m: data.widthM,
                 stock_meters: data.stockMeters,
+                weight_grams: data.weightGrams ?? null,
+                package_height_cm: data.packageHeightCm ?? null,
+                package_width_cm: data.packageWidthCm ?? null,
+                package_length_cm: data.packageLengthCm ?? null,
                 min_sale_meters: 0.5,
                 // produto novo nasce sem min_stock_meters definido (default 0 no
                 // banco) — nunca começa em low_stock, admin define o mínimo depois.
@@ -242,6 +278,10 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
             price_per_meter: data.pricePerMeter,
             width_m: data.widthM,
             stock_meters: data.stockMeters,
+            weight_grams: data.weightGrams ?? null,
+            package_height_cm: data.packageHeightCm ?? null,
+            package_width_cm: data.packageWidthCm ?? null,
+            package_length_cm: data.packageLengthCm ?? null,
             // status de inativo é controlado só pelo toggle Ativar/Inativar da tabela —
             // editar outros campos nunca deve reativar um produto inativado de propósito.
             status: computeStockStatus(product.status, data.stockMeters, product.minStockMeters),
@@ -371,6 +411,51 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
                     <p className="text-destructive text-xs">{errors.stockMeters.message}</p>
                   )}
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label>Dados para frete (peso e embalagem)</Label>
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="weightGrams" className="text-text-meta text-xs font-normal">
+                      Peso (g)
+                    </Label>
+                    <Input id="weightGrams" placeholder="300" {...register('weightGrams')} />
+                    {errors.weightGrams && (
+                      <p className="text-destructive text-xs">{errors.weightGrams.message}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="packageHeightCm" className="text-text-meta text-xs font-normal">
+                      Altura (cm)
+                    </Label>
+                    <Input id="packageHeightCm" placeholder="5" {...register('packageHeightCm')} />
+                    {errors.packageHeightCm && (
+                      <p className="text-destructive text-xs">{errors.packageHeightCm.message}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="packageWidthCm" className="text-text-meta text-xs font-normal">
+                      Largura (cm)
+                    </Label>
+                    <Input id="packageWidthCm" placeholder="20" {...register('packageWidthCm')} />
+                    {errors.packageWidthCm && (
+                      <p className="text-destructive text-xs">{errors.packageWidthCm.message}</p>
+                    )}
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <Label htmlFor="packageLengthCm" className="text-text-meta text-xs font-normal">
+                      Comprimento (cm)
+                    </Label>
+                    <Input id="packageLengthCm" placeholder="30" {...register('packageLengthCm')} />
+                    {errors.packageLengthCm && (
+                      <p className="text-destructive text-xs">{errors.packageLengthCm.message}</p>
+                    )}
+                  </div>
+                </div>
+                <p className="text-text-meta text-xs">
+                  Obrigatório em produto novo — usado pra cotar frete real (Melhor Envio) no checkout.
+                </p>
               </div>
 
               <div className="flex flex-col gap-2">

@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { formatPriceBRL } from '@/lib/format'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useMyOrders } from '@/features/orders/hooks'
-import { DELIVERY_STATUS_LABELS, ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/features/orders/data'
+import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/features/orders/data'
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' })
 
@@ -31,9 +31,7 @@ export function AccountOrdersPage() {
           </div>
           {order.delivery && (order.delivery.carrier || order.delivery.trackingCode) && (
             <div className="text-text-meta mt-2 text-xs">
-              Rastreio:{' '}
-              {[order.delivery.carrier, order.delivery.trackingCode].filter(Boolean).join(' · ')} ·{' '}
-              {DELIVERY_STATUS_LABELS[order.delivery.status]}
+              Rastreio: {[order.delivery.carrier, order.delivery.trackingCode].filter(Boolean).join(' · ')}
             </div>
           )}
         </div>
