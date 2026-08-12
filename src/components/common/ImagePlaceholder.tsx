@@ -12,6 +12,8 @@ interface ImagePlaceholderProps {
   children?: ReactNode
   /** Zoom + pan seguindo o mouse ao passar por cima — usado na imagem principal da PDP. */
   zoomOnHover?: boolean
+  /** Imagem acima da dobra (ex.: hero) — carrega eager + alta prioridade em vez de lazy. */
+  priority?: boolean
 }
 
 export function ImagePlaceholder({
@@ -22,6 +24,7 @@ export function ImagePlaceholder({
   className,
   children,
   zoomOnHover = false,
+  priority = false,
 }: ImagePlaceholderProps) {
   const [origin, setOrigin] = useState({ x: 50, y: 50 })
   const [isZooming, setIsZooming] = useState(false)
@@ -52,7 +55,8 @@ export function ImagePlaceholder({
         <img
           src={src}
           alt={alt}
-          loading="lazy"
+          loading={priority ? 'eager' : 'lazy'}
+          fetchPriority={priority ? 'high' : 'auto'}
           className={cn(
             'absolute inset-0 h-full w-full object-cover',
             zoomOnHover && 'transition-transform duration-500 ease-out',

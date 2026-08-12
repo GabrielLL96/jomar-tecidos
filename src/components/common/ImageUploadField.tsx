@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { ImageUp, Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { resizeImageFile } from '@/lib/image-compression'
 import { supabase } from '@/lib/supabase'
+import { SITE_IMAGE_MAX_WIDTH } from '@/lib/constants'
 import { cn, extractStoragePath } from '@/lib/utils'
 
 interface ImageUploadFieldProps {
@@ -40,8 +42,11 @@ export function ImageUploadField({
 
     setIsUploading(true)
     try {
-      const path = `${pathPrefix}/${crypto.randomUUID()}-${sanitizeFileName(file.name)}`
-      const { error } = await supabase.storage.from(bucket).upload(path, file, { upsert: true })
+      const resized = await resizeImageFile(file, SITE_IMAGE_MAX_WIDTH)
+      const path = `${pathPrefix}/${crypto.randomUUID()}-${sanitizeFileName(resized.name)}`
+      const { error } = await supabase.storage
+        .from(bucket)
+        .upload(path, resized, { upsert: true, cacheControl: '31536000' })
       if (error) throw new Error(error.message)
 
       const { data } = supabase.storage.from(bucket).getPublicUrl(path)
@@ -97,7 +102,13 @@ export function ImageUploadField({
             (disabled || isUploading || isRemoving) && 'pointer-events-none opacity-50',
           )}
         >
-          {isUploading ? <Loader2 className="size-4 animate-spin" /> : value ? 'Trocar' : 'Enviar imagem'}
+          {isUploading ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : value ? (
+            'Trocar'
+          ) : (
+            'Enviar imagem'
+          )}
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"

@@ -3,13 +3,15 @@ import { motion } from 'motion/react'
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { Button } from '@/components/ui/button'
 import { CategoryCarousel } from '@/features/catalog/components/CategoryCarousel'
+import { CategorySkeleton } from '@/features/catalog/components/CategorySkeleton'
 import { ProductCard } from '@/features/catalog/components/ProductCard'
+import { ProductGridSkeleton } from '@/features/catalog/components/ProductGridSkeleton'
 import { useCategories, useProducts } from '@/features/catalog/hooks'
 import { useSiteSettings } from '@/features/site-settings/hooks'
 
 export function Home() {
-  const { data: categories } = useCategories()
-  const { data: products } = useProducts()
+  const { data: categories, isLoading: isLoadingCategories } = useCategories()
+  const { data: products, isLoading: isLoadingProducts } = useProducts()
   const { data: settings } = useSiteSettings()
 
   const categoriesWithImages = categories?.map((category) => ({
@@ -49,6 +51,7 @@ export function Home() {
           src={settings.home_hero_image_url || undefined}
           label={settings.home_hero_image_url ? undefined : 'foto — rolo de linho na vitrine'}
           className="order-1 h-64 w-full p-7 md:order-2 md:h-full"
+          priority
         />
       </section>
 
@@ -56,11 +59,17 @@ export function Home() {
         <div className="text-text-meta mb-2.5 text-xs font-semibold tracking-[0.18em] uppercase">
           Categorias
         </div>
-        <h2 className="text-navy-dark mb-10 font-serif text-3xl font-medium">Explore por material</h2>
-        {categoriesWithImages && <CategoryCarousel categories={categoriesWithImages} />}
+        <h2 className="text-navy-dark mb-10 font-serif text-3xl font-medium">
+          Explore por material
+        </h2>
+        {isLoadingCategories ? (
+          <CategorySkeleton />
+        ) : (
+          categoriesWithImages && <CategoryCarousel categories={categoriesWithImages} />
+        )}
       </section>
 
-      {bestsellers.length > 0 && (
+      {(isLoadingProducts || bestsellers.length > 0) && (
         <section className="bg-navy-dark px-6 py-20 text-white md:px-12">
           <div className="mx-auto max-w-(--breakpoint-xl)">
             <div className="mb-10 flex items-baseline justify-between">
@@ -69,16 +78,20 @@ export function Home() {
                 Ver todos os tecidos →
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
-              {bestsellers.map((product) => (
-                <ProductCard key={product.id} product={product} variant="dark" />
-              ))}
-            </div>
+            {isLoadingProducts ? (
+              <ProductGridSkeleton variant="dark" />
+            ) : (
+              <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
+                {bestsellers.map((product) => (
+                  <ProductCard key={product.id} product={product} variant="dark" />
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}
 
-      {newProducts.length > 0 && (
+      {(isLoadingProducts || newProducts.length > 0) && (
         <section className="px-6 py-20 md:px-12">
           <div className="mx-auto max-w-(--breakpoint-xl)">
             <div className="mb-10 flex items-baseline justify-between">
@@ -87,11 +100,15 @@ export function Home() {
                 Ver todos os tecidos →
               </Link>
             </div>
-            <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
-              {newProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+            {isLoadingProducts ? (
+              <ProductGridSkeleton />
+            ) : (
+              <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
+                {newProducts.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -111,8 +128,13 @@ export function Home() {
           <h2 className="text-navy-dark mb-4 font-serif text-3xl font-medium">
             {settings.home_banner2_title}
           </h2>
-          <p className="text-text-body mb-5 text-base leading-relaxed">{settings.home_banner2_subtitle}</p>
-          <Link to="/tecidos" className="text-navy border-navy border-b pb-0.5 text-sm font-semibold">
+          <p className="text-text-body mb-5 text-base leading-relaxed">
+            {settings.home_banner2_subtitle}
+          </p>
+          <Link
+            to="/tecidos"
+            className="text-navy border-navy border-b pb-0.5 text-sm font-semibold"
+          >
             {settings.home_banner2_cta_label}
           </Link>
         </div>

@@ -14,6 +14,12 @@ export const BUSINESS = {
   instagramHref: 'https://instagram.com',
 } as const
 
+// Largura máxima aplicada por resizeImageFile antes do upload — site-images são elementos
+// decorativos (hero/banner/categorias); product-images precisa de mais resolução por causa do
+// zoom-with-pan da PDP.
+export const SITE_IMAGE_MAX_WIDTH = 1600
+export const PRODUCT_IMAGE_MAX_WIDTH = 2000
+
 export const NAV_ITEMS = [
   { to: '/', label: 'Início' },
   { to: '/tecidos', label: 'Tecidos' },
