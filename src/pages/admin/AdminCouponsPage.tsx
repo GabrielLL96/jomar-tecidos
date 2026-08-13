@@ -116,6 +116,29 @@ export function AdminCouponsPage() {
       return
     }
 
+    const startsAt = form.startsAt ? startOfDayLocalISOString(form.startsAt) : undefined
+    const expiresAt = form.expiresAt ? endOfDayLocalISOString(form.expiresAt) : undefined
+
+    // Status gravado no banco é recalculado a cada criação/edição — mas só
+    // quando o admin deixou "Ativo" (default). Uma escolha manual explícita
+    // de Expirado/Esgotado é o kill switch pra desativar antes da hora (ex.:
+    // pausar promoção que ainda não venceu por data) e nunca é sobrescrita
+    // aqui, senão esse recurso deixaria de funcionar.
+    const autoStatus =
+      form.status === 'active'
+        ? computeCouponStatus({
+            id: editingCoupon?.id ?? '',
+            code,
+            type: form.type,
+            value,
+            maxUses: maxUses ?? undefined,
+            usedCount: editingCoupon?.usedCount ?? 0,
+            startsAt,
+            expiresAt,
+            status: form.status,
+          })
+        : form.status
+
     setIsSaving(true)
     try {
       const payload = {
@@ -126,9 +149,9 @@ export function AdminCouponsPage() {
         // Início/fim do dia local, não a data nua — coluna é timestamptz,
         // string "YYYY-MM-DD" seria lida como meia-noite UTC (desloca ~3h em
         // fuso do Brasil). Ver startOfDayLocalISOString/endOfDayLocalISOString.
-        starts_at: form.startsAt ? startOfDayLocalISOString(form.startsAt) : null,
-        expires_at: form.expiresAt ? endOfDayLocalISOString(form.expiresAt) : null,
-        status: form.status,
+        starts_at: startsAt ?? null,
+        expires_at: expiresAt ?? null,
+        status: autoStatus,
       }
       const { error } = editingCoupon
         ? await supabase.from('coupons').update(payload).eq('id', editingCoupon.id)
@@ -313,8 +336,9 @@ export function AdminCouponsPage() {
               </div>
             </div>
             <p className="text-text-meta -mt-2 text-xs">
-              "Agendado" e "Esgotado" aparecem sozinhos na lista, calculados por data/uso real —
-              aqui você só escolhe deixar ativo ou desligar antes da hora (Expirado/Esgotado).
+              Deixando "Ativo", o status real é recalculado sozinho ao salvar (Agendado/Esgotado
+              conforme data/uso) — escolha Expirado/Esgotado aqui só se quiser desligar o cupom
+              antes da hora, mesmo com data/uso ainda válidos.
             </p>
           </div>
 
