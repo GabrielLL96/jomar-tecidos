@@ -21,3 +21,8 @@ export interface ShippingQuoteOption {
   price: number
   deliveryDays: number | null
 }
+
+export interface ShippingQuoteResult {
+  quoteId: string
+  options: ShippingQuoteOption[]
+}

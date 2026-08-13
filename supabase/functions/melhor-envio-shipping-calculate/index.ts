@@ -96,7 +96,16 @@ Deno.serve(async (req) => {
         deliveryDays: quote.delivery_time ?? null,
       }))
 
-    return new Response(JSON.stringify({ options }), {
+    // Grava a cotação pra create_order() validar o shipping_cost contra um
+    // preço real depois, em vez de confiar no valor que o checkout mandar.
+    const { data: quoteRow, error: quoteError } = await supabase
+      .from('shipping_quotes')
+      .insert({ destination_zip: cleanDestinationZip, options })
+      .select('id')
+      .single()
+    if (quoteError) throw new Error(`Falha ao salvar cotação: ${quoteError.message}`)
+
+    return new Response(JSON.stringify({ options, quoteId: quoteRow.id }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {

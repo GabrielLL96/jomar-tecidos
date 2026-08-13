@@ -705,6 +705,30 @@ export type Database = {
           },
         ]
       }
+      shipping_quotes: {
+        Row: {
+          created_at: string
+          destination_zip: string
+          expires_at: string
+          id: string
+          options: Json
+        }
+        Insert: {
+          created_at?: string
+          destination_zip: string
+          expires_at?: string
+          id?: string
+          options: Json
+        }
+        Update: {
+          created_at?: string
+          destination_zip?: string
+          expires_at?: string
+          id?: string
+          options?: Json
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           key: string
@@ -843,6 +867,8 @@ export type Database = {
           p_payment_method: Database["public"]["Enums"]["payment_method"]
           p_shipping_address_id: string
           p_shipping_cost?: number
+          p_shipping_quote_id?: string
+          p_shipping_service_id?: number
         }
         Returns: {
           id: string

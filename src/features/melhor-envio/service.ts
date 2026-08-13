@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase'
-import type { ShippingQuoteItemInput, ShippingQuoteOption } from './types'
+import type { ShippingQuoteItemInput, ShippingQuoteResult } from './types'
 
 const MELHOR_ENVIO_SANDBOX_URL = 'https://sandbox.melhorenvio.com.br'
 const OAUTH_SCOPES = 'shipping-calculate'
@@ -49,11 +49,11 @@ export async function exchangeAuthorizationCode(code: string): Promise<void> {
 export async function calculateShipping(
   destinationZip: string,
   items: ShippingQuoteItemInput[],
-): Promise<ShippingQuoteOption[]> {
-  const { data, error } = await supabase.functions.invoke<{ options: ShippingQuoteOption[] }>(
+): Promise<ShippingQuoteResult> {
+  const { data, error } = await supabase.functions.invoke<ShippingQuoteResult>(
     'melhor-envio-shipping-calculate',
     { body: { destinationZip, items } },
   )
   if (error) await unwrapFunctionError(error)
-  return data?.options ?? []
+  return data ?? { quoteId: '', options: [] }
 }

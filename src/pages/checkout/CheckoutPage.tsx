@@ -36,11 +36,14 @@ export function CheckoutPage() {
 
   const [shippingOptions, setShippingOptions] = useState<ShippingQuoteOption[]>([])
   const [selectedShippingServiceId, setSelectedShippingServiceId] = useState<number | null>(null)
+  const [shippingQuoteId, setShippingQuoteId] = useState<string | null>(null)
   const [isCalculatingShipping, setIsCalculatingShipping] = useState(false)
   const [shippingQuoteError, setShippingQuoteError] = useState<string | null>(null)
 
   const isFreeShipping = subtotal >= business.freeShippingThreshold
   const selectedShippingOption = shippingOptions.find((option) => option.serviceId === selectedShippingServiceId)
+  const cheapestShippingPrice =
+    shippingOptions.length > 0 ? Math.min(...shippingOptions.map((option) => option.price)) : null
   // sem cotação real escolhida, cai na taxa fixa (fallback já usado antes desta
   // feature existir) — nunca trava o checkout esperando integração conectada.
   const shipping = isFreeShipping ? 0 : (selectedShippingOption?.price ?? business.flatShippingFee)
@@ -66,7 +69,7 @@ export function CheckoutPage() {
   const paymentMethod = watch('paymentMethod')
   const zip = watch('zip')
 
-  const handleCalculateShipping = async () => {
+  const handleCalculateShipping = async (targetZip: string) => {
     setIsCalculatingShipping(true)
     setShippingQuoteError(null)
     try {
@@ -83,19 +86,38 @@ export function CheckoutPage() {
           quantity: 1,
         }
       })
-      const options = await calculateShipping(zip, quoteItems)
+      const { quoteId, options } = await calculateShipping(targetZip, quoteItems)
       if (options.length === 0) {
         setShippingQuoteError('Nenhuma transportadora disponível pra este CEP')
         return
       }
       setShippingOptions(options)
       setSelectedShippingServiceId(options[0].serviceId)
+      setShippingQuoteId(quoteId)
     } catch (error) {
       setShippingQuoteError(error instanceof Error ? error.message : 'Não foi possível cotar o frete')
     } finally {
       setIsCalculatingShipping(false)
     }
   }
+
+  // Cotação dispara sozinha quando o CEP completa 8 dígitos — sem botão
+  // manual. Debounce de 600ms pra não disparar uma chamada a cada tecla
+  // enquanto ainda tá digitando/colando. Qualquer mudança no CEP invalida a
+  // cotação anterior na hora (ela era pra outro endereço).
+  useEffect(() => {
+    setShippingOptions([])
+    setSelectedShippingServiceId(null)
+    setShippingQuoteId(null)
+    setShippingQuoteError(null)
+
+    const cleanZip = (zip ?? '').replace(/\D/g, '')
+    if (cleanZip.length !== 8 || isFreeShipping || cartItemsMissingShippingData) return
+
+    const timer = setTimeout(() => void handleCalculateShipping(cleanZip), 600)
+    return () => clearTimeout(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zip, isFreeShipping, cartItemsMissingShippingData])
 
   const handleApplyCoupon = async () => {
     const { data, error } = await supabase
@@ -158,6 +180,12 @@ export function CheckoutPage() {
           color_id: item.colorId ?? null,
           meters: item.meters,
         })),
+        // Com cotação real escolhida, o servidor ignora p_shipping_cost e usa
+        // o preço autoritativo salvo em shipping_quotes (ver create_order()).
+        // Sem cotação (taxa fixa), esses dois ficam null e o servidor usa
+        // p_shipping_cost mesmo — ver limitação conhecida no spec.
+        p_shipping_quote_id: shippingQuoteId ?? undefined,
+        p_shipping_service_id: selectedShippingServiceId ?? undefined,
       })
       if (orderError) throw new Error(orderError.message)
 
@@ -308,34 +336,54 @@ export function CheckoutPage() {
                 <p className="text-text-meta text-xs">
                   Cotação real indisponível pra este pedido — usando taxa estimada.
                 </p>
+              ) : isCalculatingShipping ? (
+                <p className="text-text-meta text-xs">Calculando frete…</p>
               ) : shippingOptions.length > 0 ? (
                 <div className="flex flex-col gap-1.5">
-                  {shippingOptions.map((option) => (
-                    <label
-                      key={option.serviceId}
-                      className="flex items-center gap-2 text-xs text-[#3a352b]"
-                    >
-                      <input
-                        type="radio"
-                        name="shippingOption"
-                        checked={selectedShippingServiceId === option.serviceId}
-                        onChange={() => setSelectedShippingServiceId(option.serviceId)}
-                      />
-                      {option.carrierName} {option.serviceName} — {formatPriceBRL(option.price)}
-                      {option.deliveryDays ? ` (${option.deliveryDays} dias úteis)` : ''}
-                    </label>
-                  ))}
+                  {shippingOptions.map((option) => {
+                    const isCheapest = option.price === cheapestShippingPrice
+                    const isSelected = selectedShippingServiceId === option.serviceId
+                    return (
+                      <label
+                        key={option.serviceId}
+                        className={cn(
+                          'flex cursor-pointer items-center justify-between gap-2 rounded-sm border px-3 py-2 text-xs',
+                          isSelected ? 'border-navy bg-navy/5' : 'border-border',
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          <input
+                            type="radio"
+                            name="shippingOption"
+                            className="accent-navy"
+                            checked={isSelected}
+                            onChange={() => setSelectedShippingServiceId(option.serviceId)}
+                          />
+                          <span>
+                            <span className="text-foreground block font-medium">
+                              {option.carrierName} {option.serviceName}
+                            </span>
+                            <span className="text-text-meta">
+                              {option.deliveryDays ? `${option.deliveryDays} dias úteis` : 'Prazo não informado'}
+                            </span>
+                          </span>
+                        </span>
+                        <span className="flex flex-col items-end gap-0.5">
+                          {isCheapest && (
+                            <span className="bg-navy rounded-full px-1.5 py-0.5 text-[10px] font-semibold text-white">
+                              Mais barato
+                            </span>
+                          )}
+                          <span className="text-navy font-medium">{formatPriceBRL(option.price)}</span>
+                        </span>
+                      </label>
+                    )
+                  })}
                 </div>
               ) : (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleCalculateShipping}
-                  disabled={isCalculatingShipping || zip?.replace(/\D/g, '').length !== 8}
-                  className="h-8 rounded-sm px-3 text-xs"
-                >
-                  {isCalculatingShipping ? 'Calculando…' : 'Calcular frete'}
-                </Button>
+                zip?.replace(/\D/g, '').length !== 8 && (
+                  <p className="text-text-meta text-xs">Digite o CEP completo pra calcular o frete real.</p>
+                )
               )}
               {shippingQuoteError && (
                 <p className="text-destructive mt-1 text-xs">{shippingQuoteError}</p>
