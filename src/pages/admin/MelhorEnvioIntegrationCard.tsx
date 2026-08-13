@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase'
@@ -14,7 +13,6 @@ import {
   exchangeAuthorizationCode,
   MELHOR_ENVIO_OAUTH_MESSAGE_TYPE,
 } from '@/features/melhor-envio/service'
-import type { MelhorEnvioConnectResult } from '@/features/melhor-envio/types'
 
 const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 const WEBHOOK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/melhor-envio-webhook`
@@ -35,7 +33,7 @@ export function MelhorEnvioIntegrationCard() {
   const [clientSecret, setClientSecret] = useState('')
   const [redirectUri, setRedirectUri] = useState(`${window.location.origin}/admin/melhor-envio/callback`)
   const [isSaving, setIsSaving] = useState(false)
-  const [connectResult, setConnectResult] = useState<MelhorEnvioConnectResult | null>(null)
+  const [connectError, setConnectError] = useState<string | null>(null)
   const syncedStatus = useRef(false)
   const popupRef = useRef<Window | null>(null)
   // `state` gerado pro fluxo em andamento — comparado contra o que o popup
@@ -64,23 +62,18 @@ export function MelhorEnvioIntegrationCard() {
 
       const { code, state } = event.data as { code: string | null; state: string | null }
       if (!code || !state || state !== pendingStateRef.current) {
-        setConnectResult({
-          success: false,
-          message: 'Retorno inválido da Melhor Envio (código ou state ausente/incorreto).',
-        })
+        setConnectError('Retorno inválido da Melhor Envio (código ou state ausente/incorreto).')
         return
       }
 
       exchangeAuthorizationCode(code)
         .then(() => {
-          setConnectResult({ success: true })
+          setConnectError(null)
+          toast.success('Conectado com sucesso')
           return queryClient.invalidateQueries({ queryKey: ['melhor-envio', 'status'] })
         })
         .catch((error: unknown) => {
-          setConnectResult({
-            success: false,
-            message: error instanceof Error ? error.message : 'Falha ao concluir a conexão',
-          })
+          setConnectError(error instanceof Error ? error.message : 'Falha ao concluir a conexão')
         })
     }
     window.addEventListener('message', handleMessage)
@@ -139,6 +132,7 @@ export function MelhorEnvioIntegrationCard() {
       toast.error('Não foi possível abrir a janela de conexão — verifique o bloqueador de pop-ups')
       return
     }
+    setConnectError(null)
     pendingStateRef.current = state
     popupRef.current = popup
   }
@@ -192,32 +186,17 @@ export function MelhorEnvioIntegrationCard() {
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Button type="button" onClick={handleSave} disabled={isSaving} variant="secondary">
-          {isSaving ? 'Salvando…' : 'Salvar integração'}
-        </Button>
-        <Button type="button" onClick={handleConnect}>
-          Conectar com Melhor Envio
-        </Button>
+      <div className="flex flex-col gap-1.5">
+        <div className="flex gap-2">
+          <Button type="button" onClick={handleSave} disabled={isSaving} variant="secondary">
+            {isSaving ? 'Salvando…' : 'Salvar integração'}
+          </Button>
+          <Button type="button" onClick={handleConnect}>
+            Conectar com Melhor Envio
+          </Button>
+        </div>
+        {connectError && <p className="text-destructive text-xs">{connectError}</p>}
       </div>
-
-      <Dialog open={connectResult !== null} onOpenChange={(open) => !open && setConnectResult(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {connectResult?.success ? 'Conectado com sucesso' : 'Não foi possível conectar'}
-            </DialogTitle>
-          </DialogHeader>
-          {connectResult && !connectResult.success && (
-            <p className="text-text-meta text-sm">{connectResult.message}</p>
-          )}
-          <DialogFooter>
-            <Button type="button" onClick={() => setConnectResult(null)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </SettingsCard>
   )
 }
