@@ -81,7 +81,7 @@ export function AdminLayout() {
   }
 
   return (
-    <div className="bg-cream-secondary flex min-h-svh">
+    <div className="bg-cream-secondary flex h-svh">
       <aside className="bg-navy-dark hidden w-60 shrink-0 flex-col text-[#c9c5e2] lg:flex">
         <div className="border-b border-[#2a2778] px-[22px] py-6">
           <div className="font-serif text-lg font-semibold text-white">Jomar Admin</div>
@@ -133,7 +133,7 @@ export function AdminLayout() {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-3 border-b border-[#e4ddd0] bg-white px-4 py-[18px] sm:px-8">
           <div className="flex items-center gap-3">
             <button
@@ -158,7 +158,7 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <div className="flex-1 p-4 sm:p-8">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8">
           <Outlet />
         </div>
       </div>
