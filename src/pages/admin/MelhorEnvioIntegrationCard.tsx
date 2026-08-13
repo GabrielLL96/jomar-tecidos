@@ -130,7 +130,11 @@ export function MelhorEnvioIntegrationCard() {
       return
     }
     const { url, state } = buildAuthorizeUrl(clientId.trim(), redirectUri.trim())
-    const popup = window.open(url, 'melhor-envio-oauth', 'width=520,height=680')
+    // Nome único por tentativa (não um nome fixo): um nome fixo deixa o browser
+    // reaproveitar uma janela de OUTRA aba (ex.: se /admin/configuracoes estiver
+    // aberto em 2 abas) — o `opener` dessa janela reaproveitada fica preso na
+    // aba antiga, e a aba atual nunca recebe o postMessage de volta.
+    const popup = window.open(url, `melhor-envio-oauth-${crypto.randomUUID()}`, 'width=520,height=680')
     if (!popup) {
       toast.error('Não foi possível abrir a janela de conexão — verifique o bloqueador de pop-ups')
       return
