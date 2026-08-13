@@ -791,6 +791,7 @@ export type Database = {
       }
       users: {
         Row: {
+          cpf: string | null
           created_at: string
           email: string
           id: string
@@ -801,6 +802,7 @@ export type Database = {
           status: Database["public"]["Enums"]["user_status"]
         }
         Insert: {
+          cpf?: string | null
           created_at?: string
           email: string
           id: string
@@ -811,6 +813,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["user_status"]
         }
         Update: {
+          cpf?: string | null
           created_at?: string
           email?: string
           id?: string

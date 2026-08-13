@@ -1,17 +1,38 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Minus, Plus } from 'lucide-react'
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { formatPriceBRL } from '@/lib/format'
 import { useBusinessInfo } from '@/features/site-settings/hooks'
 import { useCart } from '@/features/cart/CartContext'
+import { useProducts } from '@/features/catalog/hooks'
+import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
 
 export function CartPage() {
   const { items, subtotal, updateMeters, removeItem } = useCart()
   const business = useBusinessInfo()
   const navigate = useNavigate()
+  const { data: products = [] } = useProducts()
 
-  const shipping = subtotal >= business.freeShippingThreshold ? 0 : business.flatShippingFee
+  const [zip, setZip] = useState('')
+  const isFreeShipping = subtotal >= business.freeShippingThreshold
+
+  const {
+    options: shippingOptions,
+    isCalculating: isCalculatingShipping,
+    error: shippingQuoteError,
+    missingData: cartItemsMissingShippingData,
+  } = useShippingQuote(zip, items, products, !isFreeShipping)
+
+  const cheapestShippingPrice =
+    shippingOptions.length > 0 ? Math.min(...shippingOptions.map((option) => option.price)) : null
+  // No carrinho é só simulação (sem login ainda) — mostra a opção mais barata
+  // cotada, ou a taxa fixa como estimativa enquanto não tem CEP. A escolha
+  // real de transportadora acontece no checkout.
+  const shipping = isFreeShipping ? 0 : (cheapestShippingPrice ?? business.flatShippingFee)
   const total = subtotal + shipping
 
   if (items.length === 0) {
@@ -92,9 +113,38 @@ export function CartPage() {
             <span>Subtotal</span>
             <span>{formatPriceBRL(subtotal)}</span>
           </div>
+          {!isFreeShipping && (
+            <div className="mb-3">
+              <Label htmlFor="cart-zip" className="text-text-body text-sm font-normal">
+                Calcular frete
+              </Label>
+              <Input
+                id="cart-zip"
+                placeholder="00000-000"
+                value={zip}
+                onChange={(event) => setZip(event.target.value)}
+                className="mt-1.5 h-9 text-sm"
+                maxLength={9}
+              />
+              {cartItemsMissingShippingData ? null : isCalculatingShipping ? (
+                <p className="text-text-meta mt-1.5 text-xs">Calculando frete…</p>
+              ) : shippingQuoteError ? (
+                <p className="text-destructive mt-1.5 text-xs">{shippingQuoteError}</p>
+              ) : (
+                shippingOptions.length > 0 && (
+                  <p className="text-navy mt-1.5 text-xs">
+                    A partir de {formatPriceBRL(cheapestShippingPrice ?? 0)}
+                  </p>
+                )
+              )}
+            </div>
+          )}
           <div className="text-text-body mb-3 flex justify-between text-sm">
             <span>Frete</span>
-            <span>{shipping === 0 ? 'Grátis' : formatPriceBRL(shipping)}</span>
+            <span>
+              {shipping === 0 ? 'Grátis' : formatPriceBRL(shipping)}
+              {!isFreeShipping && shippingOptions.length === 0 && ' (estimado)'}
+            </span>
           </div>
           <div className="text-navy-dark border-border mt-2 flex justify-between border-t pt-4 text-base font-semibold">
             <span>Total</span>

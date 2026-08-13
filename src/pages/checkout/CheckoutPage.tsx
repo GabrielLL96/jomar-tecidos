@@ -17,14 +17,13 @@ import { useAddresses } from '@/features/account/AddressesContext'
 import { calculateDiscount, isCouponValid } from '@/features/orders/coupon-utils'
 import type { Coupon } from '@/features/orders/types'
 import { useProducts } from '@/features/catalog/hooks'
-import { calculateShipping } from '@/features/melhor-envio/service'
-import type { ShippingQuoteOption } from '@/features/melhor-envio/types'
+import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
 import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
 
 export function CheckoutPage() {
   const { items, subtotal, clear } = useCart()
-  const { addOrFindAddress } = useAddresses()
-  const { user } = useAuth()
+  const { addresses, addOrFindAddress } = useAddresses()
+  const { user, isLoading: isAuthLoading } = useAuth()
   const queryClient = useQueryClient()
   const business = useBusinessInfo()
   const { data: products = [] } = useProducts()
@@ -34,26 +33,7 @@ export function CheckoutPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null)
   const [couponError, setCouponError] = useState<string | null>(null)
 
-  const [shippingOptions, setShippingOptions] = useState<ShippingQuoteOption[]>([])
-  const [selectedShippingServiceId, setSelectedShippingServiceId] = useState<number | null>(null)
-  const [shippingQuoteId, setShippingQuoteId] = useState<string | null>(null)
-  const [isCalculatingShipping, setIsCalculatingShipping] = useState(false)
-  const [shippingQuoteError, setShippingQuoteError] = useState<string | null>(null)
-
   const isFreeShipping = subtotal >= business.freeShippingThreshold
-  const selectedShippingOption = shippingOptions.find((option) => option.serviceId === selectedShippingServiceId)
-  const cheapestShippingPrice =
-    shippingOptions.length > 0 ? Math.min(...shippingOptions.map((option) => option.price)) : null
-  // sem cotação real escolhida, cai na taxa fixa (fallback já usado antes desta
-  // feature existir) — nunca trava o checkout esperando integração conectada.
-  const shipping = isFreeShipping ? 0 : (selectedShippingOption?.price ?? business.flatShippingFee)
-  const discount = appliedCoupon ? calculateDiscount(appliedCoupon, subtotal, shipping) : 0
-  const total = subtotal + shipping - discount
-
-  const cartItemsMissingShippingData = items.some((item) => {
-    const product = products.find((p) => p.id === item.productId)
-    return !product?.weightGrams || !product.packageHeightCm || !product.packageWidthCm || !product.packageLengthCm
-  })
 
   const {
     register,
@@ -69,55 +49,39 @@ export function CheckoutPage() {
   const paymentMethod = watch('paymentMethod')
   const zip = watch('zip')
 
-  const handleCalculateShipping = async (targetZip: string) => {
-    setIsCalculatingShipping(true)
-    setShippingQuoteError(null)
-    try {
-      // weightGrams do produto é peso por metro — a linha do carrinho pesa
-      // isso vezes os metros comprados. Altura/largura/comprimento da
-      // embalagem NÃO escalam por metro (caixa/rolo padrão do produto).
-      const quoteItems = items.map((item) => {
-        const product = products.find((p) => p.id === item.productId)
-        return {
-          weightGrams: Math.ceil((product?.weightGrams ?? 0) * item.meters),
-          heightCm: product?.packageHeightCm ?? 0,
-          widthCm: product?.packageWidthCm ?? 0,
-          lengthCm: product?.packageLengthCm ?? 0,
-          quantity: 1,
-        }
-      })
-      const { quoteId, options } = await calculateShipping(targetZip, quoteItems)
-      if (options.length === 0) {
-        setShippingQuoteError('Nenhuma transportadora disponível pra este CEP')
-        return
-      }
-      setShippingOptions(options)
-      setSelectedShippingServiceId(options[0].serviceId)
-      setShippingQuoteId(quoteId)
-    } catch (error) {
-      setShippingQuoteError(error instanceof Error ? error.message : 'Não foi possível cotar o frete')
-    } finally {
-      setIsCalculatingShipping(false)
-    }
+  const {
+    options: shippingOptions,
+    selectedServiceId: selectedShippingServiceId,
+    setSelectedServiceId: setSelectedShippingServiceId,
+    quoteId: shippingQuoteId,
+    isCalculating: isCalculatingShipping,
+    error: shippingQuoteError,
+    missingData: cartItemsMissingShippingData,
+  } = useShippingQuote(zip, items, products, !isFreeShipping)
+
+  const selectedShippingOption = shippingOptions.find((option) => option.serviceId === selectedShippingServiceId)
+  const cheapestShippingPrice =
+    shippingOptions.length > 0 ? Math.min(...shippingOptions.map((option) => option.price)) : null
+  // sem cotação real escolhida, cai na taxa fixa (fallback já usado antes desta
+  // feature existir) — nunca trava o checkout esperando integração conectada.
+  const shipping = isFreeShipping ? 0 : (selectedShippingOption?.price ?? business.flatShippingFee)
+  const discount = appliedCoupon ? calculateDiscount(appliedCoupon, subtotal, shipping) : 0
+  const total = subtotal + shipping - discount
+
+  // Pré-preenche o formulário de entrega com o endereço padrão do cliente
+  // (definido no cadastro) assim que carrega — editável, não trava em nada.
+  // Padrão "ajustar state durante o render" (guarda por id, sem useEffect) já
+  // documentado no projeto pra hidratar form state a partir de dado async.
+  const [prefilledAddressId, setPrefilledAddressId] = useState<string | null>(null)
+  const defaultAddress = addresses.find((address) => address.isDefault) ?? addresses[0]
+  if (defaultAddress && defaultAddress.id !== prefilledAddressId) {
+    setPrefilledAddressId(defaultAddress.id)
+    setValue('fullName', user?.name ?? '')
+    setValue('address', defaultAddress.street)
+    setValue('city', defaultAddress.city)
+    setValue('state', defaultAddress.state)
+    setValue('zip', defaultAddress.zipCode)
   }
-
-  // Cotação dispara sozinha quando o CEP completa 8 dígitos — sem botão
-  // manual. Debounce de 600ms pra não disparar uma chamada a cada tecla
-  // enquanto ainda tá digitando/colando. Qualquer mudança no CEP invalida a
-  // cotação anterior na hora (ela era pra outro endereço).
-  useEffect(() => {
-    setShippingOptions([])
-    setSelectedShippingServiceId(null)
-    setShippingQuoteId(null)
-    setShippingQuoteError(null)
-
-    const cleanZip = (zip ?? '').replace(/\D/g, '')
-    if (cleanZip.length !== 8 || isFreeShipping || cartItemsMissingShippingData) return
-
-    const timer = setTimeout(() => void handleCalculateShipping(cleanZip), 600)
-    return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zip, isFreeShipping, cartItemsMissingShippingData])
 
   const handleApplyCoupon = async () => {
     const { data, error } = await supabase
@@ -206,7 +170,15 @@ export function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  if (items.length === 0) return null
+  // Reativo (não mount-only) de propósito: isLoading começa true e vira false
+  // assim que a sessão inicial resolve — precisa reagir a essa transição, não
+  // só checar na entrada. Exige login/cadastro antes de chegar no formulário
+  // de entrega (etapa 2 do checkout, spec 2026-08-13).
+  useEffect(() => {
+    if (!isAuthLoading && !user) navigate('/conta/entrar?redirect=/checkout', { replace: true })
+  }, [user, isAuthLoading, navigate])
+
+  if (items.length === 0 || isAuthLoading || !user) return null
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-lg) px-6 py-10 md:px-12">

@@ -101,11 +101,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq('id', data.user.id)
   }
 
-  const signup: AuthContextValue['signup'] = async ({ name, email, password }) => {
+  const signup: AuthContextValue['signup'] = async ({
+    name,
+    email,
+    password,
+    cpf,
+    phone,
+    street,
+    city,
+    state,
+    zipCode,
+  }) => {
+    // cpf/phone/endereço vão em raw_user_meta_data, não como escrita direta
+    // do client — o trigger handle_new_user() (security definer) é quem grava
+    // em users/addresses, porque ele roda independente de já existir sessão
+    // (confirmação de e-mail pendente não teria auth.uid() pro client escrever).
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: { data: { name, cpf, phone, street, city, state, zip_code: zipCode } },
     })
     if (error) throw new Error(error.message)
     return { requiresEmailConfirmation: !data.session }

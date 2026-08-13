@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
@@ -10,9 +10,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/features/auth/AuthContext'
 import { loginSchema, signupSchema, type LoginInput, type SignupInput } from '@/features/auth/schema'
 
+function useRedirectTarget() {
+  const [searchParams] = useSearchParams()
+  return searchParams.get('redirect') || '/conta'
+}
+
 function LoginForm() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const redirectTo = useRedirectTarget()
   const {
     register,
     handleSubmit,
@@ -23,7 +29,7 @@ function LoginForm() {
     try {
       await login(data)
       toast.success('Login realizado com sucesso')
-      navigate('/conta')
+      navigate(redirectTo)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível entrar')
     }
@@ -56,6 +62,7 @@ function LoginForm() {
 function SignupForm() {
   const { signup } = useAuth()
   const navigate = useNavigate()
+  const redirectTo = useRedirectTarget()
   const {
     register,
     handleSubmit,
@@ -70,7 +77,7 @@ function SignupForm() {
         return
       }
       toast.success('Conta criada com sucesso')
-      navigate('/conta')
+      navigate(redirectTo)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível criar a conta')
     }
@@ -87,6 +94,40 @@ function SignupForm() {
         <Label htmlFor="signup-email">E-mail</Label>
         <Input id="signup-email" type="email" {...register('email')} />
         {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="cpf">CPF</Label>
+          <Input id="cpf" placeholder="000.000.000-00" {...register('cpf')} />
+          {errors.cpf && <p className="text-destructive text-xs">{errors.cpf.message}</p>}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="phone">Telefone</Label>
+          <Input id="phone" placeholder="(00) 00000-0000" {...register('phone')} />
+          {errors.phone && <p className="text-destructive text-xs">{errors.phone.message}</p>}
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="street">Endereço</Label>
+        <Input id="street" {...register('street')} />
+        {errors.street && <p className="text-destructive text-xs">{errors.street.message}</p>}
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="city">Cidade</Label>
+          <Input id="city" {...register('city')} />
+          {errors.city && <p className="text-destructive text-xs">{errors.city.message}</p>}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="state">UF</Label>
+          <Input id="state" maxLength={2} {...register('state')} />
+          {errors.state && <p className="text-destructive text-xs">{errors.state.message}</p>}
+        </div>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="zipCode">CEP</Label>
+        <Input id="zipCode" {...register('zipCode')} />
+        {errors.zipCode && <p className="text-destructive text-xs">{errors.zipCode.message}</p>}
       </div>
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="signup-password">Senha</Label>
@@ -110,10 +151,11 @@ function SignupForm() {
 export function LoginPage() {
   const { user, isLoading } = useAuth()
   const navigate = useNavigate()
+  const redirectTo = useRedirectTarget()
 
   useEffect(() => {
-    if (!isLoading && user) navigate('/conta', { replace: true })
-  }, [user, isLoading, navigate])
+    if (!isLoading && user) navigate(redirectTo, { replace: true })
+  }, [user, isLoading, navigate, redirectTo])
 
   if (isLoading || user) return null
 
