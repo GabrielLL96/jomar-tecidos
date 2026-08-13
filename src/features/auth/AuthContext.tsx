@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 import type { LoginInput, SignupInput } from './schema'
 import type { UserRole } from './types'
 
-interface AuthUser {
+export interface AuthUser {
   id: string
   name: string
   email: string
@@ -21,7 +21,7 @@ interface UpdateProfileInput {
 interface AuthContextValue {
   user: AuthUser | null
   isLoading: boolean
-  login: (input: LoginInput) => Promise<void>
+  login: (input: LoginInput) => Promise<AuthUser>
   signup: (input: SignupInput) => Promise<{ requiresEmailConfirmation: boolean }>
   updateProfile: (patch: UpdateProfileInput) => Promise<void>
   logout: () => Promise<void>
@@ -99,6 +99,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('users')
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', data.user.id)
+
+    // Devolve o profile (com role) pro chamador decidir o redirect na hora —
+    // não dá pra esperar o listener onAuthStateChange (assíncrono) resolver
+    // isso a tempo, ele atualiza o context em paralelo, não em sequência
+    // com este await.
+    const profile = await fetchProfile(data.user.id)
+    if (!profile) throw new Error('Não foi possível carregar o perfil')
+    return profile
   }
 
   const signup: AuthContextValue['signup'] = async ({

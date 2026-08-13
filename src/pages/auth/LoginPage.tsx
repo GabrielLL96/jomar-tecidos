@@ -7,18 +7,26 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useAuth } from '@/features/auth/AuthContext'
+import { useAuth, type AuthUser } from '@/features/auth/AuthContext'
 import { loginSchema, signupSchema, type LoginInput, type SignupInput } from '@/features/auth/schema'
 
-function useRedirectTarget() {
+// Sem `?redirect=` explícito (ex.: checkout mandando de volta pra si mesmo),
+// o destino padrão depende do papel do usuário — admin vai pro painel, não
+// pra área de cliente. Um `?redirect=` explícito sempre vence (um admin
+// tentando comprar como cliente não deve ser forçado de volta pro painel).
+function defaultRedirectFor(role: AuthUser['role']) {
+  return role === 'admin' ? '/admin' : '/conta'
+}
+
+function useRedirectParam() {
   const [searchParams] = useSearchParams()
-  return searchParams.get('redirect') || '/conta'
+  return searchParams.get('redirect')
 }
 
 function LoginForm() {
   const { login } = useAuth()
   const navigate = useNavigate()
-  const redirectTo = useRedirectTarget()
+  const redirectParam = useRedirectParam()
   const {
     register,
     handleSubmit,
@@ -27,9 +35,9 @@ function LoginForm() {
 
   const onSubmit = async (data: LoginInput) => {
     try {
-      await login(data)
+      const profile = await login(data)
       toast.success('Login realizado com sucesso')
-      navigate(redirectTo)
+      navigate(redirectParam || defaultRedirectFor(profile.role))
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível entrar')
     }
@@ -62,7 +70,8 @@ function LoginForm() {
 function SignupForm() {
   const { signup } = useAuth()
   const navigate = useNavigate()
-  const redirectTo = useRedirectTarget()
+  // Cadastro novo sempre nasce como 'customer' — sem branch por role aqui.
+  const redirectParam = useRedirectParam()
   const {
     register,
     handleSubmit,
@@ -77,7 +86,7 @@ function SignupForm() {
         return
       }
       toast.success('Conta criada com sucesso')
-      navigate(redirectTo)
+      navigate(redirectParam || '/conta')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível criar a conta')
     }
@@ -151,11 +160,11 @@ function SignupForm() {
 export function LoginPage() {
   const { user, isLoading } = useAuth()
   const navigate = useNavigate()
-  const redirectTo = useRedirectTarget()
+  const redirectParam = useRedirectParam()
 
   useEffect(() => {
-    if (!isLoading && user) navigate(redirectTo, { replace: true })
-  }, [user, isLoading, navigate, redirectTo])
+    if (!isLoading && user) navigate(redirectParam || defaultRedirectFor(user.role), { replace: true })
+  }, [user, isLoading, navigate, redirectParam])
 
   if (isLoading || user) return null
 
