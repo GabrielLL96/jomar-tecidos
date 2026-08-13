@@ -5,7 +5,7 @@ import { useAdminCoupons, useAdminOrders } from '@/features/orders/hooks'
 import { useAdminProducts, useCompositions } from '@/features/catalog/hooks'
 import { useAdminUsers } from '@/features/users/hooks'
 import { buildStockCSV } from '@/features/catalog/utils'
-import { couponValueLabel } from '@/features/orders/coupon-utils'
+import { computeCouponStatus, couponValueLabel } from '@/features/orders/coupon-utils'
 import {
   COUPON_STATUS_LABELS,
   COUPON_TYPE_LABELS,
@@ -108,7 +108,7 @@ export function AdminReportsPage() {
         couponValueLabel(coupon.type, coupon.value),
         String(coupon.usedCount),
         coupon.maxUses !== undefined ? String(coupon.maxUses) : 'Sem limite',
-        COUPON_STATUS_LABELS[coupon.status],
+        COUPON_STATUS_LABELS[computeCouponStatus(coupon)],
       ]),
     )
     downloadCSV(csv, `cupons-utilizados-${toDateOnly(new Date())}.csv`)

@@ -69,6 +69,7 @@ export interface Coupon {
   value: number
   maxUses?: number
   usedCount: number
+  startsAt?: string
   expiresAt?: string
   status: CouponStatus
 }

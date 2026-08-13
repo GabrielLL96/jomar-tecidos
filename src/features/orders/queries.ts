@@ -155,7 +155,7 @@ export const adminCouponsQueryOptions = queryOptions({
   queryFn: async (): Promise<Coupon[]> => {
     const { data, error } = await supabase
       .from('coupons')
-      .select('id, code, type, value, max_uses, used_count, expires_at, status')
+      .select('id, code, type, value, max_uses, used_count, starts_at, expires_at, status')
       .order('code', { ascending: true })
     if (error) throw new Error(error.message)
     return data.map((row) => ({
@@ -165,6 +165,7 @@ export const adminCouponsQueryOptions = queryOptions({
       value: Number(row.value),
       maxUses: row.max_uses ?? undefined,
       usedCount: row.used_count,
+      startsAt: row.starts_at ?? undefined,
       expiresAt: row.expires_at ?? undefined,
       status: row.status,
     }))

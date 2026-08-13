@@ -86,7 +86,7 @@ export function CheckoutPage() {
   const handleApplyCoupon = async () => {
     const { data, error } = await supabase
       .from('coupons')
-      .select('id, code, type, value, max_uses, used_count, expires_at, status')
+      .select('id, code, type, value, max_uses, used_count, starts_at, expires_at, status')
       .eq('code', couponCode.trim().toUpperCase())
       .maybeSingle()
 
@@ -98,6 +98,7 @@ export function CheckoutPage() {
           value: Number(data.value),
           maxUses: data.max_uses ?? undefined,
           usedCount: data.used_count,
+          startsAt: data.starts_at ?? undefined,
           expiresAt: data.expires_at ?? undefined,
           status: data.status,
         }

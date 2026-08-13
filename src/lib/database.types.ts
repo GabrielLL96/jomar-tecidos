@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.15"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       activity_logs: {
@@ -189,6 +214,7 @@ export type Database = {
           expires_at: string | null
           id: string
           max_uses: number | null
+          starts_at: string | null
           status: Database["public"]["Enums"]["coupon_status"]
           type: Database["public"]["Enums"]["coupon_type"]
           used_count: number
@@ -199,6 +225,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           max_uses?: number | null
+          starts_at?: string | null
           status?: Database["public"]["Enums"]["coupon_status"]
           type: Database["public"]["Enums"]["coupon_type"]
           used_count?: number
@@ -209,6 +236,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           max_uses?: number | null
+          starts_at?: string | null
           status?: Database["public"]["Enums"]["coupon_status"]
           type?: Database["public"]["Enums"]["coupon_type"]
           used_count?: number
@@ -1039,6 +1067,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       campaign_channel: ["instagram_ads", "google_ads", "email", "whatsapp"],

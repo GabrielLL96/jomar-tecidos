@@ -9,8 +9,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { toDateOnly } from '@/lib/format'
 import { useAdminCoupons } from '@/features/orders/hooks'
-import { couponValueLabel } from '@/features/orders/coupon-utils'
+import {
+  computeCouponStatus,
+  couponValidityLabel,
+  couponValueLabel,
+  endOfDayLocalISOString,
+  startOfDayLocalISOString,
+} from '@/features/orders/coupon-utils'
 import { COUPON_STATUS_LABELS, COUPON_TYPE_LABELS } from '@/features/orders/data'
 import type { Coupon, CouponStatus, CouponType } from '@/features/orders/types'
 
@@ -21,16 +28,18 @@ const COUPON_STATUS_STYLES: Record<CouponStatus, string> = {
   depleted: 'bg-[#fbe2df] text-[#b0362b]',
 }
 
-const dateFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' })
-
 const TYPE_OPTIONS: CouponType[] = ['percentage', 'fixed', 'free_shipping']
-const STATUS_OPTIONS: CouponStatus[] = ['active', 'scheduled', 'expired', 'depleted']
+// 'scheduled' não é uma opção manual — é calculado sozinho (ver
+// computeCouponStatus) a partir de `startsAt` no futuro. Admin só escolhe
+// entre deixar ativo ou desligar antes da hora (expired/depleted).
+const STATUS_OPTIONS: CouponStatus[] = ['active', 'expired', 'depleted']
 
 interface CouponFormState {
   code: string
   type: CouponType
   value: string
   maxUses: string
+  startsAt: string
   expiresAt: string
   status: CouponStatus
 }
@@ -40,6 +49,7 @@ const EMPTY_FORM: CouponFormState = {
   type: 'percentage',
   value: '',
   maxUses: '',
+  startsAt: '',
   expiresAt: '',
   status: 'active',
 }
@@ -68,7 +78,11 @@ export function AdminCouponsPage() {
       type: coupon.type,
       value: String(coupon.value),
       maxUses: coupon.maxUses !== undefined ? String(coupon.maxUses) : '',
-      expiresAt: coupon.expiresAt ? coupon.expiresAt.slice(0, 10) : '',
+      // toDateOnly (componentes locais) — não slice() na string ISO UTC, que
+      // desloca a data exibida quando startsAt/expiresAt foi salvo com
+      // horário local (ver startOfDayLocalISOString/endOfDayLocalISOString).
+      startsAt: coupon.startsAt ? toDateOnly(new Date(coupon.startsAt)) : '',
+      expiresAt: coupon.expiresAt ? toDateOnly(new Date(coupon.expiresAt)) : '',
       status: coupon.status,
     })
     setFormOpen(true)
@@ -88,9 +102,17 @@ export function AdminCouponsPage() {
       toast.error('Informe um valor válido')
       return
     }
+    if (form.type === 'percentage' && value > 100) {
+      toast.error('Cupom percentual não pode passar de 100%')
+      return
+    }
     const maxUses = form.maxUses.trim() ? Number(form.maxUses) : null
     if (maxUses !== null && (Number.isNaN(maxUses) || maxUses <= 0)) {
       toast.error('Limite de usos precisa ser maior que zero')
+      return
+    }
+    if (form.startsAt && form.expiresAt && form.startsAt > form.expiresAt) {
+      toast.error('"Válido a partir de" precisa ser antes da validade')
       return
     }
 
@@ -101,7 +123,11 @@ export function AdminCouponsPage() {
         type: form.type,
         value,
         max_uses: maxUses,
-        expires_at: form.expiresAt || null,
+        // Início/fim do dia local, não a data nua — coluna é timestamptz,
+        // string "YYYY-MM-DD" seria lida como meia-noite UTC (desloca ~3h em
+        // fuso do Brasil). Ver startOfDayLocalISOString/endOfDayLocalISOString.
+        starts_at: form.startsAt ? startOfDayLocalISOString(form.startsAt) : null,
+        expires_at: form.expiresAt ? endOfDayLocalISOString(form.expiresAt) : null,
         status: form.status,
       }
       const { error } = editingCoupon
@@ -152,38 +178,39 @@ export function AdminCouponsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              coupons.map((coupon) => (
-                <TableRow key={coupon.id}>
-                  <TableCell className="font-semibold">{coupon.code}</TableCell>
-                  <TableCell>{COUPON_TYPE_LABELS[coupon.type]}</TableCell>
-                  <TableCell>{couponValueLabel(coupon.type, coupon.value)}</TableCell>
-                  <TableCell>
-                    {coupon.usedCount}/{coupon.maxUses ?? '∞'}
-                  </TableCell>
-                  <TableCell>
-                    {coupon.expiresAt ? dateFormatter.format(new Date(coupon.expiresAt)) : 'Sem validade'}
-                  </TableCell>
-                  <TableCell>
-                    <span
-                      className={cn(
-                        'rounded-full px-2.5 py-1 text-[11.5px] font-semibold',
-                        COUPON_STATUS_STYLES[coupon.status],
-                      )}
-                    >
-                      {COUPON_STATUS_LABELS[coupon.status]}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <button
-                      type="button"
-                      onClick={() => openEdit(coupon)}
-                      className="text-navy text-[12.5px] hover:text-primary"
-                    >
-                      Editar
-                    </button>
-                  </TableCell>
-                </TableRow>
-              ))
+              coupons.map((coupon) => {
+                const effectiveStatus = computeCouponStatus(coupon)
+                return (
+                  <TableRow key={coupon.id}>
+                    <TableCell className="font-semibold">{coupon.code}</TableCell>
+                    <TableCell>{COUPON_TYPE_LABELS[coupon.type]}</TableCell>
+                    <TableCell>{couponValueLabel(coupon.type, coupon.value)}</TableCell>
+                    <TableCell>
+                      {coupon.usedCount}/{coupon.maxUses ?? '∞'}
+                    </TableCell>
+                    <TableCell>{couponValidityLabel(coupon)}</TableCell>
+                    <TableCell>
+                      <span
+                        className={cn(
+                          'rounded-full px-2.5 py-1 text-[11.5px] font-semibold',
+                          COUPON_STATUS_STYLES[effectiveStatus],
+                        )}
+                      >
+                        {COUPON_STATUS_LABELS[effectiveStatus]}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <button
+                        type="button"
+                        onClick={() => openEdit(coupon)}
+                        className="text-navy text-[12.5px] hover:text-primary"
+                      >
+                        Editar
+                      </button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             )}
           </TableBody>
         </Table>
@@ -248,6 +275,19 @@ export function AdminCouponsPage() {
                 />
               </div>
               <div className="flex flex-col gap-1.5">
+                <Label htmlFor="couponStartsAt">Válido a partir de</Label>
+                <Input
+                  id="couponStartsAt"
+                  type="date"
+                  placeholder="Imediato"
+                  value={form.startsAt}
+                  onChange={(event) => setField('startsAt', event.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
                 <Label htmlFor="couponExpiresAt">Validade</Label>
                 <Input
                   id="couponExpiresAt"
@@ -256,27 +296,26 @@ export function AdminCouponsPage() {
                   onChange={(event) => setField('expiresAt', event.target.value)}
                 />
               </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Status</Label>
+                <Select value={form.status} onValueChange={(value) => setField('status', value as CouponStatus)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {STATUS_OPTIONS.map((status) => (
+                      <SelectItem key={status} value={status}>
+                        {COUPON_STATUS_LABELS[status]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label>Status</Label>
-              <Select value={form.status} onValueChange={(value) => setField('status', value as CouponStatus)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {STATUS_OPTIONS.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {COUPON_STATUS_LABELS[status]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-text-meta text-xs">
-                Cotação no checkout também confere validade/data/limite de uso real — mudar aqui não
-                reativa um cupom expirado ou esgotado de fato.
-              </p>
-            </div>
+            <p className="text-text-meta -mt-2 text-xs">
+              "Agendado" e "Esgotado" aparecem sozinhos na lista, calculados por data/uso real —
+              aqui você só escolhe deixar ativo ou desligar antes da hora (Expirado/Esgotado).
+            </p>
           </div>
 
           <DialogFooter>
