@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
@@ -10,7 +9,11 @@ import { supabase } from '@/lib/supabase'
 import type { TablesUpdate } from '@/lib/database.types'
 import { useMelhorEnvioStatus } from '@/features/melhor-envio/hooks'
 import { MELHOR_ENVIO_SETTINGS_ID } from '@/features/melhor-envio/queries'
-import { buildAuthorizeUrl } from '@/features/melhor-envio/service'
+import {
+  buildAuthorizeUrl,
+  exchangeAuthorizationCode,
+  MELHOR_ENVIO_OAUTH_MESSAGE_TYPE,
+} from '@/features/melhor-envio/service'
 import type { MelhorEnvioConnectResult } from '@/features/melhor-envio/types'
 
 const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
@@ -27,8 +30,6 @@ function SettingsCard({ title, children }: { title: string; children: React.Reac
 
 export function MelhorEnvioIntegrationCard() {
   const queryClient = useQueryClient()
-  const location = useLocation()
-  const navigate = useNavigate()
   const { data: status } = useMelhorEnvioStatus()
   const [clientId, setClientId] = useState('')
   const [clientSecret, setClientSecret] = useState('')
@@ -36,7 +37,12 @@ export function MelhorEnvioIntegrationCard() {
   const [isSaving, setIsSaving] = useState(false)
   const [connectResult, setConnectResult] = useState<MelhorEnvioConnectResult | null>(null)
   const syncedStatus = useRef(false)
-  const processedConnectResult = useRef(false)
+  const popupRef = useRef<Window | null>(null)
+  // `state` gerado pro fluxo em andamento — comparado contra o que o popup
+  // devolve via postMessage. Fica em memória (não sessionStorage): o popup é
+  // uma janela separada, herdar sessionStorage do opener depois de navegar por
+  // outra origem e voltar não é garantido em todo browser.
+  const pendingStateRef = useRef<string | null>(null)
 
   useEffect(() => {
     if (syncedStatus.current || !status) return
@@ -45,23 +51,41 @@ export function MelhorEnvioIntegrationCard() {
     setRedirectUri(status.redirectUri ?? `${window.location.origin}/admin/melhor-envio/callback`)
   }, [status])
 
-  // Resultado do callback OAuth (voltou de /admin/melhor-envio/callback) — exibido
-  // aqui via modal em vez de uma tela própria. Precisa ser efeito (não setState
-  // durante o render): além de espelhar o resultado em state local, limpa o
-  // `state` da entrada de histórico via navigate — sem isso, um F5 com o modal
-  // aberto reabre ele de novo, porque history.state sobrevive ao reload mas
-  // state React não. Sincronizar com a History API (sistema externo) é
-  // exatamente o caso que useEffect existe para resolver.
+  // OAuth roda numa janela popup (não navega a página atual) — o callback nela
+  // repassa code/state crus pra cá via postMessage e se fecha sozinho. Esse
+  // listener é o caso sancionado de useEffect: "subscribe pra updates de um
+  // sistema externo, chamando setState num callback quando o estado externo
+  // muda" — diferente de setState direto no corpo do effect.
   useEffect(() => {
-    if (processedConnectResult.current) return
-    const result = (location.state as { melhorEnvioResult?: MelhorEnvioConnectResult } | null)
-      ?.melhorEnvioResult
-    if (!result) return
-    processedConnectResult.current = true
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza com history.state (sistema externo, ver comentário acima)
-    setConnectResult(result)
-    navigate(location.pathname, { replace: true, state: null })
-  }, [location.state, location.pathname, navigate])
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return
+      if (event.data?.type !== MELHOR_ENVIO_OAUTH_MESSAGE_TYPE) return
+      popupRef.current?.close()
+
+      const { code, state } = event.data as { code: string | null; state: string | null }
+      if (!code || !state || state !== pendingStateRef.current) {
+        setConnectResult({
+          success: false,
+          message: 'Retorno inválido da Melhor Envio (código ou state ausente/incorreto).',
+        })
+        return
+      }
+
+      exchangeAuthorizationCode(code)
+        .then(() => {
+          setConnectResult({ success: true })
+          return queryClient.invalidateQueries({ queryKey: ['melhor-envio', 'status'] })
+        })
+        .catch((error: unknown) => {
+          setConnectResult({
+            success: false,
+            message: error instanceof Error ? error.message : 'Falha ao concluir a conexão',
+          })
+        })
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [queryClient])
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -99,7 +123,20 @@ export function MelhorEnvioIntegrationCard() {
       toast.error('Preencha e salve client_id e redirect_uri antes de conectar')
       return
     }
-    window.location.href = buildAuthorizeUrl(clientId.trim(), redirectUri.trim())
+    // Reaproveita o popup já aberto em vez de abrir um segundo (evita a corrida
+    // de 2 `state` diferentes se o clique acontecer 2x).
+    if (popupRef.current && !popupRef.current.closed) {
+      popupRef.current.focus()
+      return
+    }
+    const { url, state } = buildAuthorizeUrl(clientId.trim(), redirectUri.trim())
+    const popup = window.open(url, 'melhor-envio-oauth', 'width=520,height=680')
+    if (!popup) {
+      toast.error('Não foi possível abrir a janela de conexão — verifique o bloqueador de pop-ups')
+      return
+    }
+    pendingStateRef.current = state
+    popupRef.current = popup
   }
 
   return (

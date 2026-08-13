@@ -2,26 +2,26 @@ import { supabase } from '@/lib/supabase'
 import type { ShippingQuoteItemInput, ShippingQuoteOption } from './types'
 
 const MELHOR_ENVIO_SANDBOX_URL = 'https://sandbox.melhorenvio.com.br'
-const OAUTH_STATE_STORAGE_KEY = 'melhor-envio:oauth-state'
 const OAUTH_SCOPES = 'shipping-calculate'
 
-export function buildAuthorizeUrl(clientId: string, redirectUri: string): string {
-  const state = crypto.randomUUID()
-  sessionStorage.setItem(OAUTH_STATE_STORAGE_KEY, state)
+// Mensagem que a janela popup do callback OAuth manda pra janela principal
+// (window.opener) via postMessage.
+export const MELHOR_ENVIO_OAUTH_MESSAGE_TYPE = 'melhor-envio-oauth-callback'
 
+// `state` não fica em sessionStorage (o popup roda numa janela separada — se
+// navegar por uma origem diferente e voltar, herdar sessionStorage do opener
+// não é garantido em todo browser). Quem gera o state guarda em memória
+// (useRef na janela principal) e valida o retorno vindo do popup via
+// postMessage, ver MelhorEnvioIntegrationCard.
+export function buildAuthorizeUrl(clientId: string, redirectUri: string): { url: string; state: string } {
+  const state = crypto.randomUUID()
   const url = new URL(`${MELHOR_ENVIO_SANDBOX_URL}/oauth/authorize`)
   url.searchParams.set('client_id', clientId)
   url.searchParams.set('redirect_uri', redirectUri)
   url.searchParams.set('response_type', 'code')
   url.searchParams.set('state', state)
   url.searchParams.set('scope', OAUTH_SCOPES)
-  return url.toString()
-}
-
-export function consumeStoredOAuthState(): string | null {
-  const state = sessionStorage.getItem(OAUTH_STATE_STORAGE_KEY)
-  sessionStorage.removeItem(OAUTH_STATE_STORAGE_KEY)
-  return state
+  return { url: url.toString(), state }
 }
 
 // supabase-js só devolve a mensagem genérica ("non-2xx status code") em
