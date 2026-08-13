@@ -53,6 +53,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true
+    // O Supabase Auth dispara onAuthStateChange de novo a cada revalidação de
+    // sessão em segundo plano (ex.: TOKEN_REFRESHED, que acontece toda vez que
+    // a aba recupera o foco — inclusive ao fechar uma popup de OAuth de outra
+    // integração). Sem essa guarda, todo esse "piscar" de isLoading fazia
+    // AdminLayout (`if (isLoading) return null`) desmontar o painel inteiro a
+    // cada troca de foco, perdendo qualquer state local das páginas do admin
+    // no meio do caminho. Loading só faz sentido na checagem INICIAL da
+    // sessão (refresh de página) — eventos seguintes só atualizam o usuário.
+    let hasLoadedOnce = false
 
     const {
       data: { subscription },
@@ -62,14 +71,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!session?.user) {
         setUser(null)
         setIsLoading(false)
+        hasLoadedOnce = true
         return
       }
 
-      setIsLoading(true)
+      if (!hasLoadedOnce) setIsLoading(true)
       fetchProfile(session.user.id).then((profile) => {
         if (active) {
           setUser(profile)
           setIsLoading(false)
+          hasLoadedOnce = true
         }
       })
     })

@@ -63,7 +63,6 @@ export function MelhorEnvioIntegrationCard() {
       popupRef.current?.close()
 
       const { code, state } = event.data as { code: string | null; state: string | null }
-      console.log('[melhor-envio-diag]', { receivedState: state, pendingState: pendingStateRef.current, match: state === pendingStateRef.current, hasCode: !!code })
       if (!code || !state || state !== pendingStateRef.current) {
         setConnectResult({
           success: false,
