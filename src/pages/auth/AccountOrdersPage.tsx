@@ -10,6 +10,14 @@ export function AccountOrdersPage() {
   const { user } = useAuth()
   const { data: orders = [] } = useMyOrders(user?.id)
 
+  if (orders.length === 0) {
+    return (
+      <div className="border-border rounded-md border bg-white py-10 text-center">
+        <p className="text-text-meta text-sm">Você ainda não fez nenhum pedido.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="border-border overflow-hidden rounded-md border bg-white">
       {orders.map((order) => (

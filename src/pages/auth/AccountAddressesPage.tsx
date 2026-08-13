@@ -79,6 +79,12 @@ export function AccountAddressesPage() {
         </form>
       )}
 
+      {addresses.length === 0 && !showForm && (
+        <div className="border-border rounded-md border bg-white py-10 text-center">
+          <p className="text-text-meta text-sm">Nenhum endereço cadastrado ainda.</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {addresses.map((address) => (
           <div key={address.id} className="border-border rounded-md border bg-white p-5">
