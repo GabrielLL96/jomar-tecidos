@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
+import { unwrapFunctionError } from '@/lib/edge-functions'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useAdminUsers, useUserAddresses } from '@/features/users/hooks'
 import {
@@ -42,6 +43,16 @@ import type { AdminUser, UserStatus } from '@/features/users/types'
 
 const ALL_ROLES = 'all'
 const ALL_STATUSES = 'all'
+
+type CreatableRole = 'customer' | 'admin'
+
+const EMPTY_CREATE_FORM = {
+  name: '',
+  email: '',
+  role: 'customer' as CreatableRole,
+  password: '',
+  confirmPassword: '',
+}
 
 const lastLoginFormatter = new Intl.DateTimeFormat('pt-BR', {
   dateStyle: 'short',
@@ -63,6 +74,10 @@ export function AdminUsersPage() {
   const [editStatus, setEditStatus] = useState<UserStatus>('active')
   const [isSaving, setIsSaving] = useState(false)
   const [isSendingReset, setIsSendingReset] = useState(false)
+
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createForm, setCreateForm] = useState(EMPTY_CREATE_FORM)
+  const [isCreating, setIsCreating] = useState(false)
 
   const [detailUser, setDetailUser] = useState<AdminUser | null>(null)
   const { data: addresses = [], isLoading: isLoadingAddresses } = useUserAddresses(
@@ -125,6 +140,58 @@ export function AdminUsersPage() {
     }
   }
 
+  const setCreateField = <K extends keyof typeof EMPTY_CREATE_FORM>(
+    key: K,
+    value: (typeof EMPTY_CREATE_FORM)[K],
+  ) => setCreateForm((current) => ({ ...current, [key]: value }))
+
+  const handleCreateUser = async () => {
+    const name = createForm.name.trim()
+    if (!name) {
+      toast.error('Informe o nome')
+      return
+    }
+    const email = createForm.email.trim().toLowerCase()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error('Informe um e-mail válido')
+      return
+    }
+    if (createForm.role === 'admin') {
+      if (createForm.password.length < 6) {
+        toast.error('A senha deve ter ao menos 6 caracteres')
+        return
+      }
+      if (createForm.password !== createForm.confirmPassword) {
+        toast.error('As senhas não coincidem')
+        return
+      }
+    }
+
+    setIsCreating(true)
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: {
+          name,
+          email,
+          role: createForm.role,
+          ...(createForm.role === 'admin' ? { password: createForm.password } : {}),
+        },
+      })
+      if (error) await unwrapFunctionError(error)
+
+      toast.success(`${name} criado com sucesso`)
+      if (data?.warning) toast.error(data.warning)
+
+      setCreateOpen(false)
+      setCreateForm(EMPTY_CREATE_FORM)
+      await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível criar o usuário')
+    } finally {
+      setIsCreating(false)
+    }
+  }
+
   return (
     <div>
       <Tabs
@@ -138,38 +205,43 @@ export function AdminUsersPage() {
         </TabsList>
       </Tabs>
 
-      <div className="mb-[18px] flex flex-col gap-2.5 sm:flex-row">
-        <Input
-          placeholder="Buscar por nome ou e-mail…"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          className="w-full bg-white sm:w-[260px]"
-        />
-        {tab === 'equipe' && (
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-full bg-white sm:w-[160px]">
-              <SelectValue placeholder="Papel" />
+      <div className="mb-[18px] flex flex-col gap-2.5 sm:flex-row sm:justify-between">
+        <div className="flex flex-col gap-2.5 sm:flex-row">
+          <Input
+            placeholder="Buscar por nome ou e-mail…"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            className="w-full bg-white sm:w-[260px]"
+          />
+          {tab === 'equipe' && (
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-full bg-white sm:w-[160px]">
+                <SelectValue placeholder="Papel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL_ROLES}>Todos papéis</SelectItem>
+                {STAFF_ROLES.map((role) => (
+                  <SelectItem key={role} value={role}>
+                    {ROLE_LABELS[role]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full bg-white sm:w-[140px]">
+              <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={ALL_ROLES}>Todos papéis</SelectItem>
-              {STAFF_ROLES.map((role) => (
-                <SelectItem key={role} value={role}>
-                  {ROLE_LABELS[role]}
-                </SelectItem>
-              ))}
+              <SelectItem value={ALL_STATUSES}>Todos status</SelectItem>
+              <SelectItem value="active">Ativo</SelectItem>
+              <SelectItem value="inactive">Inativo</SelectItem>
             </SelectContent>
           </Select>
-        )}
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-full bg-white sm:w-[140px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ALL_STATUSES}>Todos status</SelectItem>
-            <SelectItem value="active">Ativo</SelectItem>
-            <SelectItem value="inactive">Inativo</SelectItem>
-          </SelectContent>
-        </Select>
+        </div>
+        <Button onClick={() => setCreateOpen(true)} className="sm:self-start">
+          + Novo usuário
+        </Button>
       </div>
 
       <div className="rounded-md border border-[#e4ddd0] bg-white">
@@ -247,6 +319,85 @@ export function AdminUsersPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => {
+          setCreateOpen(open)
+          if (!open) setCreateForm(EMPTY_CREATE_FORM)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Novo usuário</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="createName">Nome</Label>
+              <Input
+                id="createName"
+                value={createForm.name}
+                onChange={(event) => setCreateField('name', event.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="createEmail">E-mail</Label>
+              <Input
+                id="createEmail"
+                type="email"
+                value={createForm.email}
+                onChange={(event) => setCreateField('email', event.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label>Papel</Label>
+              <Select
+                value={createForm.role}
+                onValueChange={(value) => setCreateField('role', value as CreatableRole)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="customer">{ROLE_LABELS.customer}</SelectItem>
+                  <SelectItem value="admin">{ROLE_LABELS.admin}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {createForm.role === 'admin' ? (
+              <div className="flex flex-col gap-2 border-t border-[#ede8de] pt-4">
+                <Label htmlFor="createPassword">Senha</Label>
+                <Input
+                  id="createPassword"
+                  type="password"
+                  value={createForm.password}
+                  onChange={(event) => setCreateField('password', event.target.value)}
+                />
+                <Label htmlFor="createConfirmPassword">Confirmar senha</Label>
+                <Input
+                  id="createConfirmPassword"
+                  type="password"
+                  value={createForm.confirmPassword}
+                  onChange={(event) => setCreateField('confirmPassword', event.target.value)}
+                />
+              </div>
+            ) : (
+              <p className="text-text-meta border-t border-[#ede8de] pt-4 text-xs">
+                Um e-mail para definir a senha será enviado automaticamente.
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCreateUser} disabled={isCreating}>
+              {isCreating ? 'Criando…' : 'Criar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
         <DialogContent>

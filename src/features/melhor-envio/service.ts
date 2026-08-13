@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { unwrapFunctionError } from '@/lib/edge-functions'
 import type { ShippingQuoteItemInput, ShippingQuoteResult } from './types'
 
 const MELHOR_ENVIO_SANDBOX_URL = 'https://sandbox.melhorenvio.com.br'
@@ -22,23 +23,6 @@ export function buildAuthorizeUrl(clientId: string, redirectUri: string): { url:
   url.searchParams.set('state', state)
   url.searchParams.set('scope', OAUTH_SCOPES)
   return { url: url.toString(), state }
-}
-
-// supabase-js só devolve a mensagem genérica ("non-2xx status code") em
-// `error.message` — o corpo real ({error: "..."}) que as Edge Functions
-// devolvem fica em `error.context`, uma Response que precisa ser lida à
-// parte.
-async function unwrapFunctionError(error: { message: string; context?: Response }): Promise<never> {
-  let specificMessage: string | undefined
-  if (error.context) {
-    try {
-      const body = (await error.context.json()) as { error?: string }
-      specificMessage = body.error
-    } catch {
-      // corpo não era JSON — cai no throw genérico abaixo
-    }
-  }
-  throw new Error(specificMessage ?? error.message)
 }
 
 export async function exchangeAuthorizationCode(code: string): Promise<void> {

@@ -32,7 +32,7 @@ export async function requireAdmin(authorizationHeader: string | null) {
   const caller = createCallerClient(authorizationHeader)
   const { data: role, error } = await caller.rpc('current_user_role')
   if (error) throw new Error(`Falha ao checar papel do usuário: ${error.message}`)
-  if (role !== 'admin') throw new Error('Só admin pode gerenciar a integração Melhor Envio')
+  if (role !== 'admin') throw new Error('Só admin pode fazer essa ação')
 }
 
 export async function requireAuthenticated(authorizationHeader: string | null) {
