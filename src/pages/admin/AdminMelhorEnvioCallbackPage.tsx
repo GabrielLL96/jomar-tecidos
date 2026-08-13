@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { consumeStoredOAuthState, exchangeAuthorizationCode } from '@/features/melhor-envio/service'
 
 type Status = 'processing' | 'success' | 'error'
@@ -9,6 +10,7 @@ export function AdminMelhorEnvioCallbackPage() {
   const [status, setStatus] = useState<Status>('processing')
   const [errorMessage, setErrorMessage] = useState('')
   const started = useRef(false)
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     if (started.current) return
@@ -27,6 +29,7 @@ export function AdminMelhorEnvioCallbackPage() {
 
       try {
         await exchangeAuthorizationCode(code)
+        await queryClient.invalidateQueries({ queryKey: ['melhor-envio', 'status'] })
         setStatus('success')
       } catch (error) {
         setStatus('error')
