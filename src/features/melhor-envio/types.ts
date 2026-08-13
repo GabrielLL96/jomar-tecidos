@@ -6,6 +6,8 @@ export interface MelhorEnvioStatus {
   secretConfigured: boolean
 }
 
+export type MelhorEnvioConnectResult = { success: true } | { success: false; message: string }
+
 export interface ShippingQuoteItemInput {
   weightGrams: number
   heightCm: number

@@ -1,14 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { consumeStoredOAuthState, exchangeAuthorizationCode } from '@/features/melhor-envio/service'
-
-type Status = 'processing' | 'success' | 'error'
+import type { MelhorEnvioConnectResult } from '@/features/melhor-envio/types'
 
 export function AdminMelhorEnvioCallbackPage() {
   const [searchParams] = useSearchParams()
-  const [status, setStatus] = useState<Status>('processing')
-  const [errorMessage, setErrorMessage] = useState('')
+  const navigate = useNavigate()
   const started = useRef(false)
   const queryClient = useQueryClient()
 
@@ -21,20 +19,28 @@ export function AdminMelhorEnvioCallbackPage() {
       const state = searchParams.get('state')
       const expectedState = consumeStoredOAuthState()
 
+      let result: MelhorEnvioConnectResult
       if (!code || !state || state !== expectedState) {
-        setStatus('error')
-        setErrorMessage('Retorno inválido da Melhor Envio (código ou state ausente/incorreto).')
-        return
+        result = {
+          success: false,
+          message: 'Retorno inválido da Melhor Envio (código ou state ausente/incorreto).',
+        }
+      } else {
+        try {
+          await exchangeAuthorizationCode(code)
+          await queryClient.invalidateQueries({ queryKey: ['melhor-envio', 'status'] })
+          result = { success: true }
+        } catch (error) {
+          result = {
+            success: false,
+            message: error instanceof Error ? error.message : 'Falha ao concluir a conexão',
+          }
+        }
       }
 
-      try {
-        await exchangeAuthorizationCode(code)
-        await queryClient.invalidateQueries({ queryKey: ['melhor-envio', 'status'] })
-        setStatus('success')
-      } catch (error) {
-        setStatus('error')
-        setErrorMessage(error instanceof Error ? error.message : 'Falha ao concluir a conexão')
-      }
+      // Volta pra Configurações — o resultado é exibido lá via modal
+      // (state da navegação), não numa tela própria.
+      navigate('/admin/configuracoes', { replace: true, state: { melhorEnvioResult: result } })
     }
 
     void run()
@@ -44,24 +50,7 @@ export function AdminMelhorEnvioCallbackPage() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-3 py-16 text-center">
-      {status === 'processing' && <p className="text-text-meta text-sm">Concluindo conexão com a Melhor Envio…</p>}
-      {status === 'success' && (
-        <>
-          <p className="text-navy-dark text-sm font-semibold">Conectado com sucesso.</p>
-          <Link to="/admin/configuracoes" className="text-navy text-sm hover:underline">
-            Voltar para Configurações
-          </Link>
-        </>
-      )}
-      {status === 'error' && (
-        <>
-          <p className="text-destructive text-sm font-semibold">Não foi possível conectar.</p>
-          <p className="text-text-meta text-xs">{errorMessage}</p>
-          <Link to="/admin/configuracoes" className="text-navy text-sm hover:underline">
-            Voltar para Configurações
-          </Link>
-        </>
-      )}
+      <p className="text-text-meta text-sm">Concluindo conexão com a Melhor Envio…</p>
     </div>
   )
 }

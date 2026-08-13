@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { supabase } from '@/lib/supabase'
@@ -9,6 +11,7 @@ import type { TablesUpdate } from '@/lib/database.types'
 import { useMelhorEnvioStatus } from '@/features/melhor-envio/hooks'
 import { MELHOR_ENVIO_SETTINGS_ID } from '@/features/melhor-envio/queries'
 import { buildAuthorizeUrl } from '@/features/melhor-envio/service'
+import type { MelhorEnvioConnectResult } from '@/features/melhor-envio/types'
 
 const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
 const WEBHOOK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/melhor-envio-webhook`
@@ -24,12 +27,16 @@ function SettingsCard({ title, children }: { title: string; children: React.Reac
 
 export function MelhorEnvioIntegrationCard() {
   const queryClient = useQueryClient()
+  const location = useLocation()
+  const navigate = useNavigate()
   const { data: status } = useMelhorEnvioStatus()
   const [clientId, setClientId] = useState('')
   const [clientSecret, setClientSecret] = useState('')
   const [redirectUri, setRedirectUri] = useState(`${window.location.origin}/admin/melhor-envio/callback`)
   const [isSaving, setIsSaving] = useState(false)
+  const [connectResult, setConnectResult] = useState<MelhorEnvioConnectResult | null>(null)
   const syncedStatus = useRef(false)
+  const processedConnectResult = useRef(false)
 
   useEffect(() => {
     if (syncedStatus.current || !status) return
@@ -37,6 +44,24 @@ export function MelhorEnvioIntegrationCard() {
     setClientId(status.clientId ?? '')
     setRedirectUri(status.redirectUri ?? `${window.location.origin}/admin/melhor-envio/callback`)
   }, [status])
+
+  // Resultado do callback OAuth (voltou de /admin/melhor-envio/callback) — exibido
+  // aqui via modal em vez de uma tela própria. Precisa ser efeito (não setState
+  // durante o render): além de espelhar o resultado em state local, limpa o
+  // `state` da entrada de histórico via navigate — sem isso, um F5 com o modal
+  // aberto reabre ele de novo, porque history.state sobrevive ao reload mas
+  // state React não. Sincronizar com a History API (sistema externo) é
+  // exatamente o caso que useEffect existe para resolver.
+  useEffect(() => {
+    if (processedConnectResult.current) return
+    const result = (location.state as { melhorEnvioResult?: MelhorEnvioConnectResult } | null)
+      ?.melhorEnvioResult
+    if (!result) return
+    processedConnectResult.current = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- sincroniza com history.state (sistema externo, ver comentário acima)
+    setConnectResult(result)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.state, location.pathname, navigate])
 
   const handleSave = async () => {
     setIsSaving(true)
@@ -134,6 +159,24 @@ export function MelhorEnvioIntegrationCard() {
           Conectar com Melhor Envio
         </Button>
       </div>
+
+      <Dialog open={connectResult !== null} onOpenChange={(open) => !open && setConnectResult(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {connectResult?.success ? 'Conectado com sucesso' : 'Não foi possível conectar'}
+            </DialogTitle>
+          </DialogHeader>
+          {connectResult && !connectResult.success && (
+            <p className="text-text-meta text-sm">{connectResult.message}</p>
+          )}
+          <DialogFooter>
+            <Button type="button" onClick={() => setConnectResult(null)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SettingsCard>
   )
 }
