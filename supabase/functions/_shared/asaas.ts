@@ -113,7 +113,7 @@ export async function createAsaasPayment(
       dueDate: input.dueDate,
       externalReference: input.externalReference,
       ...(input.successUrl
-        ? { callback: { successUrl: input.successUrl, autoRedirect: false } }
+        ? { callback: { successUrl: input.successUrl, autoRedirect: true } }
         : {}),
     }),
   })
