@@ -82,7 +82,6 @@ export function AdminUsersPage() {
   const [editRole, setEditRole] = useState<UserRole>('customer')
   const [editStatus, setEditStatus] = useState<UserStatus>('active')
   const [isSaving, setIsSaving] = useState(false)
-  const [isSendingReset, setIsSendingReset] = useState(false)
 
   const [createOpen, setCreateOpen] = useState(false)
   const [createForm, setCreateForm] = useState(EMPTY_CREATE_FORM)
@@ -105,14 +104,24 @@ export function AdminUsersPage() {
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase()
     return users.filter((user) => {
-      const inTab = tab === 'clientes' ? user.role === 'customer' : user.role !== 'customer'
-      if (!inTab) return false
+      // Papel escolhido explicitamente tem prioridade sobre o agrupamento
+      // padrão da aba (customer vs. staff) — sem isso, filtrar por "Cliente"
+      // na aba Equipe interna nunca mostraria nada, já que a aba já exclui
+      // role customer antes do filtro rodar. Isso permite achar um usuário
+      // classificado com papel diferente do esperado pra aba atual (ex.:
+      // um "cliente" que teve o papel trocado por engano pra staff).
+      if (tab === 'equipe' && roleFilter !== ALL_ROLES) {
+        if (user.role !== roleFilter) return false
+      } else {
+        const inTab = tab === 'clientes' ? user.role === 'customer' : user.role !== 'customer'
+        if (!inTab) return false
+        if (roleFilter !== ALL_ROLES && user.role !== roleFilter) return false
+      }
       if (query) {
         const matches =
           user.name.toLowerCase().includes(query) || user.email.toLowerCase().includes(query)
         if (!matches) return false
       }
-      if (roleFilter !== ALL_ROLES && user.role !== roleFilter) return false
       if (statusFilter !== ALL_STATUSES && user.status !== statusFilter) return false
       return true
     })
@@ -144,15 +153,12 @@ export function AdminUsersPage() {
   }
 
   const handleSendPasswordReset = async (email: string) => {
-    setIsSendingReset(true)
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email)
       if (error) throw new Error(error.message)
       toast.success(`E-mail de redefinição enviado para ${email}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível enviar o e-mail')
-    } finally {
-      setIsSendingReset(false)
     }
   }
 
@@ -281,13 +287,20 @@ export function AdminUsersPage() {
     }
   }
 
+  // Busca/papel/status são state único, não por aba — trocar de aba sem
+  // resetar deixava o filtro da aba anterior "vazando" pra próxima (ex.:
+  // filtrar por um papel de staff, trocar pra Clientes, tabela vinha vazia
+  // porque o filtro antigo não batia com nenhum cliente).
+  const handleTabChange = (value: string) => {
+    setTab(value as typeof tab)
+    setSearch('')
+    setRoleFilter(ALL_ROLES)
+    setStatusFilter(ALL_STATUSES)
+  }
+
   return (
     <div>
-      <Tabs
-        value={tab}
-        onValueChange={(value) => setTab(value as typeof tab)}
-        className="mb-[18px]"
-      >
+      <Tabs value={tab} onValueChange={handleTabChange} className="mb-[18px]">
         <TabsList>
           <TabsTrigger value="clientes">Clientes</TabsTrigger>
           <TabsTrigger value="equipe">Equipe interna</TabsTrigger>
@@ -309,6 +322,10 @@ export function AdminUsersPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL_ROLES}>Todos papéis</SelectItem>
+                {/* "Cliente" aqui é pra achar um usuário classificado com papel
+                    diferente do esperado — não é o uso normal da aba Equipe
+                    interna, ver filteredUsers. */}
+                <SelectItem value="customer">{ROLE_LABELS.customer}</SelectItem>
                 {STAFF_ROLES.map((role) => (
                   <SelectItem key={role} value={role}>
                     {ROLE_LABELS[role]}
@@ -555,21 +572,6 @@ export function AdminUsersPage() {
                   <SelectItem value="inactive">Inativo</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-            <div className="flex flex-col gap-2 border-t border-[#ede8de] pt-4">
-              <Label>Senha</Label>
-              <p className="text-text-meta text-xs">
-                Envia um e-mail de redefinição real via Supabase Auth — não existe senha temporária
-                configurável por aqui.
-              </p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => editingUser && handleSendPasswordReset(editingUser.email)}
-                disabled={isSendingReset}
-              >
-                {isSendingReset ? 'Enviando…' : 'Enviar redefinição de senha'}
-              </Button>
             </div>
           </div>
           <DialogFooter>
