@@ -38,7 +38,8 @@ import { formatPriceBRL } from '@/lib/format'
 import { computeStockStatus } from '@/features/catalog/utils'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useOrder } from '@/features/orders/hooks'
-import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/features/orders/data'
+import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, ORDER_PAYMENT_STATUS_LABELS } from '@/features/orders/data'
+import { refundAsaasOrder } from '@/features/asaas/service'
 import { PAYMENT_METHODS } from '@/pages/checkout/schema'
 import type { OrderStatus } from '@/features/orders/types'
 
@@ -46,7 +47,10 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = Object.fromEntries(
   PAYMENT_METHODS.map((method) => [method.value, method.label]),
 )
 
-const APPROVED_PAYMENT_STATUSES: OrderStatus[] = ['paid', 'shipping', 'delivered']
+// "refunded" também conta como "teve pagamento aprovado" pra efeito de
+// bloquear exclusão — mesma regra já aplicada no servidor (delete_order,
+// migration 20260814000100).
+const APPROVED_PAYMENT_STATUSES: OrderStatus[] = ['paid', 'shipping', 'delivered', 'refunded']
 
 const PROGRESS_STEPS = ['Aguardando', 'Pago', 'Preparando', 'Enviado', 'Entregue']
 
@@ -68,17 +72,21 @@ function progressStepIndex(status: OrderStatus): number {
 }
 
 const STATUS_MESSAGES: Record<OrderStatus, string> = {
-  pending: 'Aguardando confirmação de pagamento.',
+  pending: 'Aguardando confirmação de pagamento pela Asaas — status muda sozinho quando o webhook confirmar.',
   paid: 'Pagamento confirmado — pedido em preparação.',
   shipping: 'Pedido a caminho do cliente.',
   delivered: 'Pedido entregue com sucesso.',
   cancelled: 'Pedido cancelado.',
+  refunded: 'Pedido reembolsado.',
 }
 
 const STATUS_FLOW: OrderStatus[] = ['pending', 'paid', 'shipping', 'delivered']
 
+// "pending" não tem entrada aqui de propósito — pending → paid só acontece
+// via webhook da Asaas agora (achado real: antes um clique de admin
+// declarava "pago" sem nenhuma verificação; com cobrança real isso vira
+// risco de fraude/erro, ver spec 2026-08-13-asaas-checkout-pagamento-design.md).
 const ADVANCE_LABELS: Partial<Record<OrderStatus, string>> = {
-  pending: 'Marcar como pago',
   paid: 'Marcar como enviado',
   shipping: 'Marcar como entregue',
 }
@@ -111,6 +119,11 @@ export function AdminSalesOrderDetailPage() {
 
   const [deleteOpen, setDeleteOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const [refundOpen, setRefundOpen] = useState(false)
+  const [refundAmount, setRefundAmount] = useState('')
+  const [refundReason, setRefundReason] = useState('')
+  const [isRefunding, setIsRefunding] = useState(false)
 
   // hidrata os campos de rastreio a partir do pedido carregado — ajuste de
   // state durante o render (guardado por order.id), não useEffect, pra não
@@ -267,6 +280,33 @@ export function AdminSalesOrderDetailPage() {
     }
   }
 
+  const handleRefund = async () => {
+    if (!order) return
+    if (!refundReason.trim()) {
+      toast.error('Informe o motivo do reembolso')
+      return
+    }
+    const parsedAmount = refundAmount.trim() ? Number(refundAmount.replace(',', '.')) : undefined
+    if (parsedAmount !== undefined && (Number.isNaN(parsedAmount) || parsedAmount <= 0)) {
+      toast.error('Valor de reembolso inválido')
+      return
+    }
+
+    setIsRefunding(true)
+    try {
+      await refundAsaasOrder(order.id, refundReason.trim(), parsedAmount)
+      toast.success('Reembolso solicitado')
+      setRefundOpen(false)
+      setRefundAmount('')
+      setRefundReason('')
+      await invalidate()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível processar o reembolso')
+    } finally {
+      setIsRefunding(false)
+    }
+  }
+
   if (isLoading) {
     return <p className="text-text-meta text-sm">Carregando…</p>
   }
@@ -283,9 +323,15 @@ export function AdminSalesOrderDetailPage() {
   }
 
   const approvedPayment = APPROVED_PAYMENT_STATUSES.includes(order.status)
-  const canAdvance = isAdmin && nextStatus(order.status) !== null && order.status !== 'cancelled'
-  const canCancel = order.status !== 'cancelled'
+  // "pending" fica de fora — essa transição só acontece via webhook agora.
+  const canAdvance = isAdmin && order.status !== 'pending' && nextStatus(order.status) !== null
+  // "Cancelar" só cobre pedido que nunca chegou a ser cobrado de verdade —
+  // pedido pago usa "Reembolsar" (mexe em dinheiro de verdade).
+  const canCancel = order.status === 'pending'
   const canDelete = isAdmin && !approvedPayment
+  const refundedTotal = order.refunds.reduce((sum, refund) => sum + refund.amount, 0)
+  const remainingToRefund = Number(order.total) - refundedTotal
+  const canRefund = ['paid', 'shipping', 'delivered'].includes(order.status) && remainingToRefund > 0
 
   return (
     <div>
@@ -324,6 +370,11 @@ export function AdminSalesOrderDetailPage() {
               Cancelar pedido
             </Button>
           )}
+          {canRefund && (
+            <Button variant="outline" onClick={() => setRefundOpen(true)}>
+              Reembolsar
+            </Button>
+          )}
           <Button
             variant="destructive"
             onClick={() => setDeleteOpen(true)}
@@ -332,7 +383,7 @@ export function AdminSalesOrderDetailPage() {
               !isAdmin
                 ? 'Só administradores podem excluir pedidos'
                 : approvedPayment
-                  ? 'Pedido tem pagamento aprovado — cancele e estorne antes de excluir'
+                  ? 'Pedido tem pagamento aprovado — reembolse antes de excluir'
                   : undefined
             }
           >
@@ -345,6 +396,10 @@ export function AdminSalesOrderDetailPage() {
         {order.status === 'cancelled' ? (
           <div className="rounded-md bg-[#f2e4e4] px-3 py-2 text-sm text-[#8c3d3d]">
             Pedido cancelado{order.cancelReason ? ` — ${order.cancelReason}` : ''}
+          </div>
+        ) : order.status === 'refunded' ? (
+          <div className="rounded-md bg-[#f2e4e4] px-3 py-2 text-sm text-[#8c3d3d]">
+            Pedido reembolsado — {formatPriceBRL(refundedTotal)} devolvido ao cliente
           </div>
         ) : (
           <>
@@ -481,8 +536,73 @@ export function AdminSalesOrderDetailPage() {
             <span>Total</span>
             <span>{formatPriceBRL(order.total)}</span>
           </div>
+          {order.payment && (
+            <div className="mt-2 flex justify-between border-t border-[#ede8de] pt-1.5">
+              <span className="text-text-meta">Status da cobrança</span>
+              <span>{ORDER_PAYMENT_STATUS_LABELS[order.payment.status] ?? order.payment.status}</span>
+            </div>
+          )}
+          {order.refunds.length > 0 && (
+            <div className="mt-2 flex flex-col gap-1 border-t border-[#ede8de] pt-1.5">
+              <span className="text-text-meta">Reembolsos</span>
+              {order.refunds.map((refund) => (
+                <div key={refund.id} className="text-text-meta flex justify-between text-xs">
+                  <span>
+                    {dateTimeFormatter.format(new Date(refund.createdAt))} · {refund.reason} ·{' '}
+                    {refund.requestedByName}
+                  </span>
+                  <span>{formatPriceBRL(refund.amount)}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+
+      <Dialog open={refundOpen} onOpenChange={setRefundOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reembolsar pedido #{order.orderNumber}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="refundAmount">Valor (R$) — deixe em branco pra reembolsar tudo que resta</Label>
+              <Input
+                id="refundAmount"
+                inputMode="decimal"
+                placeholder={remainingToRefund.toFixed(2)}
+                value={refundAmount}
+                onChange={(event) => setRefundAmount(event.target.value)}
+              />
+              <p className="text-text-meta text-xs">
+                Ainda pode reembolsar até {formatPriceBRL(remainingToRefund)}
+                {refundedTotal > 0 && ` (já reembolsado: ${formatPriceBRL(refundedTotal)})`}.
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="refundReason">Motivo do reembolso</Label>
+              <Textarea
+                id="refundReason"
+                value={refundReason}
+                onChange={(event) => setRefundReason(event.target.value)}
+                placeholder="Ex: produto com defeito"
+              />
+            </div>
+            <p className="text-text-meta text-xs">
+              Sem estorno de estoque automático — se precisar devolver mercadoria ao estoque, ajuste
+              manualmente em Estoque.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRefundOpen(false)}>
+              Voltar
+            </Button>
+            <Button variant="destructive" onClick={handleRefund} disabled={isRefunding || !refundReason.trim()}>
+              {isRefunding ? 'Processando…' : 'Confirmar reembolso'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={cancelOpen} onOpenChange={setCancelOpen}>
         <DialogContent>

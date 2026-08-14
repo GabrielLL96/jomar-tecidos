@@ -6,6 +6,7 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   shipping: 'Enviado',
   delivered: 'Entregue',
   cancelled: 'Cancelado',
+  refunded: 'Reembolsado',
 }
 
 export const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
@@ -14,6 +15,15 @@ export const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
   shipping: 'bg-[#e6e4ee] text-[#1c1a5e]',
   delivered: 'bg-[#e3ecec] text-[#2f6b5e]',
   cancelled: 'bg-[#f2e4e4] text-[#8c3d3d]',
+  refunded: 'bg-[#f2e4e4] text-[#8c3d3d]',
+}
+
+export const ORDER_PAYMENT_STATUS_LABELS: Record<string, string> = {
+  pending: 'Aguardando confirmação',
+  confirmed: 'Confirmado',
+  overdue: 'Vencido',
+  cancelled: 'Cancelado',
+  refunded: 'Reembolsado',
 }
 
 export const DELIVERY_STATUS_LABELS: Record<DeliveryStatus, string> = {

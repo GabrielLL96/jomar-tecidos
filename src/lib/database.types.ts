@@ -433,6 +433,68 @@ export type Database = {
           },
         ]
       }
+      order_payments: {
+        Row: {
+          amount: number
+          asaas_payment_id: string | null
+          boleto_barcode: string | null
+          boleto_url: string | null
+          confirmed_at: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          invoice_url: string | null
+          order_id: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          pix_copy_paste: string | null
+          pix_qr_code: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          asaas_payment_id?: string | null
+          boleto_barcode?: string | null
+          boleto_url?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          invoice_url?: string | null
+          order_id: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          pix_copy_paste?: string | null
+          pix_qr_code?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          asaas_payment_id?: string | null
+          boleto_barcode?: string | null
+          boleto_url?: string | null
+          confirmed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          invoice_url?: string | null
+          order_id?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          pix_copy_paste?: string | null
+          pix_qr_code?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_status_history: {
         Row: {
           changed_by_name: string
@@ -701,6 +763,54 @@ export type Database = {
         }
         Relationships: []
       }
+      refunds: {
+        Row: {
+          amount: number
+          asaas_refund_id: string | null
+          created_at: string
+          id: string
+          order_id: string
+          reason: string
+          requested_by: string | null
+          requested_by_name: string
+        }
+        Insert: {
+          amount: number
+          asaas_refund_id?: string | null
+          created_at?: string
+          id?: string
+          order_id: string
+          reason: string
+          requested_by?: string | null
+          requested_by_name: string
+        }
+        Update: {
+          amount?: number
+          asaas_refund_id?: string | null
+          created_at?: string
+          id?: string
+          order_id?: string
+          reason?: string
+          requested_by?: string | null
+          requested_by_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refunds_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           author_name: string
@@ -832,6 +942,7 @@ export type Database = {
       }
       users: {
         Row: {
+          asaas_customer_id: string | null
           cpf: string | null
           created_at: string
           email: string
@@ -843,6 +954,7 @@ export type Database = {
           status: Database["public"]["Enums"]["user_status"]
         }
         Insert: {
+          asaas_customer_id?: string | null
           cpf?: string | null
           created_at?: string
           email: string
@@ -854,6 +966,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["user_status"]
         }
         Update: {
+          asaas_customer_id?: string | null
           cpf?: string | null
           created_at?: string
           email?: string
@@ -951,7 +1064,13 @@ export type Database = {
         | "in_transit"
         | "delivered"
         | "delayed"
-      order_status: "pending" | "paid" | "shipping" | "delivered" | "cancelled"
+      order_status:
+        | "pending"
+        | "paid"
+        | "shipping"
+        | "delivered"
+        | "cancelled"
+        | "refunded"
       payment_method: "credit_card" | "pix" | "boleto"
       product_status: "active" | "low_stock" | "out_of_stock" | "draft"
       user_role:
@@ -1099,7 +1218,14 @@ export const Constants = {
         "delivered",
         "delayed",
       ],
-      order_status: ["pending", "paid", "shipping", "delivered", "cancelled"],
+      order_status: [
+        "pending",
+        "paid",
+        "shipping",
+        "delivered",
+        "cancelled",
+        "refunded",
+      ],
       payment_method: ["credit_card", "pix", "boleto"],
       product_status: ["active", "low_stock", "out_of_stock", "draft"],
       user_role: [

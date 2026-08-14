@@ -6,3 +6,10 @@ export interface AsaasStatus {
   apiKeyConfigured: boolean
   webhookTokenConfigured: boolean
 }
+
+export interface CreateChargeResult {
+  invoiceUrl: string
+  pixQrCode: string | null
+  pixCopyPaste: string | null
+  boletoUrl: string | null
+}

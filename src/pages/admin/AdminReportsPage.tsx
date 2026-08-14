@@ -56,9 +56,9 @@ export function AdminReportsPage() {
   }
 
   const exportCompositionPerformance = () => {
-    // pedido cancelado não conta como venda real — mesmo critério já usado
-    // no KPI "Faturamento" de /admin/vendas.
-    const valid = orders.filter((order) => order.status !== 'cancelled')
+    // pedido cancelado ou reembolsado não conta como venda real — mesmo
+    // critério já usado no KPI "Faturamento" de /admin/vendas.
+    const valid = orders.filter((order) => order.status !== 'cancelled' && order.status !== 'refunded')
 
     const byComposition = new Map<string, { orders: number; meters: number; revenue: number }>()
     for (const order of valid) {
@@ -117,7 +117,7 @@ export function AdminReportsPage() {
   const exportCustomers = () => {
     const byEmail = new Map<string, { count: number; total: number }>()
     for (const order of orders) {
-      if (!order.customerEmail || order.status === 'cancelled') continue
+      if (!order.customerEmail || order.status === 'cancelled' || order.status === 'refunded') continue
       const entry = byEmail.get(order.customerEmail) ?? { count: 0, total: 0 }
       entry.count += 1
       entry.total += order.total

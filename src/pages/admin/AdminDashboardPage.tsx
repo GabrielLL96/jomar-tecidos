@@ -25,9 +25,9 @@ function computeKpis(products: Product[], orders: Order[]) {
 }
 
 // Mesmo critério já usado em /admin/vendas e /admin/relatorios: pedido
-// cancelado não conta como venda real.
+// cancelado ou reembolsado não conta como venda real.
 function computeSalesBars(orders: Order[]) {
-  const valid = orders.filter((order) => order.status !== 'cancelled')
+  const valid = orders.filter((order) => order.status !== 'cancelled' && order.status !== 'refunded')
   const revenueByDay = new Map<string, number>()
   const today = new Date()
   const days: { key: string; label: string }[] = []
@@ -60,7 +60,7 @@ function computeSalesBars(orders: Order[]) {
 // faturamento de cada composição na proporção do seu percentual no produto
 // (mesmo cálculo já usado em exportCompositionPerformance, /admin/relatorios).
 function computeTopCompositions(products: Product[], orders: Order[], compositions: Composition[]) {
-  const valid = orders.filter((order) => order.status !== 'cancelled')
+  const valid = orders.filter((order) => order.status !== 'cancelled' && order.status !== 'refunded')
   const productsById = new Map(products.map((product) => [product.id, product]))
   const revenueByComposition = new Map<string, number>()
 

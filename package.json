@@ -28,6 +28,8 @@
     "fn:deploy:admin-set-password": "supabase functions deploy admin-set-password",
     "fn:deploy:asaas-validate-connection": "supabase functions deploy asaas-validate-connection",
     "fn:deploy:asaas-webhook": "supabase functions deploy asaas-webhook --no-verify-jwt",
+    "fn:deploy:asaas-create-charge": "supabase functions deploy asaas-create-charge",
+    "fn:deploy:asaas-refund": "supabase functions deploy asaas-refund",
     "fn:deploy:all": "supabase functions deploy"
   },
   "dependencies": {

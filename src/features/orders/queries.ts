@@ -1,6 +1,6 @@
 import { queryOptions } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import type { Coupon, DeliveryStatus, Order, OrderItem } from './types'
+import type { Coupon, DeliveryStatus, Order, OrderItem, OrderPaymentStatus } from './types'
 
 const ORDER_SELECT = `
   id, order_number, status, payment_method, subtotal, shipping_cost, discount_total, total,
@@ -9,7 +9,9 @@ const ORDER_SELECT = `
   addresses(label, street, city, state, zip_code),
   order_items(id, product_id, color_id, meters, unit_price, total, products(name), product_colors(label)),
   deliveries(id, order_id, carrier, tracking_code, tracking_url, status, eta_date),
-  order_status_history(id, status, changed_by_name, created_at)
+  order_status_history(id, status, changed_by_name, created_at),
+  order_payments(id, status, payment_method, amount, pix_qr_code, pix_copy_paste, boleto_url, boleto_barcode, invoice_url, due_date, confirmed_at, created_at),
+  refunds(id, amount, reason, requested_by_name, created_at)
 `
 
 interface OrderRow {
@@ -55,6 +57,32 @@ interface OrderRow {
     changed_by_name: string
     created_at: string
   }[]
+  // 1:N de verdade (FK order_id não é unique) mesmo só existindo 1 linha por
+  // pedido na prática hoje ("uma cobrança por pedido", ver spec) — tratar
+  // como array evita repetir o bug já documentado neste projeto de assumir
+  // objeto único numa relação que o Postgrest só garante 1:1 quando a FK tem
+  // constraint unique de verdade.
+  order_payments: {
+    id: string
+    status: OrderPaymentStatus
+    payment_method: Order['paymentMethod']
+    amount: number
+    pix_qr_code: string | null
+    pix_copy_paste: string | null
+    boleto_url: string | null
+    boleto_barcode: string | null
+    invoice_url: string | null
+    due_date: string | null
+    confirmed_at: string | null
+    created_at: string
+  }[]
+  refunds: {
+    id: string
+    amount: number
+    reason: string
+    requested_by_name: string
+    created_at: string
+  }[]
 }
 
 function adaptOrder(row: OrderRow): Order {
@@ -70,6 +98,9 @@ function adaptOrder(row: OrderRow): Order {
   }))
 
   const deliveryRow = row.deliveries
+  const latestPayment = [...row.order_payments].sort((a, b) =>
+    a.created_at < b.created_at ? 1 : -1,
+  )[0]
 
   return {
     id: row.id,
@@ -114,6 +145,30 @@ function adaptOrder(row: OrderRow): Order {
         status: entry.status,
         changedByName: entry.changed_by_name,
         createdAt: entry.created_at,
+      })),
+    payment: latestPayment
+      ? {
+          id: latestPayment.id,
+          status: latestPayment.status,
+          paymentMethod: latestPayment.payment_method,
+          amount: Number(latestPayment.amount),
+          pixQrCode: latestPayment.pix_qr_code ?? undefined,
+          pixCopyPaste: latestPayment.pix_copy_paste ?? undefined,
+          boletoUrl: latestPayment.boleto_url ?? undefined,
+          boletoBarcode: latestPayment.boleto_barcode ?? undefined,
+          invoiceUrl: latestPayment.invoice_url ?? undefined,
+          dueDate: latestPayment.due_date ?? undefined,
+          confirmedAt: latestPayment.confirmed_at ?? undefined,
+        }
+      : undefined,
+    refunds: [...row.refunds]
+      .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+      .map((refund) => ({
+        id: refund.id,
+        amount: Number(refund.amount),
+        reason: refund.reason,
+        requestedByName: refund.requested_by_name,
+        createdAt: refund.created_at,
       })),
     createdAt: row.created_at,
   }

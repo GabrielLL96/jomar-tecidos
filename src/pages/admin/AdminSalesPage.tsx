@@ -33,7 +33,10 @@ export function AdminSalesPage() {
   }, [orders])
 
   const kpis = useMemo(() => {
-    const valid = monthOrders.filter((order) => order.status !== 'cancelled')
+    // "refunded" sai do faturamento junto com "cancelled" — dinheiro que
+    // voltou pro cliente não é receita real (achado ao adicionar o status
+    // novo, não existia antes do reembolso real via Asaas).
+    const valid = monthOrders.filter((order) => order.status !== 'cancelled' && order.status !== 'refunded')
     const revenue = valid.reduce((sum, order) => sum + order.total, 0)
     const cancelledCount = monthOrders.filter((order) => order.status === 'cancelled').length
     const cancellationRate = monthOrders.length ? (cancelledCount / monthOrders.length) * 100 : 0

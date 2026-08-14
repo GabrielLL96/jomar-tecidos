@@ -18,6 +18,7 @@ import { calculateDiscount, isCouponValid } from '@/features/orders/coupon-utils
 import type { Coupon } from '@/features/orders/types'
 import { useProducts } from '@/features/catalog/hooks'
 import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
+import { createAsaasCharge } from '@/features/asaas/service'
 import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
 
 export function CheckoutPage() {
@@ -157,8 +158,29 @@ export function CheckoutPage() {
       const orderRow = orderRows?.[0]
       if (!orderRow) throw new Error('Pedido não pôde ser criado')
 
+      // Pedido já existe e o estoque já foi baixado nesse ponto — limpar o
+      // carrinho é seguro independente do resultado da cobrança abaixo.
       clear()
       await queryClient.invalidateQueries({ queryKey: ['products'] })
+
+      try {
+        const charge = await createAsaasCharge(orderRow.id, data.paymentMethod)
+        if (data.paymentMethod === 'credit_card') {
+          // Página inteira, não popup — fatura hospedada da Asaas, cliente
+          // volta sozinho via callback.successUrl configurado na cobrança.
+          window.location.href = charge.invoiceUrl
+          return
+        }
+      } catch (chargeError) {
+        // Pedido já existe (pending, sem cobrança) — a página de
+        // confirmação oferece tentar gerar a cobrança de novo.
+        toast.error(
+          chargeError instanceof Error
+            ? chargeError.message
+            : 'Não foi possível gerar a cobrança — tente novamente na página do pedido',
+        )
+      }
+
       navigate(`/pedido/${orderRow.id}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível finalizar o pedido')
@@ -245,12 +267,20 @@ export function CheckoutPage() {
               ))}
             </div>
             {paymentMethod === 'credit_card' && (
-              <div className="flex flex-col gap-1.5">
-                <Input placeholder="Número do cartão" {...register('cardNumber')} />
-                {errors.cardNumber && (
-                  <p className="text-destructive text-xs">{errors.cardNumber.message}</p>
-                )}
-              </div>
+              <p className="text-text-meta text-xs">
+                Ao confirmar, você será redirecionado pra página segura da Asaas pra digitar os dados do
+                cartão — nunca coletamos esse dado diretamente.
+              </p>
+            )}
+            {paymentMethod === 'pix' && (
+              <p className="text-text-meta text-xs">
+                Ao confirmar, mostramos um QR code / código Pix copia-e-cola pra pagar na hora.
+              </p>
+            )}
+            {paymentMethod === 'boleto' && (
+              <p className="text-text-meta text-xs">
+                Ao confirmar, geramos o boleto — o pagamento pode levar até 3 dias úteis pra ser confirmado.
+              </p>
             )}
           </div>
         </div>

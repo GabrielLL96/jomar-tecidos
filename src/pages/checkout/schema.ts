@@ -1,19 +1,16 @@
 import { z } from 'zod'
 
-export const checkoutSchema = z
-  .object({
-    fullName: z.string().min(3, 'Informe seu nome completo'),
-    address: z.string().min(5, 'Informe o endereço'),
-    city: z.string().min(2, 'Informe a cidade'),
-    state: z.string().length(2, 'UF inválida'),
-    zip: z.string().min(8, 'CEP inválido'),
-    paymentMethod: z.enum(['credit_card', 'pix', 'boleto']),
-    cardNumber: z.string().optional(),
-  })
-  .refine((data) => data.paymentMethod !== 'credit_card' || (data.cardNumber?.length ?? 0) >= 13, {
-    message: 'Número do cartão inválido',
-    path: ['cardNumber'],
-  })
+// Cartão de crédito não coleta dado nenhum de cartão aqui — a cobrança
+// redireciona pra fatura hospedada da Asaas (nunca passa pelo nosso
+// servidor, ver spec 2026-08-13-asaas-checkout-pagamento-design.md).
+export const checkoutSchema = z.object({
+  fullName: z.string().min(3, 'Informe seu nome completo'),
+  address: z.string().min(5, 'Informe o endereço'),
+  city: z.string().min(2, 'Informe a cidade'),
+  state: z.string().length(2, 'UF inválida'),
+  zip: z.string().min(8, 'CEP inválido'),
+  paymentMethod: z.enum(['credit_card', 'pix', 'boleto']),
+})
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>
 

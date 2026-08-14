@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { formatPriceBRL } from '@/lib/format'
 import { useAuth } from '@/features/auth/AuthContext'
@@ -41,6 +42,11 @@ export function AccountOrdersPage() {
             <div className="text-text-meta mt-2 text-xs">
               Rastreio: {[order.delivery.carrier, order.delivery.trackingCode].filter(Boolean).join(' · ')}
             </div>
+          )}
+          {order.status === 'pending' && order.payment?.status === 'pending' && (
+            <Link to={`/pedido/${order.id}`} className="text-navy mt-2 inline-block text-xs hover:underline">
+              {order.payment.paymentMethod === 'pix' ? 'Ver QR code Pix' : 'Ver boleto'} pra pagar
+            </Link>
           )}
         </div>
       ))}
