@@ -10,6 +10,10 @@ export const checkoutSchema = z.object({
   state: z.string().length(2, 'UF inválida'),
   zip: z.string().min(8, 'CEP inválido'),
   paymentMethod: z.enum(['credit_card', 'pix', 'boleto']),
+  // Parcelamento sem juros, só cartão — mínimo de pedido pra oferecer 2x/3x
+  // é decidido no componente (MIN_INSTALLMENT_TOTAL em CheckoutPage.tsx), não
+  // aqui: o schema só garante que o valor em si está num intervalo válido.
+  installments: z.number().int().min(1).max(3),
 })
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>

@@ -67,6 +67,7 @@ export interface OrderPayment {
   invoiceUrl?: string
   dueDate?: string
   confirmedAt?: string
+  installmentCount: number
 }
 
 export interface Refund {

@@ -10,7 +10,7 @@ const ORDER_SELECT = `
   order_items(id, product_id, color_id, meters, unit_price, total, products(name), product_colors(label)),
   deliveries(id, order_id, carrier, tracking_code, tracking_url, status, eta_date),
   order_status_history(id, status, changed_by_name, created_at),
-  order_payments(id, status, payment_method, amount, pix_qr_code, pix_copy_paste, boleto_url, boleto_barcode, invoice_url, due_date, confirmed_at, created_at),
+  order_payments(id, status, payment_method, amount, pix_qr_code, pix_copy_paste, boleto_url, boleto_barcode, invoice_url, due_date, confirmed_at, created_at, installment_count),
   refunds(id, amount, reason, requested_by_name, created_at)
 `
 
@@ -75,6 +75,7 @@ interface OrderRow {
     due_date: string | null
     confirmed_at: string | null
     created_at: string
+    installment_count: number
   }[]
   refunds: {
     id: string
@@ -159,6 +160,7 @@ function adaptOrder(row: OrderRow): Order {
           invoiceUrl: latestPayment.invoice_url ?? undefined,
           dueDate: latestPayment.due_date ?? undefined,
           confirmedAt: latestPayment.confirmed_at ?? undefined,
+          installmentCount: latestPayment.installment_count,
         }
       : undefined,
     refunds: [...row.refunds]

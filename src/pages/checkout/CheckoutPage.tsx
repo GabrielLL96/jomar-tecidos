@@ -21,6 +21,9 @@ import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
 import { createAsaasCharge } from '@/features/asaas/service'
 import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
 
+// Abaixo disso, parcela ficaria irrisória — só oferece 2x/3x a partir daqui.
+const MIN_INSTALLMENT_TOTAL = 30
+
 export function CheckoutPage() {
   const { items, subtotal, clear } = useCart()
   const { addresses, addOrFindAddress } = useAddresses()
@@ -44,10 +47,11 @@ export function CheckoutPage() {
     formState: { errors },
   } = useForm<CheckoutInput>({
     resolver: zodResolver(checkoutSchema),
-    defaultValues: { paymentMethod: 'credit_card' },
+    defaultValues: { paymentMethod: 'credit_card', installments: 1 },
   })
 
   const paymentMethod = watch('paymentMethod')
+  const installments = watch('installments')
   const zip = watch('zip')
 
   const {
@@ -164,7 +168,11 @@ export function CheckoutPage() {
       await queryClient.invalidateQueries({ queryKey: ['products'] })
 
       try {
-        const charge = await createAsaasCharge(orderRow.id, data.paymentMethod)
+        const charge = await createAsaasCharge(
+          orderRow.id,
+          data.paymentMethod,
+          data.paymentMethod === 'credit_card' ? data.installments : undefined,
+        )
         if (data.paymentMethod === 'credit_card') {
           // Página inteira, não popup — fatura hospedada da Asaas, cliente
           // volta sozinho via callback.successUrl configurado na cobrança.
@@ -267,10 +275,31 @@ export function CheckoutPage() {
               ))}
             </div>
             {paymentMethod === 'credit_card' && (
-              <p className="text-text-meta text-xs">
-                Ao confirmar, você será redirecionado pra página segura da Asaas pra digitar os dados do
-                cartão — nunca coletamos esse dado diretamente.
-              </p>
+              <>
+                <p className="text-text-meta text-xs">
+                  Ao confirmar, você será redirecionado pra página segura da Asaas pra digitar os dados do
+                  cartão — nunca coletamos esse dado diretamente.
+                </p>
+                {total >= MIN_INSTALLMENT_TOTAL && (
+                  <div className="mt-3 flex gap-2">
+                    {[1, 2, 3].map((n) => (
+                      <button
+                        key={n}
+                        type="button"
+                        onClick={() => setValue('installments', n)}
+                        className={cn(
+                          'flex-1 rounded-sm border px-2 py-2 text-center text-xs',
+                          installments === n
+                            ? 'border-navy bg-navy/5 text-navy'
+                            : 'border-input text-text-body',
+                        )}
+                      >
+                        {n === 1 ? 'À vista' : `${n}x de ${formatPriceBRL(total / n)}`}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
             )}
             {paymentMethod === 'pix' && (
               <p className="text-text-meta text-xs">

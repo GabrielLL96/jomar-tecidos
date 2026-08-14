@@ -91,6 +91,9 @@ export interface CreateAsaasPaymentInput {
   dueDate: string
   externalReference: string
   successUrl?: string
+  // Sem juros: sempre installmentCount + totalValue, nunca installmentValue
+  // (deixa a Asaas dividir e absorver o arredondamento na última parcela).
+  installmentCount?: number
 }
 
 export interface AsaasPaymentResult {
@@ -114,6 +117,9 @@ export async function createAsaasPayment(
       externalReference: input.externalReference,
       ...(input.successUrl
         ? { callback: { successUrl: input.successUrl, autoRedirect: true } }
+        : {}),
+      ...(input.installmentCount && input.installmentCount > 1
+        ? { installmentCount: input.installmentCount, totalValue: input.value }
         : {}),
     }),
   })

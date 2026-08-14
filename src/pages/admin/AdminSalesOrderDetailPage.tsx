@@ -542,6 +542,15 @@ export function AdminSalesOrderDetailPage() {
               <span>{ORDER_PAYMENT_STATUS_LABELS[order.payment.status] ?? order.payment.status}</span>
             </div>
           )}
+          {order.payment && order.payment.installmentCount > 1 && (
+            <div className="flex justify-between">
+              <span className="text-text-meta">Parcelamento</span>
+              <span>
+                {order.payment.installmentCount}x de{' '}
+                {formatPriceBRL(order.payment.amount / order.payment.installmentCount)}
+              </span>
+            </div>
+          )}
           {order.refunds.length > 0 && (
             <div className="mt-2 flex flex-col gap-1 border-t border-[#ede8de] pt-1.5">
               <span className="text-text-meta">Reembolsos</span>

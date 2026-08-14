@@ -11,6 +11,7 @@ import {
 interface CreateChargeRequestBody {
   orderId: string
   paymentMethod: 'credit_card' | 'pix' | 'boleto'
+  installments?: number
 }
 
 const BILLING_TYPE_BY_METHOD: Record<CreateChargeRequestBody['paymentMethod'], CreateAsaasPaymentInput['billingType']> = {
@@ -32,8 +33,18 @@ Deno.serve(async (req) => {
     if (callerError || !callerData.user) throw new Error('Sessão inválida')
     const userId = callerData.user.id
 
-    const { orderId, paymentMethod } = (await req.json()) as CreateChargeRequestBody
+    const { orderId, paymentMethod, installments } = (await req.json()) as CreateChargeRequestBody
     if (!orderId || !paymentMethod) throw new Error('Parâmetros ausentes')
+
+    // Parcelamento (até 3x, sem juros) só existe pra cartão — nunca confia no
+    // client sozinho pra decidir a parcela, é dinheiro (mesmo princípio já
+    // usado no resto desta function e em create_order() pro unit_price).
+    if (installments !== undefined) {
+      if (paymentMethod !== 'credit_card') throw new Error('Parcelamento só é válido pra cartão de crédito')
+      if (!Number.isInteger(installments) || installments < 1 || installments > 3) {
+        throw new Error('Número de parcelas inválido')
+      }
+    }
 
     const supabase = createServiceClient()
 
@@ -74,6 +85,7 @@ Deno.serve(async (req) => {
       // Só cartão usa a fatura hospedada — Pix/boleto mostram o QR/link na
       // própria página, sem redirect (ver spec).
       successUrl: billingType === 'CREDIT_CARD' ? `${SITE_URL}/pedido/${order.id}` : undefined,
+      installmentCount: billingType === 'CREDIT_CARD' ? installments : undefined,
     })
 
     let pixQrCode: string | null = null
@@ -112,6 +124,7 @@ Deno.serve(async (req) => {
       boleto_barcode: paymentRow.identificationField ?? null,
       invoice_url: payment.invoiceUrl,
       due_date: payment.dueDate,
+      installment_count: billingType === 'CREDIT_CARD' ? (installments ?? 1) : 1,
     })
     if (insertError) throw new Error(`Falha ao salvar cobrança: ${insertError.message}`)
 

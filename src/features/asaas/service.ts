@@ -11,9 +11,10 @@ export async function validateAsaasConnection(): Promise<void> {
 export async function createAsaasCharge(
   orderId: string,
   paymentMethod: PaymentMethod,
+  installments?: number,
 ): Promise<CreateChargeResult> {
   const { data, error } = await supabase.functions.invoke<CreateChargeResult>('asaas-create-charge', {
-    body: { orderId, paymentMethod },
+    body: { orderId, paymentMethod, installments },
   })
   if (error) await unwrapFunctionError(error)
   if (!data) throw new Error('Resposta vazia ao criar cobrança')
