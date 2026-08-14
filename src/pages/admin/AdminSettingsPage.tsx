@@ -7,21 +7,14 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { ImageUploadField } from '@/components/common/ImageUploadField'
 import { MelhorEnvioIntegrationCard } from './MelhorEnvioIntegrationCard'
+import { AsaasIntegrationCard } from './AsaasIntegrationCard'
+import { SettingsCard } from './SettingsCard'
 import { supabase } from '@/lib/supabase'
 import { CATEGORY_DISPLAY } from '@/features/catalog/data'
 import { useSiteSettings } from '@/features/site-settings/hooks'
 import type { SiteSettings } from '@/features/site-settings/types'
 
 const CATEGORY_SLUGS = Object.keys(CATEGORY_DISPLAY) as (keyof typeof CATEGORY_DISPLAY)[]
-
-function SettingsCard({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-md border border-[#e4ddd0] bg-white p-6">
-      <h2 className="text-navy-dark mb-4 font-serif text-lg font-medium">{title}</h2>
-      <div className="flex flex-col gap-4">{children}</div>
-    </div>
-  )
-}
 
 export function AdminSettingsPage() {
   const queryClient = useQueryClient()
@@ -249,6 +242,8 @@ export function AdminSettingsPage() {
       </SettingsCard>
 
       <MelhorEnvioIntegrationCard />
+
+      <AsaasIntegrationCard />
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={isSaving}>

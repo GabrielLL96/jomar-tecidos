@@ -6,6 +6,7 @@ Sempre que for necessário testar um link de desenvolvimento (ex.: `localhost:51
 
 @C:/Users/Cliente/Desktop/Obsidian/CLAUDE.md
 
+@C:/Users/Cliente/Desktop/Obsidian/projetos/trabalho/Jomartecidos/_index.md
 @C:/Users/Cliente/Desktop/Obsidian/projetos/trabalho/Jomartecidos/_Context.md
 @C:/Users/Cliente/Desktop/Obsidian/projetos/trabalho/Jomartecidos/_Architecture.md
 @C:/Users/Cliente/Desktop/Obsidian/projetos/trabalho/Jomartecidos/_ADRs.md

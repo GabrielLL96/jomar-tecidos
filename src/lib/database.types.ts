@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.15"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       activity_logs: {
@@ -109,6 +84,44 @@ export type Database = {
           {
             foreignKeyName: "addresses_user_id_fkey"
             columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asaas_settings: {
+        Row: {
+          api_key: string | null
+          connected_at: string | null
+          connected_by: string | null
+          environment: string
+          id: string
+          updated_at: string
+          webhook_token: string | null
+        }
+        Insert: {
+          api_key?: string | null
+          connected_at?: string | null
+          connected_by?: string | null
+          environment?: string
+          id?: string
+          updated_at?: string
+          webhook_token?: string | null
+        }
+        Update: {
+          api_key?: string | null
+          connected_at?: string | null
+          connected_by?: string | null
+          environment?: string
+          id?: string
+          updated_at?: string
+          webhook_token?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asaas_settings_connected_by_fkey"
+            columns: ["connected_by"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -891,6 +904,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      asaas_secrets_configured: {
+        Args: never
+        Returns: {
+          api_key_configured: boolean
+          webhook_token_configured: boolean
+        }[]
+      }
       create_order: {
         Args: {
           p_coupon_id?: string
@@ -1067,9 +1087,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       campaign_channel: ["instagram_ads", "google_ads", "email", "whatsapp"],
