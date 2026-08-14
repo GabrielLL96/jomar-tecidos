@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
+import { Eye, KeyRound, Pencil, UserCheck, UserX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -27,10 +28,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { unwrapFunctionError } from '@/lib/edge-functions'
-import { useAuth } from '@/features/auth/AuthContext'
 import { useAdminUsers, useUserAddresses } from '@/features/users/hooks'
 import {
   ROLE_LABELS,
@@ -60,7 +70,6 @@ const lastLoginFormatter = new Intl.DateTimeFormat('pt-BR', {
 })
 
 export function AdminUsersPage() {
-  const { user: currentUser } = useAuth()
   const { data: users = [], isLoading } = useAdminUsers()
   const queryClient = useQueryClient()
 
@@ -78,6 +87,14 @@ export function AdminUsersPage() {
   const [createOpen, setCreateOpen] = useState(false)
   const [createForm, setCreateForm] = useState(EMPTY_CREATE_FORM)
   const [isCreating, setIsCreating] = useState(false)
+
+  const [passwordUser, setPasswordUser] = useState<AdminUser | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [isSettingPassword, setIsSettingPassword] = useState(false)
+
+  const [deactivateUser, setDeactivateUser] = useState<AdminUser | null>(null)
+  const [isDeactivating, setIsDeactivating] = useState(false)
 
   const [detailUser, setDetailUser] = useState<AdminUser | null>(null)
   const { data: addresses = [], isLoading: isLoadingAddresses } = useUserAddresses(
@@ -126,17 +143,89 @@ export function AdminUsersPage() {
     }
   }
 
-  const handleSendPasswordReset = async () => {
-    if (!editingUser) return
+  const handleSendPasswordReset = async (email: string) => {
     setIsSendingReset(true)
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(editingUser.email)
+      const { error } = await supabase.auth.resetPasswordForEmail(email)
       if (error) throw new Error(error.message)
-      toast.success(`E-mail de redefinição enviado para ${editingUser.email}`)
+      toast.success(`E-mail de redefinição enviado para ${email}`)
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível enviar o e-mail')
     } finally {
       setIsSendingReset(false)
+    }
+  }
+
+  // Cliente sempre recebe por e-mail (não existe senha temporária
+  // configurável) — equipe/staff pode ter a senha definida direto pelo
+  // admin, exceção deliberada só pra contas internas. Mesmo ícone/posição
+  // na tabela, comportamento diferente por papel.
+  const openPasswordAction = (user: AdminUser) => {
+    if (user.role === 'customer') {
+      void handleSendPasswordReset(user.email)
+      return
+    }
+    setPasswordUser(user)
+    setNewPassword('')
+    setConfirmNewPassword('')
+  }
+
+  const handleSetPassword = async () => {
+    if (!passwordUser) return
+    if (newPassword.length < 6) {
+      toast.error('A senha deve ter ao menos 6 caracteres')
+      return
+    }
+    if (newPassword !== confirmNewPassword) {
+      toast.error('As senhas não coincidem')
+      return
+    }
+
+    setIsSettingPassword(true)
+    try {
+      const { error } = await supabase.functions.invoke('admin-set-password', {
+        body: { userId: passwordUser.id, password: newPassword },
+      })
+      if (error) await unwrapFunctionError(error)
+
+      toast.success(`Senha de ${passwordUser.name} atualizada`)
+      setPasswordUser(null)
+      setNewPassword('')
+      setConfirmNewPassword('')
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível alterar a senha')
+    } finally {
+      setIsSettingPassword(false)
+    }
+  }
+
+  const handleDeactivate = async () => {
+    if (!deactivateUser) return
+    setIsDeactivating(true)
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ status: 'inactive' })
+        .eq('id', deactivateUser.id)
+      if (error) throw new Error(error.message)
+      toast.success(`${deactivateUser.name} desativado`)
+      setDeactivateUser(null)
+      await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível desativar')
+    } finally {
+      setIsDeactivating(false)
+    }
+  }
+
+  const handleActivate = async (user: AdminUser) => {
+    try {
+      const { error } = await supabase.from('users').update({ status: 'active' }).eq('id', user.id)
+      if (error) throw new Error(error.message)
+      toast.success(`${user.name} ativado`)
+      await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível ativar')
     }
   }
 
@@ -249,11 +338,11 @@ export function AdminUsersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>E-mail</TableHead>
+              <TableHead className="w-full">E-mail</TableHead>
               <TableHead>Papel</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Último login</TableHead>
-              <TableHead></TableHead>
+              <TableHead className="w-px whitespace-nowrap"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -271,7 +360,6 @@ export function AdminUsersPage() {
               </TableRow>
             ) : (
               filteredUsers.map((user) => {
-                const isSelf = user.id === currentUser?.id
                 return (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
@@ -292,24 +380,57 @@ export function AdminUsersPage() {
                         ? lastLoginFormatter.format(new Date(user.lastLoginAt))
                         : 'Nunca'}
                     </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1.5">
+                    <TableCell className="whitespace-nowrap">
+                      <div className="flex justify-end gap-1">
                         {tab === 'clientes' && (
-                          <Button variant="outline" size="sm" onClick={() => setDetailUser(user)}>
-                            Ver detalhes
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            onClick={() => setDetailUser(user)}
+                            title="Ver detalhes"
+                          >
+                            <Eye className="size-4" />
                           </Button>
                         )}
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="icon-sm"
                           onClick={() => openEdit(user)}
-                          disabled={isSelf}
+                          title="Editar"
+                        >
+                          <Pencil className="size-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon-sm"
+                          onClick={() => openPasswordAction(user)}
                           title={
-                            isSelf ? 'Não é possível editar a própria conta por aqui' : undefined
+                            user.role === 'customer'
+                              ? 'Enviar redefinição de senha por e-mail'
+                              : 'Alterar senha'
                           }
                         >
-                          Editar
+                          <KeyRound className="size-4" />
                         </Button>
+                        {user.status === 'active' ? (
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            onClick={() => setDeactivateUser(user)}
+                            title="Desativar"
+                          >
+                            <UserX className="size-4" />
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="icon-sm"
+                            onClick={() => handleActivate(user)}
+                            title="Ativar"
+                          >
+                            <UserCheck className="size-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -444,7 +565,7 @@ export function AdminUsersPage() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={handleSendPasswordReset}
+                onClick={() => editingUser && handleSendPasswordReset(editingUser.email)}
                 disabled={isSendingReset}
               >
                 {isSendingReset ? 'Enviando…' : 'Enviar redefinição de senha'}
@@ -461,6 +582,77 @@ export function AdminUsersPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={!!passwordUser}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPasswordUser(null)
+            setNewPassword('')
+            setConfirmNewPassword('')
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Alterar senha — {passwordUser?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="newPassword">Nova senha</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="confirmNewPassword">Confirmar nova senha</Label>
+              <Input
+                id="confirmNewPassword"
+                type="password"
+                value={confirmNewPassword}
+                onChange={(event) => setConfirmNewPassword(event.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPasswordUser(null)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSetPassword} disabled={isSettingPassword}>
+              {isSettingPassword ? 'Salvando…' : 'Salvar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!deactivateUser} onOpenChange={(open) => !open && setDeactivateUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Desativar {deactivateUser?.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O status vira "Inativo" nas listagens do admin. Pode reverter a qualquer momento pelo
+              botão "Ativar" na mesma linha.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(event) => {
+                event.preventDefault()
+                handleDeactivate()
+              }}
+              disabled={isDeactivating}
+              variant="destructive"
+            >
+              {isDeactivating ? 'Desativando…' : 'Desativar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Dialog open={!!detailUser} onOpenChange={(open) => !open && setDetailUser(null)}>
         <DialogContent className="max-h-[80vh] overflow-y-auto">

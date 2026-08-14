@@ -25,6 +25,7 @@
     "fn:deploy:melhor-envio-shipping-calculate": "supabase functions deploy melhor-envio-shipping-calculate",
     "fn:deploy:melhor-envio-webhook": "supabase functions deploy melhor-envio-webhook --no-verify-jwt",
     "fn:deploy:admin-create-user": "supabase functions deploy admin-create-user",
+    "fn:deploy:admin-set-password": "supabase functions deploy admin-set-password",
     "fn:deploy:all": "supabase functions deploy"
   },
   "dependencies": {
