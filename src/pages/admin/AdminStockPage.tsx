@@ -78,25 +78,27 @@ export function AdminStockPage() {
 
   const filteredProducts = useMemo(() => {
     const query = search.trim().toLowerCase()
-    return products.filter((product) => {
-      if (query) {
-        const matches =
-          product.name.toLowerCase().includes(query) || product.sku.toLowerCase().includes(query)
-        if (!matches) return false
-      }
-      if (statusFilter === NEEDS_RESTOCK) {
-        if (product.status !== 'low_stock' && product.status !== 'out_of_stock') return false
-      } else if (statusFilter !== ALL_STATUSES && product.status !== statusFilter) {
-        return false
-      }
-      if (
-        compositionFilter !== ALL_COMPOSITIONS &&
-        !product.compositions.some((c) => c.compositionId === compositionFilter)
-      ) {
-        return false
-      }
-      return true
-    })
+    return products
+      .filter((product) => {
+        if (query) {
+          const matches =
+            product.name.toLowerCase().includes(query) || product.sku.toLowerCase().includes(query)
+          if (!matches) return false
+        }
+        if (statusFilter === NEEDS_RESTOCK) {
+          if (product.status !== 'low_stock' && product.status !== 'out_of_stock') return false
+        } else if (statusFilter !== ALL_STATUSES && product.status !== statusFilter) {
+          return false
+        }
+        if (
+          compositionFilter !== ALL_COMPOSITIONS &&
+          !product.compositions.some((c) => c.compositionId === compositionFilter)
+        ) {
+          return false
+        }
+        return true
+      })
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
   }, [products, search, statusFilter, compositionFilter])
 
   const openAdjust = (product: Product) => {
