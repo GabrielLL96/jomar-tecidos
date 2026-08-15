@@ -1,0 +1,13 @@
+# Registro de Operadores — Jomartecidos
+
+Mapeamento dos terceiros que tratam dado pessoal de titular da Jomar, conforme LGPD art. 37-39. Gerado na auditoria de 2026-08-15 (`auditoria-2026-08-15.md`).
+
+| Operador | Finalidade | Dado tratado | País | DPA revisado? |
+|---|---|---|---|---|
+| **Asaas** | Processamento de pagamento (Pix, boleto, cartão de crédito) | Nome, CPF, e-mail, telefone, endereço, dado de cartão (nunca persiste no nosso banco) | Brasil (presumido — não confirmado contratualmente) | 🔲 Não |
+| **Melhor Envio** | Cotação e etiqueta de frete | Nome, endereço, peso/dimensão do pedido | Brasil (presumido — não confirmado contratualmente) | 🔲 Não |
+| **Google (Analytics/Tag Manager)** | Métricas de uso do site, só com consentimento do cookie banner | Identificador de navegação/cookie, comportamento no site | EUA/infraestrutura global do Google — **transferência internacional real** | 🔲 Não |
+| **Supabase** | Banco de dados, autenticação, storage, Edge Functions (infraestrutura, não operador de negócio) | Todo dado pessoal da plataforma | Brasil (`sa-east-1`, confirmado via API) | 🔲 Não |
+| **Cloudflare** | Hospedagem/CDN do frontend estático | Nenhum dado pessoal em repouso — só proxy de request (IP de acesso passa pela rede deles) | Global (edge network) | 🔲 Não |
+
+**Nenhum DPA foi revisado formalmente nesta auditoria** — esta tabela é o mapeamento de QUEM trata dado, não uma confirmação de que os contratos estão adequados. Revisão de contrato real é item de responsabilidade jurídica, não técnica.
