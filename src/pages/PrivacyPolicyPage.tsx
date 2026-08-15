@@ -57,7 +57,7 @@ export function PrivacyPolicyPage() {
             controlador dos dados pessoais tratados aqui.
           </p>
           <p>
-            Razão social: <Placeholder>razão social completa</Placeholder>
+            Razão social: Jomar Comércio de Tecidos Ltda
             <br />
             CNPJ: 09.115.885/0001-49
             <br />
