@@ -106,8 +106,8 @@ export function PrivacyPolicyPage() {
         <Section title="8. Segurança">
           <p>
             Dados sensíveis de autenticação/sessão são armazenados de forma criptografada no
-            navegador. O acesso a dados de cliente no painel administrativo é restrito por papel
-            (admin/vendas/estoque).
+            navegador. O acesso a dados de cliente no painel administrativo é restrito ao papel de
+            administrador.
           </p>
         </Section>
 
