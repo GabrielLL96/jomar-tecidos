@@ -10,8 +10,11 @@ import { useBusinessInfo } from '@/features/site-settings/hooks'
 import { useCart } from '@/features/cart/CartContext'
 import { useProducts } from '@/features/catalog/hooks'
 import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
+import { useSeoMeta } from '@/lib/seo'
 
 export function CartPage() {
+  useSeoMeta({ title: 'Carrinho', description: 'Seu carrinho de compras Jomar Tecidos.', path: '/carrinho', noindex: true })
+
   const { items, subtotal, updateMeters, removeItem } = useCart()
   const business = useBusinessInfo()
   const navigate = useNavigate()

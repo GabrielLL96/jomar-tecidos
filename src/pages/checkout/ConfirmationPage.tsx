@@ -7,9 +7,17 @@ import { Button } from '@/components/ui/button'
 import { formatPriceBRL } from '@/lib/format'
 import { orderQueryOptions } from '@/features/orders/queries'
 import { createAsaasCharge } from '@/features/asaas/service'
+import { useSeoMeta } from '@/lib/seo'
 
 export function ConfirmationPage() {
   const { id } = useParams()
+
+  useSeoMeta({
+    title: 'Pedido Confirmado',
+    description: 'Confirmação de pedido Jomar Tecidos.',
+    path: `/pedido/${id ?? ''}`,
+    noindex: true,
+  })
   const queryClient = useQueryClient()
   const [isRetrying, setIsRetrying] = useState(false)
 

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
+import { useSeoMeta } from '@/lib/seo'
 import { resetPasswordSchema, type ResetPasswordInput } from '@/features/auth/schema'
 
 type PageStatus = 'checking' | 'ready' | 'invalid'
@@ -16,6 +17,13 @@ type PageStatus = 'checking' | 'ready' | 'invalid'
 const RECOVERY_TIMEOUT_MS = 4000
 
 export function ResetPasswordPage() {
+  useSeoMeta({
+    title: 'Redefinir Senha',
+    description: 'Defina uma nova senha pra sua conta Jomar Tecidos.',
+    path: '/conta/redefinir-senha',
+    noindex: true,
+  })
+
   const navigate = useNavigate()
   const [status, setStatus] = useState<PageStatus>('checking')
   const {

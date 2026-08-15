@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth, type AuthUser } from '@/features/auth/AuthContext'
+import { useSeoMeta } from '@/lib/seo'
 import { loginSchema, signupSchema, type LoginInput, type SignupInput } from '@/features/auth/schema'
 
 // Sem `?redirect=` explícito (ex.: checkout mandando de volta pra si mesmo),
@@ -161,6 +162,13 @@ export function LoginPage() {
   const { user, isLoading } = useAuth()
   const navigate = useNavigate()
   const redirectParam = useRedirectParam()
+
+  useSeoMeta({
+    title: 'Entrar ou Criar Conta',
+    description: 'Acesse sua conta Jomar Tecidos.',
+    path: '/conta/entrar',
+    noindex: true,
+  })
 
   useEffect(() => {
     if (!isLoading && user) navigate(redirectParam || defaultRedirectFor(user.role), { replace: true })

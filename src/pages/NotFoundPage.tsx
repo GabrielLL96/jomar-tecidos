@@ -1,7 +1,15 @@
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { useSeoMeta } from '@/lib/seo'
 
 export function NotFoundPage() {
+  useSeoMeta({
+    title: 'Página Não Encontrada',
+    description: 'A página que você procura não existe ou foi movida.',
+    path: '/404',
+    noindex: true,
+  })
+
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-sm) px-6 py-24 text-center">
       <h1 className="text-navy-dark mb-3 font-serif text-4xl font-medium">Página não encontrada</h1>

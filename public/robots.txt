@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /carrinho
+Disallow: /checkout
+Disallow: /pedido/
+Disallow: /conta
+Disallow: /favoritos
+
+Sitemap: https://jomartecidos.com.br/sitemap.xml

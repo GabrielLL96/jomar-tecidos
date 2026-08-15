@@ -12,6 +12,7 @@ import { PRODUCT_CARE_DEFAULT, PRODUCT_DELIVERY_DEFAULT } from '@/features/catal
 import { formatCompositionBreakdown, formatCompositionLabel, formatWidthM } from '@/features/catalog/utils'
 import { useCart } from '@/features/cart/CartContext'
 import { useFavorites } from '@/features/favorites/FavoritesContext'
+import { useProductJsonLd, useSeoMeta } from '@/lib/seo'
 
 export function ProductDetailPage() {
   const { slug = '' } = useParams()
@@ -20,6 +21,36 @@ export function ProductDetailPage() {
   const { data: compositions = [] } = useCompositions()
   const { addItem } = useCart()
   const { isFavorite, toggleFavorite } = useFavorites()
+
+  // Hook precisa rodar sempre (Rules of Hooks) — mesmo antes do produto
+  // carregar, com fallback razoável.
+  useSeoMeta({
+    title: product?.name ?? 'Tecido',
+    description: product
+      ? `${product.description.slice(0, 140)} — R$ ${product.pricePerMeter.toFixed(2).replace('.', ',')}/metro na Jomar Tecidos.`
+      : 'Confira este tecido no catálogo da Jomar Tecidos e Enxovais.',
+    path: `/tecidos/${slug}`,
+    image: product?.images[0]?.url,
+    type: 'product',
+  })
+
+  useProductJsonLd(
+    product
+      ? {
+          name: product.name,
+          description: product.description,
+          sku: product.sku,
+          slug: product.slug,
+          image: product.images.map((image) => image.url),
+          priceBRL: product.pricePerMeter,
+          inStock: product.status !== 'out_of_stock',
+          ratingValue: reviews.length
+            ? reviews.reduce((total, review) => total + review.rating, 0) / reviews.length
+            : undefined,
+          reviewCount: reviews.length || undefined,
+        }
+      : null,
+  )
 
   const [selectedColorIdx, setSelectedColorIdx] = useState(0)
   const [selectedImageIdx, setSelectedImageIdx] = useState(0)

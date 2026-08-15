@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useBusinessInfo } from '@/features/site-settings/hooks'
+import { useSeoMeta } from '@/lib/seo'
 import { contactSchema, type ContactInput } from './schema'
 
 export function ContactPage() {
@@ -17,6 +18,12 @@ export function ContactPage() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<ContactInput>({ resolver: zodResolver(contactSchema) })
+
+  useSeoMeta({
+    title: 'Contato',
+    description: 'Fale com a Jomar Tecidos e Enxovais — telefone, WhatsApp, endereço e horário de atendimento.',
+    path: '/contato',
+  })
 
   const onSubmit = async () => {
     await new Promise((resolve) => setTimeout(resolve, 400))

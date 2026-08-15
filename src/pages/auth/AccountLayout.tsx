@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
+import { useSeoMeta } from '@/lib/seo'
 
 const ACCOUNT_NAV = [
   { to: '/conta', label: 'Resumo', end: true },
@@ -13,6 +14,8 @@ const ACCOUNT_NAV = [
 export function AccountLayout() {
   const { user, isLoading, logout } = useAuth()
   const navigate = useNavigate()
+
+  useSeoMeta({ title: 'Minha Conta', description: 'Área do cliente Jomar Tecidos.', path: '/conta', noindex: true })
 
   useEffect(() => {
     if (!isLoading && !user) navigate('/conta/entrar', { replace: true })

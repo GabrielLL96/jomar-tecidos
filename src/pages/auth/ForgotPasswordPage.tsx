@@ -7,9 +7,17 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
+import { useSeoMeta } from '@/lib/seo'
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/features/auth/schema'
 
 export function ForgotPasswordPage() {
+  useSeoMeta({
+    title: 'Esqueci Minha Senha',
+    description: 'Recupere o acesso à sua conta Jomar Tecidos.',
+    path: '/conta/esqueci-senha',
+    noindex: true,
+  })
+
   const [sent, setSent] = useState(false)
   const {
     register,

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
+import { useSeoMeta } from '@/lib/seo'
 import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
 const ADMIN_NAV = [
@@ -55,6 +56,8 @@ export function AdminLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+
+  useSeoMeta({ title: 'Painel Admin', description: 'Painel de gestão Jomar.', path: '/admin', noindex: true })
 
   useEffect(() => {
     if (isLoading) return

@@ -4,12 +4,23 @@ import { useCompositions, useProducts } from '@/features/catalog/hooks'
 import { formatCompositionLabel } from '@/features/catalog/utils'
 import { ProductCard } from '@/features/catalog/components/ProductCard'
 import { ProductFilters } from './components/ProductFilters'
+import { useSeoMeta } from '@/lib/seo'
 
 export function ProductsPage() {
   const [searchParams] = useSearchParams()
   const categoria = searchParams.get('categoria')
   const busca = searchParams.get('busca')?.trim().toLowerCase()
   const novidades = searchParams.get('novidades') === '1'
+
+  // Canonical sempre em /tecidos (sem query params) — filtro/busca não deve
+  // gerar página indexável própria, senão pulveriza o mesmo conteúdo em N
+  // URLs diferentes (faceted navigation, problema clássico de SEO).
+  useSeoMeta({
+    title: novidades ? 'Novidades' : 'Todos os Tecidos',
+    description:
+      'Catálogo completo de tecidos, enxovais e aviamentos da Jomar — algodões, linhos, sedas, poliéster e nylon, com filtro por material, cor e preço.',
+    path: '/tecidos',
+  })
 
   const { data: products } = useProducts()
   const { data: compositions = [] } = useCompositions()

@@ -8,11 +8,19 @@ import { ProductCard } from '@/features/catalog/components/ProductCard'
 import { ProductGridSkeleton } from '@/features/catalog/components/ProductGridSkeleton'
 import { useCategories, useProducts } from '@/features/catalog/hooks'
 import { useSiteSettings } from '@/features/site-settings/hooks'
+import { useSeoMeta } from '@/lib/seo'
 
 export function Home() {
   const { data: categories, isLoading: isLoadingCategories } = useCategories()
   const { data: products, isLoading: isLoadingProducts } = useProducts()
   const { data: settings } = useSiteSettings()
+
+  useSeoMeta({
+    title: 'Tecidos, Enxovais e Aviamentos em Pouso Alegre, MG',
+    description:
+      'Tecidos nobres, algodões, linhos, sedas, aviamentos e enxovais. Loja física em Pouso Alegre, MG, desde 1987. Compre online com entrega para todo o Brasil.',
+    path: '/',
+  })
 
   const categoriesWithImages = categories?.map((category) => ({
     ...category,

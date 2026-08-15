@@ -20,12 +20,15 @@ import { useProducts } from '@/features/catalog/hooks'
 import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
 import { createAsaasCharge, chargeAsaasCard } from '@/features/asaas/service'
 import { CreditCardFields } from '@/features/asaas/CreditCardFields'
+import { useSeoMeta } from '@/lib/seo'
 import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
 
 // Abaixo disso, parcela ficaria irrisória — só oferece 2x/3x a partir daqui.
 const MIN_INSTALLMENT_TOTAL = 30
 
 export function CheckoutPage() {
+  useSeoMeta({ title: 'Finalizar Compra', description: 'Checkout Jomar Tecidos.', path: '/checkout', noindex: true })
+
   const { items, subtotal, clear } = useCart()
   const { addresses, addOrFindAddress } = useAddresses()
   const { user, isLoading: isAuthLoading } = useAuth()

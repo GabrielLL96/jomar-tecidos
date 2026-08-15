@@ -3,8 +3,11 @@ import { Button } from '@/components/ui/button'
 import { useProducts } from '@/features/catalog/hooks'
 import { ProductCard } from '@/features/catalog/components/ProductCard'
 import { useFavorites } from '@/features/favorites/FavoritesContext'
+import { useSeoMeta } from '@/lib/seo'
 
 export function FavoritesPage() {
+  useSeoMeta({ title: 'Favoritos', description: 'Seus tecidos favoritos.', path: '/favoritos', noindex: true })
+
   const { data: products } = useProducts()
   const { favoriteIds } = useFavorites()
   const favorites = products?.filter((product) => favoriteIds.includes(product.id)) ?? []

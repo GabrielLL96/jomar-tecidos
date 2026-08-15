@@ -1,8 +1,17 @@
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { useBusinessInfo } from '@/features/site-settings/hooks'
+import { useSeoMeta } from '@/lib/seo'
 
 export function AboutPage() {
   const business = useBusinessInfo()
+
+  useSeoMeta({
+    title: 'Sobre Nós',
+    description:
+      'Conheça a história da Jomar Tecidos e Enxovais, loja física em Pouso Alegre, MG, desde 1987.',
+    path: '/sobre',
+  })
+
   return (
     <main>
       <ImagePlaceholder colors={['#131047', '#1c1a5e']} className="flex h-[280px] items-center justify-center">
