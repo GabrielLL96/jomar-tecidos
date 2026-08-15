@@ -9,8 +9,20 @@ import { useAddresses } from '@/features/account/AddressesContext'
 import { addressSchema, type AddressInput } from '@/features/account/schema'
 
 export function AccountAddressesPage() {
-  const { addresses, addOrFindAddress } = useAddresses()
+  const { addresses, addOrFindAddress, setDefaultAddress } = useAddresses()
   const [showForm, setShowForm] = useState(false)
+  const [settingDefaultId, setSettingDefaultId] = useState<string | null>(null)
+
+  const handleSetDefault = async (addressId: string) => {
+    setSettingDefaultId(addressId)
+    try {
+      await setDefaultAddress(addressId)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível definir o endereço padrão')
+    } finally {
+      setSettingDefaultId(null)
+    }
+  }
 
   const {
     register,
@@ -101,6 +113,18 @@ export function AccountAddressesPage() {
               <br />
               {address.city} - {address.state}, {address.zipCode}
             </div>
+            {!address.isDefault && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                disabled={settingDefaultId === address.id}
+                onClick={() => handleSetDefault(address.id)}
+              >
+                {settingDefaultId === address.id ? 'Definindo…' : 'Definir como padrão'}
+              </Button>
+            )}
           </div>
         ))}
       </div>

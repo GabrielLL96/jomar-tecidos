@@ -7,6 +7,7 @@ import type { AddressInput } from './schema'
 interface AddressesContextValue {
   addresses: Address[]
   addOrFindAddress: (input: AddressInput) => Promise<Address>
+  setDefaultAddress: (addressId: string) => Promise<void>
 }
 
 const AddressesContext = createContext<AddressesContextValue | null>(null)
@@ -84,8 +85,20 @@ export function AddressesProvider({ children }: { children: ReactNode }) {
     return newAddress
   }
 
+  // Servidor (trigger fn_enforce_single_default_address) garante que só um
+  // endereço fica com is_default=true por usuário — aqui só precisa marcar
+  // o escolhido, o resto é desmarcado atomicamente do lado de lá.
+  const setDefaultAddress: AddressesContextValue['setDefaultAddress'] = async (addressId) => {
+    if (!user) throw new Error('Usuário não autenticado')
+    const { error } = await supabase.from('addresses').update({ is_default: true }).eq('id', addressId)
+    if (error) throw new Error(error.message)
+    setAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === addressId })))
+  }
+
   return (
-    <AddressesContext.Provider value={{ addresses, addOrFindAddress }}>{children}</AddressesContext.Provider>
+    <AddressesContext.Provider value={{ addresses, addOrFindAddress, setDefaultAddress }}>
+      {children}
+    </AddressesContext.Provider>
   )
 }
 
