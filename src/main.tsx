@@ -9,6 +9,7 @@ import { AuthProvider } from '@/features/auth/AuthContext'
 import { FavoritesProvider } from '@/features/favorites/FavoritesContext'
 import { CartProvider } from '@/features/cart/CartContext'
 import { AddressesProvider } from '@/features/account/AddressesContext'
+import { ConsentProvider } from '@/features/consent/ConsentContext'
 import App from './App.tsx'
 import './index.css'
 
@@ -19,10 +20,12 @@ createRoot(document.getElementById('root')!).render(
         <FavoritesProvider>
           <AddressesProvider>
             <CartProvider>
-              <BrowserRouter>
-                <App />
-              </BrowserRouter>
-              <Toaster richColors position="top-right" />
+              <ConsentProvider>
+                <BrowserRouter>
+                  <App />
+                </BrowserRouter>
+                <Toaster richColors position="top-right" />
+              </ConsentProvider>
             </CartProvider>
           </AddressesProvider>
         </FavoritesProvider>

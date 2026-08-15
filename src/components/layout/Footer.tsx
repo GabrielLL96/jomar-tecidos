@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
 import { CreditCard, Mail, MapPin, MessageCircle, Phone, ShieldCheck, Truck } from 'lucide-react'
 import { TRUST_BADGES } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 import { InstagramIcon } from '@/components/common/InstagramIcon'
 import { useBusinessInfo } from '@/features/site-settings/hooks'
+import { useConsent } from '@/features/consent/ConsentContext'
 
 const TRUST_ICONS = [Truck, CreditCard, MessageCircle, ShieldCheck]
 
@@ -10,6 +12,7 @@ const inertLinkClass = 'text-[#c9c5e2]'
 
 export function Footer() {
   const business = useBusinessInfo()
+  const { reopen } = useConsent()
   return (
     <footer className="bg-navy-dark mt-auto text-[#c9c5e2]">
       <div className="mx-auto grid max-w-(--breakpoint-xl) grid-cols-2 gap-8 px-6 py-10 md:grid-cols-4 md:px-12">
@@ -33,6 +36,9 @@ export function Footer() {
             </Link>
             <span className={inertLinkClass}>Política de Segurança</span>
             <span className={inertLinkClass}>Política de Privacidade</span>
+            <button type="button" onClick={reopen} className={cn(inertLinkClass, 'cursor-pointer text-left')}>
+              Preferências de Cookies
+            </button>
             <Link to="/tecidos" className={inertLinkClass}>
               Todos os Tecidos
             </Link>
