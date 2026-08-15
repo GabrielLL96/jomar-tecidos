@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useConsent } from './ConsentContext'
 
@@ -11,7 +12,11 @@ export function ConsentBanner() {
       <div className="mx-auto flex max-w-(--breakpoint-xl) flex-col items-center gap-4 md:flex-row md:justify-between">
         <p className="text-sm leading-relaxed">
           Usamos cookies pra melhorar sua experiência e medir o desempenho do site. Você pode aceitar ou
-          recusar — isso não afeta sua capacidade de navegar ou comprar.
+          recusar — isso não afeta sua capacidade de navegar ou comprar. Saiba mais na{' '}
+          <Link to="/politica-de-privacidade" className="underline">
+            Política de Privacidade
+          </Link>
+          .
         </p>
         <div className="flex shrink-0 gap-3">
           <Button type="button" variant="secondary" size="sm" onClick={deny} className="rounded-sm">

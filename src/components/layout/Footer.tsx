@@ -35,7 +35,9 @@ export function Footer() {
               Novidades
             </Link>
             <span className={inertLinkClass}>Política de Segurança</span>
-            <span className={inertLinkClass}>Política de Privacidade</span>
+            <Link to="/politica-de-privacidade" className={inertLinkClass}>
+              Política de Privacidade
+            </Link>
             <button type="button" onClick={reopen} className={cn(inertLinkClass, 'cursor-pointer text-left')}>
               Preferências de Cookies
             </button>
