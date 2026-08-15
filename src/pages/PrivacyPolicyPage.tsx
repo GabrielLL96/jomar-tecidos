@@ -59,7 +59,9 @@ export function PrivacyPolicyPage() {
           <p>
             Razão social: <Placeholder>razão social completa</Placeholder>
             <br />
-            CNPJ: <Placeholder>CNPJ</Placeholder>
+            CNPJ: 09.115.885/0001-49
+            <br />
+            Inscrição estadual: 0010452180040
             <br />
             Encarregado de dados (DPO): <Placeholder>nome/e-mail do encarregado, ou decisão de não designar um formalmente</Placeholder>
           </p>
@@ -83,12 +85,7 @@ export function PrivacyPolicyPage() {
         <Section title="3. Para que usamos seus dados">
           <p>Processar e entregar pedidos, calcular frete (via Melhor Envio) e processar pagamento (via Asaas).</p>
           <p>Comunicar sobre status de pedido, entrega e questões de suporte.</p>
-          <p>
-            <Placeholder>
-              uso pra marketing/e-mail promocional — só se houver essa prática de verdade, e só com
-              consentimento
-            </Placeholder>
-          </p>
+          <p>Enviar comunicação de marketing promocional (novidades, ofertas).</p>
           <p>Métricas de uso do site e desempenho de campanhas, quando há consentimento de cookies.</p>
         </Section>
 
@@ -104,9 +101,7 @@ export function PrivacyPolicyPage() {
             <strong>Google (Analytics/Tag Manager)</strong> (métricas de uso do site, só com
             consentimento).
           </p>
-          <p>
-            <Placeholder>outros serviços de terceiros não listados aqui, se existirem</Placeholder>
-          </p>
+          <p>Não compartilhamos seus dados com nenhum outro terceiro além dos listados acima.</p>
         </Section>
 
         <Section title="5. Cookies">
@@ -129,12 +124,7 @@ export function PrivacyPolicyPage() {
         </Section>
 
         <Section title="7. Retenção de dados">
-          <p>
-            <Placeholder>
-              por quanto tempo os dados de cadastro/pedido ficam guardados após a última compra, e o
-              critério pra decidir isso (obrigação fiscal, prazo de garantia, etc.)
-            </Placeholder>
-          </p>
+          <p>Seus dados de cadastro e pedido ficam guardados pelo tempo autorizado pela legislação aplicável.</p>
         </Section>
 
         <Section title="8. Segurança">
