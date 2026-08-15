@@ -63,7 +63,9 @@ export function PrivacyPolicyPage() {
             <br />
             Inscrição estadual: 0010452180040
             <br />
-            Encarregado de dados (DPO): <Placeholder>nome/e-mail do encarregado, ou decisão de não designar um formalmente</Placeholder>
+            Encarregado de dados (DPO): não há encarregado formalmente designado — como pequena
+            empresa, atendemos a Resolução CD/ANPD nº 2/2022. Pedidos sobre dados pessoais podem
+            ser feitos pelos canais de contato do item 10 abaixo.
           </p>
         </Section>
 
@@ -118,8 +120,8 @@ export function PrivacyPolicyPage() {
             consentimento já dado, a qualquer momento.
           </p>
           <p>
-            Pra exercer esses direitos, entre em contato por{' '}
-            <Placeholder>canal oficial pra solicitação de dados (e-mail dedicado, ou o mesmo já usado no site?)</Placeholder>.
+            Pra exercer esses direitos, entre em contato por telefone ({business.phone}) ou e-mail (
+            {business.email}).
           </p>
         </Section>
 
