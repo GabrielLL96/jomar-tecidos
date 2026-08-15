@@ -1,17 +1,31 @@
 import { createContext, useContext, useState, type ReactNode } from 'react'
 import { useSecureStorage } from '@/hooks/useSecureStorage'
 
-// LGPD: consentimento tem que ser opt-in explícito (nunca pré-marcado, nunca
-// assumido), revisável a qualquer momento (reopen, ligado ao link
-// "Preferências de Cookies" no rodapé) — nunca dispara nenhuma tag de
-// rastreio (GoogleTagManager.tsx) antes do usuário decidir.
-type ConsentValue = 'granted' | 'denied' | null
+// LGPD (achados da auditoria docs/lgpd/auditoria-2026-08-15.md):
+// 1. Consentimento tem que ser granular por finalidade, não "tudo ou nada"
+//    — só existe 1 categoria real hoje (analytics, via GTM/GA4). Essencial
+//    (sessão/auth) nunca precisa de consentimento (art. 7, VI), não é um
+//    toggle.
+// 2. Registro de consentimento precisa de timestamp + versão do documento +
+//    canal, não só um valor booleano solto.
+export const PRIVACY_POLICY_VERSION = '2026-08-15'
+
+export interface ConsentCategories {
+  analytics: boolean
+}
+
+export interface ConsentRecord {
+  version: string
+  timestamp: string
+  channel: 'banner' | 'preferences'
+  categories: ConsentCategories
+}
 
 interface ConsentContextValue {
-  consent: ConsentValue
+  consent: ConsentRecord | null
   isBannerOpen: boolean
-  grant: () => void
-  deny: () => void
+  hasAnalyticsConsent: boolean
+  saveConsent: (categories: ConsentCategories, channel: ConsentRecord['channel']) => void
   reopen: () => void
 }
 
@@ -19,33 +33,38 @@ const ConsentContext = createContext<ConsentContextValue | null>(null)
 
 export function ConsentProvider({ children }: { children: ReactNode }) {
   const { getItem, setItem } = useSecureStorage()
-  const [consent, setConsent] = useState<ConsentValue>(() => getItem<ConsentValue>('cookie-consent', null))
+  const [consent, setConsent] = useState<ConsentRecord | null>(() => getItem<ConsentRecord>('cookie-consent', null))
   const [forceOpen, setForceOpen] = useState(false)
 
-  const grant = () => {
-    setConsent('granted')
-    setItem('cookie-consent', 'granted')
+  const saveConsent = (categories: ConsentCategories, channel: ConsentRecord['channel']) => {
+    // Se analytics estava ligado antes e a pessoa está desligando agora, só
+    // atualizar o state não basta — o script do GTM já rodou, já setou
+    // cookie do lado do Google. Precisa de reload pra garantir que a tag não
+    // volta a rodar (mesmo princípio já validado quando isso era binário).
+    const hadAnalyticsBefore = consent?.categories.analytics === true
+    const record: ConsentRecord = {
+      version: PRIVACY_POLICY_VERSION,
+      timestamp: new Date().toISOString(),
+      channel,
+      categories,
+    }
+    setConsent(record)
+    setItem('cookie-consent', record)
     setForceOpen(false)
-  }
-
-  const deny = () => {
-    // Se o GTM já tinha sido carregado antes (usuário reabriu preferências
-    // depois de ter aceitado), só marcar 'denied' não remove script/cookie
-    // já ativo — precisa de reload pra garantir que a tag não volte a
-    // rodar. Sem consentimento prévio, não há nada rodando, reload seria
-    // ruído desnecessário.
-    const hadActiveTracking = consent === 'granted'
-    setConsent('denied')
-    setItem('cookie-consent', 'denied')
-    setForceOpen(false)
-    if (hadActiveTracking) window.location.reload()
+    if (hadAnalyticsBefore && !categories.analytics) window.location.reload()
   }
 
   const reopen = () => setForceOpen(true)
 
   return (
     <ConsentContext.Provider
-      value={{ consent, isBannerOpen: consent === null || forceOpen, grant, deny, reopen }}
+      value={{
+        consent,
+        isBannerOpen: consent === null || forceOpen,
+        hasAnalyticsConsent: consent?.categories.analytics === true,
+        saveConsent,
+        reopen,
+      }}
     >
       {children}
     </ConsentContext.Provider>

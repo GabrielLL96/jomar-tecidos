@@ -7,6 +7,7 @@ import {
   getOrCreateAsaasCustomer,
   type CreateAsaasPaymentInput,
 } from '../_shared/asaas.ts'
+import { enforceRateLimit } from '../_shared/rate-limit.ts'
 
 interface CreateChargeRequestBody {
   orderId: string
@@ -32,6 +33,8 @@ Deno.serve(async (req) => {
     const { data: callerData, error: callerError } = await caller.auth.getUser()
     if (callerError || !callerData.user) throw new Error('Sessão inválida')
     const userId = callerData.user.id
+
+    await enforceRateLimit(userId, 'asaas-create-charge', 10, 600)
 
     const { orderId, paymentMethod, installments } = (await req.json()) as CreateChargeRequestBody
     if (!orderId || !paymentMethod) throw new Error('Parâmetros ausentes')

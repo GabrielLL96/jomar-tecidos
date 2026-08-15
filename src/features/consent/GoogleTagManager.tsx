@@ -10,10 +10,10 @@ const GTM_NOSCRIPT_ID = 'gtm-noscript'
 // externo (injeta/remove elemento real do DOM), mesma categoria já
 // documentada em skills/reactjs.md.
 export function GoogleTagManager() {
-  const { consent } = useConsent()
+  const { hasAnalyticsConsent } = useConsent()
 
   useEffect(() => {
-    if (consent !== 'granted') return
+    if (!hasAnalyticsConsent) return
     if (document.getElementById(GTM_SCRIPT_ID)) return
 
     const script = document.createElement('script')
@@ -35,7 +35,7 @@ export function GoogleTagManager() {
     iframe.style.visibility = 'hidden'
     noscript.appendChild(iframe)
     document.body.prepend(noscript)
-  }, [consent])
+  }, [hasAnalyticsConsent])
 
   return null
 }

@@ -6,6 +6,7 @@ import {
   getClientIp,
   getOrCreateAsaasCustomer,
 } from '../_shared/asaas.ts'
+import { enforceRateLimit } from '../_shared/rate-limit.ts'
 
 // Dado de cartão cru (número/CVV/validade) chega aqui e é repassado direto
 // pra Asaas na mesma invocação — NUNCA gravado em log, banco ou storage, em
@@ -40,6 +41,10 @@ Deno.serve(async (req) => {
     const { data: callerData, error: callerError } = await caller.auth.getUser()
     if (callerError || !callerData.user) throw new Error('Sessão inválida')
     const userId = callerData.user.id
+
+    // 5 tentativas / 10min por usuário — endpoint que cobra cartão de
+    // verdade, achado real da auditoria LGPD (risco de card testing).
+    await enforceRateLimit(userId, 'asaas-charge-card', 5, 600)
 
     const body = (await req.json()) as ChargeCardRequestBody
     const { orderId, installments, card, holderInfo, saveCard } = body

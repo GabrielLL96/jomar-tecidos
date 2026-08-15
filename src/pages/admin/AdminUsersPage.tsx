@@ -53,6 +53,10 @@ import type { AdminUser, UserStatus } from '@/features/users/types'
 
 const ALL_ROLES = 'all'
 const ALL_STATUSES = 'all'
+// Paginação client-side — achado da auditoria LGPD (item de listagem de
+// dado pessoal sem limite): useAdminUsers() já busca tudo de uma vez, isso
+// só corta o que é renderizado na tabela por página.
+const PAGE_SIZE = 20
 
 type CreatableRole = 'customer' | 'admin'
 
@@ -77,6 +81,7 @@ export function AdminUsersPage() {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState(ALL_ROLES)
   const [statusFilter, setStatusFilter] = useState(ALL_STATUSES)
+  const [page, setPage] = useState(1)
 
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
   const [editRole, setEditRole] = useState<UserRole>('customer')
@@ -126,6 +131,13 @@ export function AdminUsersPage() {
       return true
     })
   }, [users, tab, search, roleFilter, statusFilter])
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE))
+  // Guarda por identidade (padrão já usado no projeto pra ajustar state
+  // durante o render) — se o filtro mudou e a página atual ficou fora do
+  // intervalo válido, volta pra página 1 sem precisar de useEffect.
+  if (page > totalPages) setPage(totalPages)
+  const paginatedUsers = filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   const openEdit = (user: AdminUser) => {
     setEditingUser(user)
@@ -296,6 +308,7 @@ export function AdminUsersPage() {
     setSearch('')
     setRoleFilter(ALL_ROLES)
     setStatusFilter(ALL_STATUSES)
+    setPage(1)
   }
 
   return (
@@ -312,11 +325,20 @@ export function AdminUsersPage() {
           <Input
             placeholder="Buscar por nome ou e-mail…"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value)
+              setPage(1)
+            }}
             className="w-full bg-white sm:w-[260px]"
           />
           {tab === 'equipe' && (
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <Select
+              value={roleFilter}
+              onValueChange={(value) => {
+                setRoleFilter(value)
+                setPage(1)
+              }}
+            >
               <SelectTrigger className="w-full bg-white sm:w-[160px]">
                 <SelectValue placeholder="Papel" />
               </SelectTrigger>
@@ -334,7 +356,13 @@ export function AdminUsersPage() {
               </SelectContent>
             </Select>
           )}
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => {
+              setStatusFilter(value)
+              setPage(1)
+            }}
+          >
             <SelectTrigger className="w-full bg-white sm:w-[140px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -376,7 +404,7 @@ export function AdminUsersPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredUsers.map((user) => {
+              paginatedUsers.map((user) => {
                 return (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
@@ -457,6 +485,33 @@ export function AdminUsersPage() {
           </TableBody>
         </Table>
       </div>
+
+      {filteredUsers.length > PAGE_SIZE && (
+        <div className="mt-3 flex items-center justify-between text-sm">
+          <span className="text-text-meta">
+            {filteredUsers.length} usuário{filteredUsers.length === 1 ? '' : 's'} — página {page} de{' '}
+            {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((current) => Math.max(1, current - 1))}
+              disabled={page === 1}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+              disabled={page === totalPages}
+            >
+              Próxima
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Dialog
         open={createOpen}

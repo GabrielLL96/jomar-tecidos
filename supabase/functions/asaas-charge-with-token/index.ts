@@ -6,6 +6,7 @@ import {
   getClientIp,
   getOrCreateAsaasCustomer,
 } from '../_shared/asaas.ts'
+import { enforceRateLimit } from '../_shared/rate-limit.ts'
 
 // Cobrança recorrente/futura com um cartão já salvo (asaas-charge-card) — só
 // o creditCardToken viaja, nenhum dado de cartão cru passa por aqui.
@@ -25,6 +26,8 @@ Deno.serve(async (req) => {
     const { data: callerData, error: callerError } = await caller.auth.getUser()
     if (callerError || !callerData.user) throw new Error('Sessão inválida')
     const userId = callerData.user.id
+
+    await enforceRateLimit(userId, 'asaas-charge-with-token', 5, 600)
 
     const { orderId, savedCardId, installments } = (await req.json()) as ChargeWithTokenRequestBody
     if (!orderId || !savedCardId) throw new Error('Parâmetros ausentes')

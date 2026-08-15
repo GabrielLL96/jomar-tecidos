@@ -7,6 +7,7 @@ interface FavoritesContextValue {
   favoriteIds: string[]
   isFavorite: (productId: string) => boolean
   toggleFavorite: (productId: string) => void
+  clearFavorites: () => void
 }
 
 const FavoritesContext = createContext<FavoritesContextValue | null>(null)
@@ -28,8 +29,13 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
 
   const isFavorite = (productId: string) => favoriteIds.includes(productId)
 
+  const clearFavorites = () => {
+    setFavoriteIds([])
+    setItem(FAVORITES_STORAGE_KEY, [])
+  }
+
   return (
-    <FavoritesContext.Provider value={{ favoriteIds, isFavorite, toggleFavorite }}>
+    <FavoritesContext.Provider value={{ favoriteIds, isFavorite, toggleFavorite, clearFavorites }}>
       {children}
     </FavoritesContext.Provider>
   )
