@@ -1,5 +1,6 @@
 import { createServiceClient } from '../_shared/melhor-envio.ts'
 import { ASAAS_SETTINGS_ID } from '../_shared/asaas.ts'
+import { logIntegrationCall } from '../_shared/integration-logger.ts'
 
 type OrderPaymentStatus = 'pending' | 'confirmed' | 'overdue' | 'cancelled' | 'refunded'
 
@@ -26,15 +27,19 @@ const APPROVED_PAYMENT_STATUSES = ['paid', 'shipping', 'delivered']
 
 // Token estático comparado direto (não HMAC) — mesmo mecanismo já usado na
 // Fase 1, nunca reaproveitar a API key como esse token (orientação da Asaas).
-async function isTokenValid(req: Request, supabase: ReturnType<typeof createServiceClient>) {
+async function checkToken(
+  req: Request,
+  supabase: ReturnType<typeof createServiceClient>,
+): Promise<{ valid: boolean; environment: 'sandbox' | 'production' }> {
   const { data: settings, error } = await supabase
     .from('asaas_settings')
-    .select('webhook_token')
+    .select('webhook_token, environment')
     .eq('id', ASAAS_SETTINGS_ID)
     .maybeSingle()
-  if (error || !settings?.webhook_token) return false
+  const environment = settings?.environment === 'production' ? 'production' : 'sandbox'
+  if (error || !settings?.webhook_token) return { valid: false, environment }
   const receivedToken = req.headers.get('asaas-access-token')
-  return !!receivedToken && receivedToken === settings.webhook_token
+  return { valid: !!receivedToken && receivedToken === settings.webhook_token, environment }
 }
 
 Deno.serve(async (req) => {
@@ -42,7 +47,8 @@ Deno.serve(async (req) => {
 
   const supabase = createServiceClient()
 
-  if (!(await isTokenValid(req, supabase))) {
+  const { valid, environment } = await checkToken(req, supabase)
+  if (!valid) {
     return new Response('Invalid token', { status: 401 })
   }
 
@@ -64,12 +70,33 @@ Deno.serve(async (req) => {
 
   if (paymentError) {
     console.error('[asaas-webhook] falha ao buscar order_payments:', paymentError.message)
+    await logIntegrationCall({
+      integration: 'asaas',
+      operation: 'webhook_received',
+      direction: 'inbound',
+      requestSummary: { event: payload.event },
+      status: 'failure',
+      errorMessage: paymentError.message,
+      statusHttp: 200,
+      environment,
+    })
     return new Response('ok', { status: 200 })
   }
 
   // sem cobrança correspondente localmente — confirma recebimento sem
   // processar (evita a Asaas reenviar), mesmo padrão do melhor-envio-webhook.
-  if (!orderPayment) return new Response('ok', { status: 200 })
+  if (!orderPayment) {
+    await logIntegrationCall({
+      integration: 'asaas',
+      operation: 'webhook_received',
+      direction: 'inbound',
+      requestSummary: { event: payload.event, matched: false },
+      status: 'success',
+      statusHttp: 200,
+      environment,
+    })
+    return new Response('ok', { status: 200 })
+  }
 
   const nextPaymentStatus = ORDER_PAYMENT_STATUS_BY_EVENT[payload.event]
   if (nextPaymentStatus && nextPaymentStatus !== orderPayment.status) {
@@ -88,7 +115,19 @@ Deno.serve(async (req) => {
     .select('id, status')
     .eq('id', orderPayment.order_id)
     .maybeSingle()
-  if (orderError || !order) return new Response('ok', { status: 200 })
+  if (orderError || !order) {
+    await logIntegrationCall({
+      integration: 'asaas',
+      operation: 'webhook_received',
+      direction: 'inbound',
+      requestSummary: { event: payload.event },
+      status: 'failure',
+      errorMessage: orderError?.message ?? 'Pedido não encontrado',
+      statusHttp: 200,
+      environment,
+    })
+    return new Response('ok', { status: 200 })
+  }
 
   // idempotente por design: só transiciona se o pedido ainda estiver no
   // status "de origem" esperado — reenvio do mesmo evento não duplica
@@ -112,6 +151,18 @@ Deno.serve(async (req) => {
     const { error: statusError } = await supabase.from('orders').update({ status: nextOrderStatus }).eq('id', order.id)
     if (statusError) {
       console.error('[asaas-webhook] falha ao atualizar orders.status:', statusError.message)
+      await logIntegrationCall({
+        integration: 'asaas',
+        operation: 'webhook_received',
+        direction: 'inbound',
+        relatedEntity: 'orders',
+        relatedEntityId: order.id,
+        requestSummary: { event: payload.event },
+        status: 'failure',
+        errorMessage: statusError.message,
+        statusHttp: 200,
+        environment,
+      })
       return new Response('ok', { status: 200 })
     }
     const { error: historyError } = await supabase.from('order_status_history').insert({
@@ -121,6 +172,18 @@ Deno.serve(async (req) => {
     })
     if (historyError) console.error('[asaas-webhook] falha ao gravar order_status_history:', historyError.message)
   }
+
+  await logIntegrationCall({
+    integration: 'asaas',
+    operation: 'webhook_received',
+    direction: 'inbound',
+    relatedEntity: 'orders',
+    relatedEntityId: order.id,
+    requestSummary: { event: payload.event, nextPaymentStatus: nextPaymentStatus ?? null, nextOrderStatus },
+    status: 'success',
+    statusHttp: 200,
+    environment,
+  })
 
   return new Response('ok', { status: 200 })
 })

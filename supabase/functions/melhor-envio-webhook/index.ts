@@ -1,4 +1,5 @@
 import { createServiceClient, MELHOR_ENVIO_SETTINGS_ID } from '../_shared/melhor-envio.ts'
+import { logIntegrationCall } from '../_shared/integration-logger.ts'
 
 type DeliveryStatus = 'awaiting_pickup' | 'in_transit' | 'delivered' | 'delayed'
 
@@ -88,12 +89,33 @@ Deno.serve(async (req) => {
 
   if (deliveryError) {
     console.error('Falha ao buscar delivery:', deliveryError.message)
+    await logIntegrationCall({
+      integration: 'melhor_envio',
+      operation: 'webhook_received',
+      direction: 'inbound',
+      requestSummary: { event: payload.event },
+      status: 'failure',
+      errorMessage: deliveryError.message,
+      statusHttp: 200,
+      environment: 'sandbox',
+    })
     return new Response('ok', { status: 200 })
   }
 
   // nenhum pedido correspondente (esperado até a Fase 2 existir) — confirma
   // recebimento sem processar, pra Melhor Envio não ficar reentregando.
-  if (!delivery) return new Response('ok', { status: 200 })
+  if (!delivery) {
+    await logIntegrationCall({
+      integration: 'melhor_envio',
+      operation: 'webhook_received',
+      direction: 'inbound',
+      requestSummary: { event: payload.event, matched: false },
+      status: 'success',
+      statusHttp: 200,
+      environment: 'sandbox',
+    })
+    return new Response('ok', { status: 200 })
+  }
 
   const nextStatus = STATUS_BY_EVENT[payload.event]
   const update: Record<string, unknown> = {}
@@ -101,10 +123,26 @@ Deno.serve(async (req) => {
   if (payload.data.tracking) update.tracking_code = payload.data.tracking
   if (payload.data.tracking_url) update.tracking_url = payload.data.tracking_url
 
+  let updateFailed = false
   if (Object.keys(update).length > 0) {
     const { error: updateError } = await supabase.from('deliveries').update(update).eq('id', delivery.id)
-    if (updateError) console.error('Falha ao atualizar delivery:', updateError.message)
+    if (updateError) {
+      console.error('Falha ao atualizar delivery:', updateError.message)
+      updateFailed = true
+    }
   }
+
+  await logIntegrationCall({
+    integration: 'melhor_envio',
+    operation: 'webhook_received',
+    direction: 'inbound',
+    relatedEntity: 'deliveries',
+    relatedEntityId: delivery.id,
+    requestSummary: { event: payload.event, nextStatus: nextStatus ?? null },
+    status: updateFailed ? 'failure' : 'success',
+    statusHttp: 200,
+    environment: 'sandbox',
+  })
 
   return new Response('ok', { status: 200 })
 })

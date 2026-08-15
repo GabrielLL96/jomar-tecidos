@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth, type AuthUser } from '@/features/auth/AuthContext'
 import { useSeoMeta } from '@/lib/seo'
+import { supabase } from '@/lib/supabase'
 import { loginSchema, signupSchema, type LoginInput, type SignupInput } from '@/features/auth/schema'
 
 // Sem `?redirect=` explícito (ex.: checkout mandando de volta pra si mesmo),
@@ -41,6 +42,10 @@ function LoginForm() {
       navigate(redirectParam || defaultRedirectFor(profile.role))
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível entrar')
+      // Sem sessão, não há auth.uid() verificável — user_email aqui é o que
+      // o formulário tentou, não uma identidade confirmada (mesma limitação
+      // inerente a qualquer log de tentativa que falhou). Best-effort.
+      void supabase.rpc('log_failed_login', { p_email: data.email })
     }
   }
 

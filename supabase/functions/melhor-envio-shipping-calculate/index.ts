@@ -2,7 +2,7 @@ import {
   corsHeaders,
   createServiceClient,
   getValidAccessToken,
-  MELHOR_ENVIO_BASE_URL,
+  melhorEnvioFetch,
   requireAuthenticated,
 } from '../_shared/melhor-envio.ts'
 
@@ -59,33 +59,47 @@ Deno.serve(async (req) => {
 
     const accessToken = await getValidAccessToken()
 
-    const response = await fetch(`${MELHOR_ENVIO_BASE_URL}/api/v2/me/shipment/calculate`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        'User-Agent': 'Jomar Tecidos (contato@jomartecidos.com.br)',
+    // Payload/resposta não têm dado sensível (CEP não é PII isoladamente,
+    // preço/prazo de transportadora é público) — seguro logar o resumo
+    // inteiro, ao contrário dos fluxos de pagamento da Asaas.
+    const quotes = (await melhorEnvioFetch(
+      '/api/v2/me/shipment/calculate',
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          'User-Agent': 'Jomar Tecidos (contato@jomartecidos.com.br)',
+        },
+        body: JSON.stringify({
+          from: { postal_code: originZip },
+          to: { postal_code: cleanDestinationZip },
+          products: items.map((item, index) => ({
+            id: String(index),
+            width: item.widthCm,
+            height: item.heightCm,
+            length: item.lengthCm,
+            weight: item.weightGrams / 1000,
+            quantity: item.quantity,
+          })),
+        }),
       },
-      body: JSON.stringify({
-        from: { postal_code: originZip },
-        to: { postal_code: cleanDestinationZip },
-        products: items.map((item, index) => ({
-          id: String(index),
-          width: item.widthCm,
-          height: item.heightCm,
-          length: item.lengthCm,
-          weight: item.weightGrams / 1000,
-          quantity: item.quantity,
-        })),
-      }),
-    })
-
-    if (!response.ok) {
-      throw new Error(`Melhor Envio recusou a cotação (${response.status}): ${await response.text()}`)
-    }
-
-    const quotes = (await response.json()) as MelhorEnvioQuote[]
+      {
+        operation: 'calculate_shipping',
+        requestSummary: { destinationZip: cleanDestinationZip, itemCount: items.length },
+        summarizeResponse: (parsed) => {
+          const quotesResult = parsed as MelhorEnvioQuote[]
+          return {
+            optionCount: quotesResult.filter((q) => !q.error && q.price).length,
+            cheapest: quotesResult
+              .filter((q) => !q.error && q.price)
+              .map((q) => Number(q.price))
+              .sort((a, b) => a - b)[0] ?? null,
+          }
+        },
+      },
+    )) as MelhorEnvioQuote[]
     const options = quotes
       .filter((quote) => !quote.error && quote.price)
       .map((quote) => ({

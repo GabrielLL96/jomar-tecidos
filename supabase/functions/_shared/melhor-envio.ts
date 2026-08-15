@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.112.0'
+import { logIntegrationCall, type LogStatus } from './integration-logger.ts'
 
 export const MELHOR_ENVIO_BASE_URL = 'https://sandbox.melhorenvio.com.br'
 export const MELHOR_ENVIO_SETTINGS_ID = '00000000-0000-0000-0000-000000000001'
@@ -42,6 +43,67 @@ export async function requireAuthenticated(authorizationHeader: string | null) {
   if (error || !data.user) throw new Error('Sessão inválida')
 }
 
+// ============================================================================
+// Base URL da Melhor Envio neste projeto é sempre sandbox (constante acima,
+// nunca lida de configuração) — não existe ambiente de produção Melhor Envio
+// suportado ainda, diferente da Asaas (que já tem sandbox/production reais
+// via asaas_settings.environment). `environment: 'sandbox'` abaixo reflete
+// isso, não é um valor arbitrário.
+// ============================================================================
+
+interface MelhorEnvioLogMeta {
+  operation: string
+  relatedEntity?: string
+  relatedEntityId?: string
+  // SEMPRE um resumo explícito (allowlist) — nunca o body cru. client_secret/
+  // access_token/refresh_token NUNCA entram aqui, em nenhuma chamada.
+  requestSummary?: Record<string, unknown> | null
+  summarizeResponse?: (parsed: unknown) => Record<string, unknown> | null
+}
+
+export async function melhorEnvioFetch(
+  path: string,
+  init: RequestInit,
+  logMeta: MelhorEnvioLogMeta,
+): Promise<unknown> {
+  const startedAt = Date.now()
+  let statusHttp: number | null = null
+  let status: LogStatus = 'success'
+  let errorMessage: string | null = null
+  let parsed: unknown = null
+
+  try {
+    const response = await fetch(`${MELHOR_ENVIO_BASE_URL}${path}`, init)
+    statusHttp = response.status
+    if (!response.ok) {
+      status = 'failure'
+      errorMessage = `Melhor Envio recusou (${response.status}): ${await response.text()}`
+      throw new Error(errorMessage)
+    }
+    parsed = await response.json()
+    return parsed
+  } catch (error) {
+    status = 'failure'
+    if (!errorMessage) errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    throw error
+  } finally {
+    await logIntegrationCall({
+      integration: 'melhor_envio',
+      operation: logMeta.operation,
+      relatedEntity: logMeta.relatedEntity,
+      relatedEntityId: logMeta.relatedEntityId,
+      requestSummary: logMeta.requestSummary ?? null,
+      responseSummary:
+        status === 'success' && logMeta.summarizeResponse ? logMeta.summarizeResponse(parsed) : null,
+      statusHttp,
+      status,
+      errorMessage,
+      durationMs: Date.now() - startedAt,
+      environment: 'sandbox',
+    })
+  }
+}
+
 interface MelhorEnvioTokenResponse {
   access_token: string
   refresh_token: string
@@ -75,22 +137,26 @@ export async function getValidAccessToken(): Promise<string> {
     throw new Error('Melhor Envio: client_id/client_secret ausentes, não foi possível renovar o token.')
   }
 
-  const response = await fetch(`${MELHOR_ENVIO_BASE_URL}/oauth/token`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-    body: JSON.stringify({
-      grant_type: 'refresh_token',
-      client_id: settings.client_id,
-      client_secret: settings.client_secret,
-      refresh_token: settings.refresh_token,
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`Falha ao renovar token da Melhor Envio (${response.status}): ${await response.text()}`)
-  }
-
-  const tokenData = (await response.json()) as MelhorEnvioTokenResponse
+  const tokenData = (await melhorEnvioFetch(
+    '/oauth/token',
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({
+        grant_type: 'refresh_token',
+        client_id: settings.client_id,
+        client_secret: settings.client_secret,
+        refresh_token: settings.refresh_token,
+      }),
+    },
+    {
+      operation: 'refresh_token',
+      // client_id é público (não secret), seguro incluir; client_secret e os
+      // tokens em si NUNCA entram no log, nem na resposta.
+      requestSummary: { grantType: 'refresh_token' },
+      summarizeResponse: () => ({ refreshed: true }),
+    },
+  )) as MelhorEnvioTokenResponse
   const newExpiresAt = new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
 
   const { error: updateError } = await supabase

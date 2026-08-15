@@ -1,5 +1,6 @@
 import { corsHeaders, createCallerClient, createServiceClient } from '../_shared/melhor-envio.ts'
 import { enforceRateLimit } from '../_shared/rate-limit.ts'
+import { logActivity } from '../_shared/activity-logger.ts'
 
 // Direito de eliminação/anonimização (LGPD art. 18, IV e VI) — self-service,
 // achado da auditoria (docs/lgpd/auditoria-2026-08-15.md). NUNCA apaga a
@@ -52,6 +53,20 @@ Deno.serve(async (req) => {
       ban_duration: '876600h',
     })
     if (banError) throw new Error(`Falha ao desativar login: ${banError.message}`)
+
+    // fn_audit_log() (trigger) já registra o UPDATE em users (anonimização
+    // muda name/email/phone/status), mas com user_id null — a escrita real
+    // acontece via service_role, sem JWT no contexto da conexão. Aqui o
+    // chamador é conhecido (é o próprio dono da conta, fluxo self-service),
+    // então grava explicitamente pra não perder o "quem".
+    await logActivity({
+      userId,
+      userEmail: callerData.user.email ?? null,
+      action: 'delete',
+      entity: 'users',
+      entityId: userId,
+      details: 'excluiu a própria conta (anonimização + bloqueio de login)',
+    })
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

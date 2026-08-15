@@ -18,22 +18,49 @@ export type Database = {
         Row: {
           action: string
           created_at: string
+          data_after: Json | null
+          data_before: Json | null
           details: string | null
+          entity: string | null
+          entity_id: string | null
+          error_message: string | null
           id: string
+          ip_address: string | null
+          status: string
+          user_agent: string | null
+          user_email: string | null
           user_id: string | null
         }
         Insert: {
           action: string
           created_at?: string
+          data_after?: Json | null
+          data_before?: Json | null
           details?: string | null
+          entity?: string | null
+          entity_id?: string | null
+          error_message?: string | null
           id?: string
+          ip_address?: string | null
+          status?: string
+          user_agent?: string | null
+          user_email?: string | null
           user_id?: string | null
         }
         Update: {
           action?: string
           created_at?: string
+          data_after?: Json | null
+          data_before?: Json | null
           details?: string | null
+          entity?: string | null
+          entity_id?: string | null
+          error_message?: string | null
           id?: string
+          ip_address?: string | null
+          status?: string
+          user_agent?: string | null
+          user_email?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -300,6 +327,104 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      error_logs: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          message: string
+          source: string
+          stack: string | null
+          url: string | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message: string
+          source: string
+          stack?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string
+          source?: string
+          stack?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "error_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_logs: {
+        Row: {
+          created_at: string
+          direction: string
+          duration_ms: number | null
+          environment: string
+          error_message: string | null
+          id: string
+          integration: string
+          operation: string
+          related_entity: string | null
+          related_entity_id: string | null
+          request_summary: Json | null
+          response_summary: Json | null
+          status: string
+          status_http: number | null
+        }
+        Insert: {
+          created_at?: string
+          direction?: string
+          duration_ms?: number | null
+          environment: string
+          error_message?: string | null
+          id?: string
+          integration: string
+          operation: string
+          related_entity?: string | null
+          related_entity_id?: string | null
+          request_summary?: Json | null
+          response_summary?: Json | null
+          status?: string
+          status_http?: number | null
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          duration_ms?: number | null
+          environment?: string
+          error_message?: string | null
+          id?: string
+          integration?: string
+          operation?: string
+          related_entity?: string | null
+          related_entity_id?: string | null
+          request_summary?: Json | null
+          response_summary?: Json | null
+          status?: string
+          status_http?: number | null
+        }
+        Relationships: []
       }
       marketing_campaigns: {
         Row: {
@@ -766,6 +891,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_attempts: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       refunds: {
         Row: {
           amount: number
@@ -1062,6 +1208,15 @@ export type Database = {
           webhook_token_configured: boolean
         }[]
       }
+      check_and_record_rate_limit: {
+        Args: {
+          p_endpoint: string
+          p_max_attempts: number
+          p_user_id: string
+          p_window_seconds: number
+        }
+        Returns: boolean
+      }
       create_order: {
         Args: {
           p_coupon_id?: string
@@ -1090,6 +1245,9 @@ export type Database = {
         Args: { p_coupon_id: string }
         Returns: undefined
       }
+      log_failed_login: { Args: { p_email: string }; Returns: undefined }
+      log_login: { Args: never; Returns: undefined }
+      log_logout: { Args: never; Returns: undefined }
       melhor_envio_secret_configured: { Args: never; Returns: boolean }
     }
     Enums: {

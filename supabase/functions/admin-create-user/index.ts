@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.112.0'
-import { corsHeaders, createServiceClient, requireAdmin } from '../_shared/melhor-envio.ts'
+import { corsHeaders, createCallerClient, createServiceClient, requireAdmin } from '../_shared/melhor-envio.ts'
+import { logActivity } from '../_shared/activity-logger.ts'
 
 type CreatableRole = 'customer' | 'admin'
 
@@ -18,7 +19,14 @@ Deno.serve(async (req) => {
   try {
     // Único gate de autorização — cria conta comum e admin (ambos fluxos só
     // acessíveis de dentro do painel admin, requireAdmin cobre os dois).
-    await requireAdmin(req.headers.get('Authorization'))
+    const authHeader = req.headers.get('Authorization')
+    await requireAdmin(authHeader)
+
+    // fn_audit_log() (trigger) não recupera auth.uid() aqui — o insert real
+    // em public.users acontece via service_role, sem JWT no contexto da
+    // conexão. Resolve o chamador explicitamente pra não perder "quem criou".
+    const caller = createCallerClient(authHeader!)
+    const { data: callerData } = await caller.auth.getUser()
 
     const { name, email, role, password } = (await req.json()) as CreateUserRequestBody
 
@@ -62,6 +70,15 @@ Deno.serve(async (req) => {
         await supabase.auth.admin.deleteUser(data.user.id)
         throw new Error('Não foi possível definir o papel de administrador — operação revertida, tente novamente')
       }
+      await logActivity({
+        userId: callerData.user?.id ?? null,
+        userEmail: callerData.user?.email ?? null,
+        action: 'create',
+        entity: 'usuarios_admin',
+        entityId: data.user.id,
+        dataAfter: { email, name: name.trim() },
+        details: `criou o usuário admin ${email}`,
+      })
     }
 
     let warning: string | null = null

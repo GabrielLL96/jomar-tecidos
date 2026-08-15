@@ -3,11 +3,13 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   BarChart3,
   Boxes,
+  History,
   Layers,
   LayoutDashboard,
   LogOut,
   Menu,
   Package,
+  Plug,
   Receipt,
   Search,
   Settings,
@@ -31,6 +33,8 @@ const ADMIN_NAV = [
   { to: '/admin/cupons', label: 'Cupons', icon: Tag, end: false },
   { to: '/admin/usuarios', label: 'Usuários', icon: Users, end: false },
   { to: '/admin/relatorios', label: 'Relatórios', icon: BarChart3, end: false },
+  { to: '/admin/logs', label: 'Logs', icon: History, end: false },
+  { to: '/admin/integracoes-log', label: 'Logs de Integração', icon: Plug, end: false },
   { to: '/admin/configuracoes', label: 'Configurações', icon: Settings, end: false },
 ] as const
 
@@ -44,6 +48,11 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   '/admin/cupons': { title: 'Cupons e Promoções', subtitle: 'Descontos ativos e histórico' },
   '/admin/usuarios': { title: 'Usuários', subtitle: 'Clientes e equipe interna' },
   '/admin/relatorios': { title: 'Relatórios', subtitle: 'Exportações e análises' },
+  '/admin/logs': { title: 'Logs', subtitle: 'Auditoria de ações e erros capturados em runtime' },
+  '/admin/integracoes-log': {
+    title: 'Logs de Integração',
+    subtitle: 'Chamadas pra Asaas e Melhor Envio — sucesso, falha e tempo de resposta',
+  },
   '/admin/configuracoes': {
     title: 'Configurações',
     subtitle: 'Conteúdo da home, categorias e informações de contato',

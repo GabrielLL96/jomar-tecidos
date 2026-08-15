@@ -75,6 +75,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
+      // log_login() precisa rodar só quando a sessão está de fato pronta no
+      // client — chamá-la logo após signInWithPassword() (dentro de login(),
+      // abaixo) resolve auth.uid() como null do lado do servidor às vezes
+      // (a propagação da sessão não é síncrona com o resolve da promise),
+      // e a function faz no-op silencioso nesse caso — achado real testando
+      // no browser, sem erro nenhum, só a linha de log que nunca aparecia.
+      // 'SIGNED_IN' só dispara em sign-in novo de verdade (não em
+      // 'INITIAL_SESSION' de reload de página nem em 'TOKEN_REFRESHED').
+      if (_event === 'SIGNED_IN') void supabase.rpc('log_login')
+
       if (!hasLoadedOnce) setIsLoading(true)
       fetchProfile(session.user.id).then((profile) => {
         if (active) {
@@ -99,6 +109,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .from('users')
       .update({ last_login_at: new Date().toISOString() })
       .eq('id', data.user.id)
+    // log_login() em si roda no listener onAuthStateChange (evento
+    // 'SIGNED_IN'), não aqui — ver comentário lá.
 
     // Devolve o profile (com role) pro chamador decidir o redirect na hora —
     // não dá pra esperar o listener onAuthStateChange (assíncrono) resolver
@@ -164,6 +176,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logout: AuthContextValue['logout'] = async () => {
+    // precisa rodar ANTES do signOut — log_logout() é security definer e lê
+    // auth.uid() da sessão ainda ativa; depois do signOut não há JWT pra
+    // atribuir o evento a ninguém. Best-effort, não bloqueia o logout.
+    try {
+      await supabase.rpc('log_logout')
+    } catch {
+      // ignora — não deve impedir o logout
+    }
     await supabase.auth.signOut()
     setUser(null)
   }

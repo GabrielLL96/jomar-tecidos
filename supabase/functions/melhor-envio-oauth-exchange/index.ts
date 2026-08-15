@@ -2,8 +2,8 @@ import {
   corsHeaders,
   createCallerClient,
   createServiceClient,
-  MELHOR_ENVIO_BASE_URL,
   MELHOR_ENVIO_SETTINGS_ID,
+  melhorEnvioFetch,
   requireAdmin,
 } from '../_shared/melhor-envio.ts'
 
@@ -38,24 +38,28 @@ Deno.serve(async (req) => {
       throw new Error('client_id/client_secret/redirect_uri não configurados em Configurações > Integrações')
     }
 
-    const tokenResponse = await fetch(`${MELHOR_ENVIO_BASE_URL}/oauth/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({
-        grant_type: 'authorization_code',
-        client_id: settings.client_id,
-        client_secret: settings.client_secret,
-        redirect_uri: settings.redirect_uri,
-        code,
-      }),
-    })
-
-    if (!tokenResponse.ok) {
-      const body = await tokenResponse.text()
-      throw new Error(`Melhor Envio recusou o código (${tokenResponse.status}): ${body}`)
-    }
-
-    const tokenData = (await tokenResponse.json()) as MelhorEnvioTokenResponse
+    // code/client_secret NUNCA entram no log — code é secret de uso único,
+    // client_secret é credencial permanente. tokenData (access/refresh
+    // token) também nunca é logado, nem na resposta.
+    const tokenData = (await melhorEnvioFetch(
+      '/oauth/token',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          grant_type: 'authorization_code',
+          client_id: settings.client_id,
+          client_secret: settings.client_secret,
+          redirect_uri: settings.redirect_uri,
+          code,
+        }),
+      },
+      {
+        operation: 'oauth_exchange',
+        requestSummary: { grantType: 'authorization_code' },
+        summarizeResponse: () => ({ connected: true }),
+      },
+    )) as MelhorEnvioTokenResponse
     const tokenExpiresAt = new Date(Date.now() + tokenData.expires_in * 1000).toISOString()
 
     const caller = createCallerClient(req.headers.get('Authorization')!)

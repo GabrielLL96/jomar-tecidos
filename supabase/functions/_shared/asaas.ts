@@ -1,4 +1,5 @@
 import { createServiceClient } from './melhor-envio.ts'
+import { logIntegrationCall, maskDocument, type LogEnvironment, type LogStatus } from './integration-logger.ts'
 
 export const ASAAS_SETTINGS_ID = '00000000-0000-0000-0000-000000000002'
 
@@ -51,16 +52,70 @@ async function asaasErrorMessage(response: Response): Promise<string> {
   return `Asaas recusou a chamada (HTTP ${response.status})`
 }
 
-async function asaasFetch(credentials: AsaasCredentials, path: string, init?: RequestInit) {
-  const baseUrl = getAsaasBaseUrl(credentials.environment)
-  const response = await fetch(`${baseUrl}${path}`, {
-    ...init,
-    headers: { ...asaasAuthHeaders(credentials.apiKey), ...(init?.headers ?? {}) },
-  })
-  if (!response.ok) {
-    throw new Error(await asaasErrorMessage(response))
+function asaasLogEnvironment(environment: string): LogEnvironment {
+  return environment === 'production' ? 'production' : 'sandbox'
+}
+
+interface AsaasLogMeta {
+  operation: string
+  relatedEntity?: string
+  relatedEntityId?: string
+  // SEMPRE um resumo explícito (allowlist) — nunca o body da requisição.
+  // asaas-charge-card já tem uma invariante de código (ADR-016) proibindo
+  // logar dado de cartão em qualquer lugar; um denylist genérico por nome de
+  // campo erraria por omissão sempre que a Asaas mudar o shape da API.
+  requestSummary?: Record<string, unknown> | null
+  // Recebe a resposta já parseada e devolve só o que é seguro persistir —
+  // por padrão null (nada é logado a menos que o call site decida incluir).
+  summarizeResponse?: (parsed: unknown) => Record<string, unknown> | null
+}
+
+async function asaasFetch(
+  credentials: AsaasCredentials,
+  path: string,
+  init: RequestInit | undefined,
+  logMeta: AsaasLogMeta,
+) {
+  const startedAt = Date.now()
+  let statusHttp: number | null = null
+  let status: LogStatus = 'success'
+  let errorMessage: string | null = null
+  let parsed: unknown = null
+
+  try {
+    const baseUrl = getAsaasBaseUrl(credentials.environment)
+    const response = await fetch(`${baseUrl}${path}`, {
+      ...init,
+      headers: { ...asaasAuthHeaders(credentials.apiKey), ...(init?.headers ?? {}) },
+    })
+    statusHttp = response.status
+    if (!response.ok) {
+      status = 'failure'
+      errorMessage = await asaasErrorMessage(response)
+      throw new Error(errorMessage)
+    }
+    parsed = await response.json()
+    return parsed
+  } catch (error) {
+    status = 'failure'
+    if (!errorMessage) errorMessage = error instanceof Error ? error.message : 'Erro desconhecido'
+    throw error
+  } finally {
+    await logIntegrationCall({
+      integration: 'asaas',
+      operation: logMeta.operation,
+      relatedEntity: logMeta.relatedEntity,
+      relatedEntityId: logMeta.relatedEntityId,
+      requestSummary: logMeta.requestSummary ?? null,
+      responseSummary:
+        status === 'success' && logMeta.summarizeResponse ? logMeta.summarizeResponse(parsed) : null,
+      statusHttp,
+      status,
+      errorMessage,
+      durationMs: Date.now() - startedAt,
+      environment: asaasLogEnvironment(credentials.environment),
+    })
   }
-  return response.json()
 }
 
 // x-forwarded-for pode vir com múltiplos IPs separados por vírgula (proxies
@@ -116,22 +171,57 @@ export async function createAsaasPaymentWithCard(
     installmentCount?: number
   },
 ): Promise<AsaasCreditCardChargeResult> {
-  const raw = await asaasFetch(credentials, '/v3/payments', {
-    method: 'POST',
-    body: JSON.stringify({
-      customer: input.customerId,
-      billingType: 'CREDIT_CARD',
-      value: input.value,
-      dueDate: input.dueDate,
-      externalReference: input.externalReference,
-      remoteIp: input.remoteIp,
-      creditCard: input.creditCard,
-      creditCardHolderInfo: input.creditCardHolderInfo,
-      ...(input.installmentCount && input.installmentCount > 1
-        ? { installmentCount: input.installmentCount, totalValue: input.value }
-        : {}),
-    }),
-  })
+  const raw = (await asaasFetch(
+    credentials,
+    '/v3/payments',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        customer: input.customerId,
+        billingType: 'CREDIT_CARD',
+        value: input.value,
+        dueDate: input.dueDate,
+        externalReference: input.externalReference,
+        remoteIp: input.remoteIp,
+        creditCard: input.creditCard,
+        creditCardHolderInfo: input.creditCardHolderInfo,
+        ...(input.installmentCount && input.installmentCount > 1
+          ? { installmentCount: input.installmentCount, totalValue: input.value }
+          : {}),
+      }),
+    },
+    {
+      operation: 'create_charge_card',
+      relatedEntity: 'orders',
+      relatedEntityId: input.externalReference,
+      // NUNCA inclui creditCard/creditCardHolderInfo — dado de cartão e CPF
+      // nunca entram no log, nem mascarados (mesma invariante de
+      // asaas-charge-card/index.ts).
+      requestSummary: { billingType: 'CREDIT_CARD', value: input.value, installments: input.installmentCount ?? 1 },
+      summarizeResponse: (parsed) => {
+        const p = parsed as {
+          id?: string
+          status?: string
+          creditCard?: { creditCardNumber?: string; creditCardBrand?: string }
+        }
+        // creditCardToken NUNCA entra no log — é um credential reutilizável;
+        // se vazasse aqui, qualquer admin (não só o dono do pedido) poderia
+        // reusar pra cobrar o cartão de novo, contornando a RLS de
+        // saved_credit_cards (user_id = auth.uid()).
+        return {
+          id: p?.id ?? null,
+          status: p?.status ?? null,
+          last4: p?.creditCard?.creditCardNumber ?? null,
+          brand: p?.creditCard?.creditCardBrand ?? null,
+        }
+      },
+    },
+  )) as { creditCard?: { creditCardToken?: string; creditCardNumber?: string; creditCardBrand?: string } } & {
+    id: string
+    status: string
+    invoiceUrl: string
+    dueDate: string
+  }
   const card = raw?.creditCard ?? {}
   if (!card.creditCardToken) throw new Error('Asaas aprovou a cobrança mas não devolveu o token do cartão')
   return {
@@ -140,7 +230,7 @@ export async function createAsaasPaymentWithCard(
     invoiceUrl: raw.invoiceUrl,
     dueDate: raw.dueDate,
     creditCardToken: card.creditCardToken,
-    creditCardLastFour: card.creditCardNumber,
+    creditCardLastFour: card.creditCardNumber!,
     creditCardBrand: card.creditCardBrand ?? null,
   }
 }
@@ -159,21 +249,35 @@ export async function createAsaasPaymentWithToken(
     installmentCount?: number
   },
 ): Promise<AsaasPaymentResult> {
-  return asaasFetch(credentials, '/v3/payments', {
-    method: 'POST',
-    body: JSON.stringify({
-      customer: input.customerId,
-      billingType: 'CREDIT_CARD',
-      value: input.value,
-      dueDate: input.dueDate,
-      externalReference: input.externalReference,
-      remoteIp: input.remoteIp,
-      creditCardToken: input.creditCardToken,
-      ...(input.installmentCount && input.installmentCount > 1
-        ? { installmentCount: input.installmentCount, totalValue: input.value }
-        : {}),
-    }),
-  })
+  return asaasFetch(
+    credentials,
+    '/v3/payments',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        customer: input.customerId,
+        billingType: 'CREDIT_CARD',
+        value: input.value,
+        dueDate: input.dueDate,
+        externalReference: input.externalReference,
+        remoteIp: input.remoteIp,
+        creditCardToken: input.creditCardToken,
+        ...(input.installmentCount && input.installmentCount > 1
+          ? { installmentCount: input.installmentCount, totalValue: input.value }
+          : {}),
+      }),
+    },
+    {
+      operation: 'create_charge_token',
+      relatedEntity: 'orders',
+      relatedEntityId: input.externalReference,
+      requestSummary: { billingType: 'CREDIT_CARD', value: input.value, installments: input.installmentCount ?? 1 },
+      summarizeResponse: (parsed) => {
+        const p = parsed as { id?: string; status?: string }
+        return { id: p?.id ?? null, status: p?.status ?? null }
+      },
+    },
+  ) as Promise<AsaasPaymentResult>
 }
 
 // POST /v3/payments exige um `customer` (id do lado da Asaas) já cadastrado
@@ -192,15 +296,33 @@ export async function getOrCreateAsaasCustomer(credentials: AsaasCredentials, us
 
   if (!user.cpf) throw new Error('Cadastro sem CPF — não é possível gerar cobrança real')
 
-  const customer = await asaasFetch(credentials, '/v3/customers', {
-    method: 'POST',
-    body: JSON.stringify({
-      name: user.name,
-      email: user.email,
-      cpfCnpj: user.cpf.replace(/\D/g, ''),
-      mobilePhone: user.phone?.replace(/\D/g, '') || undefined,
-    }),
-  })
+  const customer = (await asaasFetch(
+    credentials,
+    '/v3/customers',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        name: user.name,
+        email: user.email,
+        cpfCnpj: user.cpf.replace(/\D/g, ''),
+        mobilePhone: user.phone?.replace(/\D/g, '') || undefined,
+      }),
+    },
+    {
+      operation: 'create_customer',
+      relatedEntity: 'users',
+      relatedEntityId: userId,
+      // cpfCnpj É o dado mais provável de causar falha aqui (formato
+      // inválido, duplicado) — vale mascarado (só últimos 3 dígitos), ao
+      // contrário do fluxo de cobrança com cartão, que nunca inclui CPF de
+      // jeito nenhum.
+      requestSummary: { cpfCnpjMasked: maskDocument(user.cpf) },
+      summarizeResponse: (parsed) => {
+        const p = parsed as { id?: string }
+        return { id: p?.id ?? null }
+      },
+    },
+  )) as { id: string }
 
   const { error: updateError } = await supabase
     .from('users')
@@ -234,22 +356,40 @@ export async function createAsaasPayment(
   credentials: AsaasCredentials,
   input: CreateAsaasPaymentInput,
 ): Promise<AsaasPaymentResult> {
-  return asaasFetch(credentials, '/v3/payments', {
-    method: 'POST',
-    body: JSON.stringify({
-      customer: input.customerId,
-      billingType: input.billingType,
-      value: input.value,
-      dueDate: input.dueDate,
-      externalReference: input.externalReference,
-      ...(input.successUrl
-        ? { callback: { successUrl: input.successUrl, autoRedirect: true } }
-        : {}),
-      ...(input.installmentCount && input.installmentCount > 1
-        ? { installmentCount: input.installmentCount, totalValue: input.value }
-        : {}),
-    }),
-  })
+  return asaasFetch(
+    credentials,
+    '/v3/payments',
+    {
+      method: 'POST',
+      body: JSON.stringify({
+        customer: input.customerId,
+        billingType: input.billingType,
+        value: input.value,
+        dueDate: input.dueDate,
+        externalReference: input.externalReference,
+        ...(input.successUrl
+          ? { callback: { successUrl: input.successUrl, autoRedirect: true } }
+          : {}),
+        ...(input.installmentCount && input.installmentCount > 1
+          ? { installmentCount: input.installmentCount, totalValue: input.value }
+          : {}),
+      }),
+    },
+    {
+      operation: 'create_charge',
+      relatedEntity: 'orders',
+      relatedEntityId: input.externalReference,
+      requestSummary: {
+        billingType: input.billingType,
+        value: input.value,
+        installments: input.installmentCount ?? 1,
+      },
+      summarizeResponse: (parsed) => {
+        const p = parsed as { id?: string; status?: string }
+        return { id: p?.id ?? null, status: p?.status ?? null }
+      },
+    },
+  ) as Promise<AsaasPaymentResult>
 }
 
 export interface AsaasRefundResult {
@@ -265,10 +405,22 @@ export async function refundAsaasPayment(
   asaasPaymentId: string,
   value?: number,
 ): Promise<AsaasRefundResult> {
-  return asaasFetch(credentials, `/v3/payments/${asaasPaymentId}/refund`, {
-    method: 'POST',
-    body: JSON.stringify(value !== undefined ? { value } : {}),
-  })
+  return asaasFetch(
+    credentials,
+    `/v3/payments/${asaasPaymentId}/refund`,
+    {
+      method: 'POST',
+      body: JSON.stringify(value !== undefined ? { value } : {}),
+    },
+    {
+      operation: 'refund',
+      requestSummary: { asaasPaymentId, value: value ?? null },
+      summarizeResponse: (parsed) => {
+        const p = parsed as { id?: string; status?: string }
+        return { id: p?.id ?? null, status: p?.status ?? null }
+      },
+    },
+  ) as Promise<AsaasRefundResult>
 }
 
 export interface AsaasPixQrCode {
@@ -283,7 +435,14 @@ export async function getAsaasPixQrCode(
   credentials: AsaasCredentials,
   paymentId: string,
 ): Promise<AsaasPixQrCode> {
-  return asaasFetch(credentials, `/v3/payments/${paymentId}/pixQrCode`)
+  return asaasFetch(credentials, `/v3/payments/${paymentId}/pixQrCode`, undefined, {
+    operation: 'get_pix_qrcode',
+    requestSummary: { paymentId },
+    // encodedImage/payload NUNCA entram no log — não são secret, mas são o
+    // próprio meio de pagamento (qualquer um com o payload consegue gerar o
+    // QR e pagar aquela cobrança); sem valor de debug em persistir.
+    summarizeResponse: () => ({ hasQrCode: true }),
+  }) as Promise<AsaasPixQrCode>
 }
 
 // Pix/cartão têm processamento imediato (dueDate = hoje só formaliza o

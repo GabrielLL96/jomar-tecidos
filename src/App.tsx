@@ -97,6 +97,12 @@ const AdminUsersPage = lazy(() =>
 const AdminSettingsPage = lazy(() =>
   import('@/pages/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })),
 )
+const AdminLogsPage = lazy(() =>
+  import('@/pages/admin/AdminLogsPage').then((m) => ({ default: m.AdminLogsPage })),
+)
+const AdminIntegrationLogPage = lazy(() =>
+  import('@/pages/admin/AdminIntegrationLogPage').then((m) => ({ default: m.AdminIntegrationLogPage })),
+)
 const NotFoundPage = lazy(() =>
   import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),
 )
@@ -142,6 +148,8 @@ function App() {
             <Route path="usuarios" element={<AdminUsersPage />} />
             <Route path="relatorios" element={<AdminReportsPage />} />
             <Route path="configuracoes" element={<AdminSettingsPage />} />
+            <Route path="logs" element={<AdminLogsPage />} />
+            <Route path="integracoes-log" element={<AdminIntegrationLogPage />} />
             <Route path="melhor-envio/callback" element={<AdminMelhorEnvioCallbackPage />} />
           </Route>
         </Routes>
