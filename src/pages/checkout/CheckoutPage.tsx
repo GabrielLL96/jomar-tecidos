@@ -18,7 +18,8 @@ import { calculateDiscount, isCouponValid } from '@/features/orders/coupon-utils
 import type { Coupon } from '@/features/orders/types'
 import { useProducts } from '@/features/catalog/hooks'
 import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
-import { createAsaasCharge } from '@/features/asaas/service'
+import { createAsaasCharge, chargeAsaasCard } from '@/features/asaas/service'
+import { CreditCardFields } from '@/features/asaas/CreditCardFields'
 import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
 
 // Abaixo disso, parcela ficaria irrisória — só oferece 2x/3x a partir daqui.
@@ -168,20 +169,36 @@ export function CheckoutPage() {
       await queryClient.invalidateQueries({ queryKey: ['products'] })
 
       try {
-        const charge = await createAsaasCharge(
-          orderRow.id,
-          data.paymentMethod,
-          data.paymentMethod === 'credit_card' ? data.installments : undefined,
-        )
         if (data.paymentMethod === 'credit_card') {
-          // Página inteira, não popup — fatura hospedada da Asaas, cliente
-          // volta sozinho via callback.successUrl configurado na cobrança.
-          window.location.href = charge.invoiceUrl
-          return
+          // Cobrança direta com o cartão digitado no próprio checkout —
+          // autoriza na hora (sem redirect pra fatura hospedada). Dado de
+          // cartão só existe no `data` deste submit, nunca persistido; a
+          // Edge Function devolve status já resolvido (aprovado/recusado),
+          // nunca "pending" esperando confirmação assíncrona. Ver ADR-016.
+          await chargeAsaasCard({
+            orderId: orderRow.id,
+            installments: data.installments,
+            card: {
+              holderName: data.cardHolderName ?? '',
+              number: data.cardNumber ?? '',
+              expiryMonth: (data.cardExpiry ?? '').split('/')[0] ?? '',
+              expiryYear: `20${(data.cardExpiry ?? '').split('/')[1] ?? ''}`,
+              ccv: data.cardCvv ?? '',
+            },
+            holderInfo: {
+              postalCode: data.cardPostalCode ?? '',
+              addressNumber: data.cardAddressNumber ?? '',
+              addressComplement: data.cardAddressComplement,
+            },
+            saveCard: data.saveCard ?? false,
+          })
+        } else {
+          await createAsaasCharge(orderRow.id, data.paymentMethod)
         }
       } catch (chargeError) {
         // Pedido já existe (pending, sem cobrança) — a página de
-        // confirmação oferece tentar gerar a cobrança de novo.
+        // confirmação oferece tentar gerar a cobrança de novo (Pix/boleto)
+        // ou, pro cartão, cai de volta na fatura hospedada como alternativa.
         toast.error(
           chargeError instanceof Error
             ? chargeError.message
@@ -276,10 +293,7 @@ export function CheckoutPage() {
             </div>
             {paymentMethod === 'credit_card' && (
               <>
-                <p className="text-text-meta text-xs">
-                  Ao confirmar, você será redirecionado pra página segura da Asaas pra digitar os dados do
-                  cartão — nunca coletamos esse dado diretamente.
-                </p>
+                <CreditCardFields register={register} setValue={setValue} errors={errors} />
                 {total >= MIN_INSTALLMENT_TOTAL && (
                   <div className="mt-3 flex gap-2">
                     {[1, 2, 3].map((n) => (

@@ -36,6 +36,21 @@ export async function getAsaasCredentials(): Promise<AsaasCredentials> {
   return { environment: data.environment, apiKey: data.api_key }
 }
 
+// Formato real de erro da Asaas: { errors: [{ code, description }] }. Nunca
+// inclui dado de cartão de volta no erro (confirmado na doc antes de assumir
+// que era seguro repassar a mensagem pro client) — seguro propagar
+// `description` pro usuário final (ex: "cartão sem limite disponível").
+async function asaasErrorMessage(response: Response): Promise<string> {
+  try {
+    const body = await response.json()
+    const description = body?.errors?.[0]?.description
+    if (typeof description === 'string' && description) return description
+  } catch {
+    // corpo não era JSON — cai no genérico abaixo
+  }
+  return `Asaas recusou a chamada (HTTP ${response.status})`
+}
+
 async function asaasFetch(credentials: AsaasCredentials, path: string, init?: RequestInit) {
   const baseUrl = getAsaasBaseUrl(credentials.environment)
   const response = await fetch(`${baseUrl}${path}`, {
@@ -43,10 +58,122 @@ async function asaasFetch(credentials: AsaasCredentials, path: string, init?: Re
     headers: { ...asaasAuthHeaders(credentials.apiKey), ...(init?.headers ?? {}) },
   })
   if (!response.ok) {
-    const body = await response.text()
-    throw new Error(`Asaas recusou a chamada ${path} (${response.status}): ${body}`)
+    throw new Error(await asaasErrorMessage(response))
   }
   return response.json()
+}
+
+// x-forwarded-for pode vir com múltiplos IPs separados por vírgula (proxies
+// encadeados) — o primeiro é o do cliente real. A Asaas exige explicitamente
+// que remoteIp NUNCA seja o IP do servidor (ver doc de tokenização) — usar
+// esse header em vez de qualquer IP de infraestrutura local.
+export function getClientIp(req: Request): string {
+  const forwardedFor = req.headers.get('x-forwarded-for')
+  const ip = forwardedFor?.split(',')[0]?.trim()
+  if (!ip) throw new Error('Não foi possível identificar o IP do cliente')
+  return ip
+}
+
+export interface AsaasCreditCardInput {
+  holderName: string
+  number: string
+  expiryMonth: string
+  expiryYear: string
+  ccv: string
+}
+
+export interface AsaasCreditCardHolderInfoInput {
+  name: string
+  email: string
+  cpfCnpj: string
+  postalCode: string
+  addressNumber: string
+  addressComplement?: string
+  phone: string
+}
+
+export interface AsaasCreditCardChargeResult extends AsaasPaymentResult {
+  creditCardToken: string
+  creditCardLastFour: string
+  creditCardBrand: string | null
+}
+
+// POST /v3/payments com creditCard+creditCardHolderInfo: autorização
+// acontece na hora (HTTP 200 sucesso / 400 recusa, nunca fica "pending"
+// esperando o cliente preencher nada depois — diferente do fluxo de
+// invoiceUrl). A resposta já inclui creditCardToken pra reuso futuro, sem
+// precisar de uma chamada de tokenização separada.
+export async function createAsaasPaymentWithCard(
+  credentials: AsaasCredentials,
+  input: {
+    customerId: string
+    value: number
+    dueDate: string
+    externalReference: string
+    remoteIp: string
+    creditCard: AsaasCreditCardInput
+    creditCardHolderInfo: AsaasCreditCardHolderInfoInput
+    installmentCount?: number
+  },
+): Promise<AsaasCreditCardChargeResult> {
+  const raw = await asaasFetch(credentials, '/v3/payments', {
+    method: 'POST',
+    body: JSON.stringify({
+      customer: input.customerId,
+      billingType: 'CREDIT_CARD',
+      value: input.value,
+      dueDate: input.dueDate,
+      externalReference: input.externalReference,
+      remoteIp: input.remoteIp,
+      creditCard: input.creditCard,
+      creditCardHolderInfo: input.creditCardHolderInfo,
+      ...(input.installmentCount && input.installmentCount > 1
+        ? { installmentCount: input.installmentCount, totalValue: input.value }
+        : {}),
+    }),
+  })
+  const card = raw?.creditCard ?? {}
+  if (!card.creditCardToken) throw new Error('Asaas aprovou a cobrança mas não devolveu o token do cartão')
+  return {
+    id: raw.id,
+    status: raw.status,
+    invoiceUrl: raw.invoiceUrl,
+    dueDate: raw.dueDate,
+    creditCardToken: card.creditCardToken,
+    creditCardLastFour: card.creditCardNumber,
+    creditCardBrand: card.creditCardBrand ?? null,
+  }
+}
+
+// Mesmo endpoint, mas com creditCardToken salvo em vez de creditCard cru —
+// dado de cartão nunca mais trafega depois do primeiro save.
+export async function createAsaasPaymentWithToken(
+  credentials: AsaasCredentials,
+  input: {
+    customerId: string
+    value: number
+    dueDate: string
+    externalReference: string
+    remoteIp: string
+    creditCardToken: string
+    installmentCount?: number
+  },
+): Promise<AsaasPaymentResult> {
+  return asaasFetch(credentials, '/v3/payments', {
+    method: 'POST',
+    body: JSON.stringify({
+      customer: input.customerId,
+      billingType: 'CREDIT_CARD',
+      value: input.value,
+      dueDate: input.dueDate,
+      externalReference: input.externalReference,
+      remoteIp: input.remoteIp,
+      creditCardToken: input.creditCardToken,
+      ...(input.installmentCount && input.installmentCount > 1
+        ? { installmentCount: input.installmentCount, totalValue: input.value }
+        : {}),
+    }),
+  })
 }
 
 // POST /v3/payments exige um `customer` (id do lado da Asaas) já cadastrado

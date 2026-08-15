@@ -443,6 +443,7 @@ export type Database = {
           created_at: string
           due_date: string | null
           id: string
+          installment_count: number
           invoice_url: string | null
           order_id: string
           payment_method: Database["public"]["Enums"]["payment_method"]
@@ -460,6 +461,7 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          installment_count?: number
           invoice_url?: string | null
           order_id: string
           payment_method: Database["public"]["Enums"]["payment_method"]
@@ -477,6 +479,7 @@ export type Database = {
           created_at?: string
           due_date?: string | null
           id?: string
+          installment_count?: number
           invoice_url?: string | null
           order_id?: string
           payment_method?: Database["public"]["Enums"]["payment_method"]
@@ -849,6 +852,41 @@ export type Database = {
           },
           {
             foreignKeyName: "reviews_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_credit_cards: {
+        Row: {
+          brand: string | null
+          created_at: string
+          credit_card_token: string
+          id: string
+          last_four_digits: string
+          user_id: string
+        }
+        Insert: {
+          brand?: string | null
+          created_at?: string
+          credit_card_token: string
+          id?: string
+          last_four_digits: string
+          user_id: string
+        }
+        Update: {
+          brand?: string | null
+          created_at?: string
+          credit_card_token?: string
+          id?: string
+          last_four_digits?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_credit_cards_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "users"
