@@ -100,7 +100,15 @@ export function PrivacyPolicyPage() {
         </Section>
 
         <Section title="7. Retenção de dados">
-          <p>Seus dados de cadastro e pedido ficam guardados pelo tempo autorizado pela legislação aplicável.</p>
+          <p>
+            Seus dados de cadastro e pedido ficam guardados pelo tempo exigido pela legislação
+            aplicável: a Lei Geral de Proteção de Dados (Lei nº 13.709/2018) permite reter dado
+            pessoal enquanto necessário pra cumprir obrigação legal ou regulatória; documentos
+            fiscais de venda (nota fiscal, comprovante) seguem o prazo de 5 anos do Código
+            Tributário Nacional (Lei nº 5.172/1966, art. 173); e reclamações relacionadas à compra
+            seguem o prazo de 5 anos do Código de Defesa do Consumidor (Lei nº 8.078/1990, art.
+            27).
+          </p>
         </Section>
 
         <Section title="8. Segurança">
