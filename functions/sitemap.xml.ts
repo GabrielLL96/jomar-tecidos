@@ -16,7 +16,7 @@ interface ProductRow {
   created_at: string
 }
 
-const STATIC_URLS = ['/', '/tecidos', '/sobre', '/contato']
+const STATIC_URLS = ['/', '/tecidos', '/sobre', '/contato', '/politica-de-privacidade']
 
 function escapeXml(value: string) {
   return value.replace(/&/g, '&amp;')

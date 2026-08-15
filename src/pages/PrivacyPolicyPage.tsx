@@ -1,21 +1,6 @@
 import { useBusinessInfo } from '@/features/site-settings/hooks'
 import { useSeoMeta } from '@/lib/seo'
 
-// ESTRUTURA + CONTEÚDO FACTUAL (o que a plataforma realmente faz e com quem
-// realmente integra) — qualquer trecho marcado como [PREENCHER] é decisão
-// jurídica/de negócio que não deve ser inventada por código, precisa de
-// revisão de quem entende a operação real de dados da empresa (ou
-// advogado/contador, a critério do usuário). noindex de propósito enquanto
-// isso não acontece — indexar uma política de privacidade "rascunho" no
-// Google seria pior que não ter nenhuma.
-function Placeholder({ children }: { children: string }) {
-  return (
-    <span className="rounded-sm border border-amber-400 bg-amber-50 px-1.5 py-0.5 text-amber-900">
-      [PREENCHER: {children}]
-    </span>
-  )
-}
-
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="flex flex-col gap-3">
@@ -32,23 +17,12 @@ export function PrivacyPolicyPage() {
     title: 'Política de Privacidade',
     description: 'Como a Jomar Tecidos e Enxovais coleta, usa e protege seus dados pessoais.',
     path: '/politica-de-privacidade',
-    noindex: true,
   })
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-md) px-6 py-16 md:px-12">
-      <div className="mb-8 rounded-sm border border-amber-400 bg-amber-50 p-4 text-sm text-amber-900">
-        <strong>Rascunho — não publicado como política final.</strong> Esta página estrutura as
-        seções exigidas pela LGPD com o que a plataforma realmente faz hoje. Os trechos marcados
-        como <Placeholder>exemplo</Placeholder> precisam de decisão jurídica/de negócio antes de
-        valer como política oficial. Por isso está marcada <code>noindex</code> — não aparece no
-        Google enquanto não for revisada.
-      </div>
-
       <h1 className="text-navy-dark mb-3 font-serif text-3xl font-medium">Política de Privacidade</h1>
-      <p className="text-text-meta mb-10 text-xs">
-        Última atualização: <Placeholder>data da revisão jurídica</Placeholder>
-      </p>
+      <p className="text-text-meta mb-10 text-xs">Última atualização: 15 de agosto de 2026</p>
 
       <div className="flex flex-col gap-10">
         <Section title="1. Quem somos">
@@ -120,8 +94,8 @@ export function PrivacyPolicyPage() {
             consentimento já dado, a qualquer momento.
           </p>
           <p>
-            Pra exercer esses direitos, entre em contato por telefone ({business.phone}) ou e-mail (
-            {business.email}).
+            Pra exercer esses direitos, entre em contato por telefone {business.phone} ou e-mail{' '}
+            {business.email}.
           </p>
         </Section>
 
