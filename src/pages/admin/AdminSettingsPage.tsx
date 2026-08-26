@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ImageUploadField } from '@/components/common/ImageUploadField'
 import { MelhorEnvioIntegrationCard } from './MelhorEnvioIntegrationCard'
 import { AsaasIntegrationCard } from './AsaasIntegrationCard'
+import { ResendIntegrationCard } from './ResendIntegrationCard'
 import { SettingsCard } from './SettingsCard'
 import { supabase } from '@/lib/supabase'
 import { CATEGORY_DISPLAY } from '@/features/catalog/data'
@@ -244,6 +245,8 @@ export function AdminSettingsPage() {
       <MelhorEnvioIntegrationCard />
 
       <AsaasIntegrationCard />
+
+      <ResendIntegrationCard />
 
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={isSaving}>

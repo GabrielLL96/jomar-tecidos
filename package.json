@@ -30,6 +30,10 @@
     "fn:deploy:asaas-webhook": "supabase functions deploy asaas-webhook --no-verify-jwt",
     "fn:deploy:asaas-create-charge": "supabase functions deploy asaas-create-charge",
     "fn:deploy:asaas-refund": "supabase functions deploy asaas-refund",
+    "fn:deploy:resend-validate-connection": "supabase functions deploy resend-validate-connection",
+    "fn:deploy:send-order-confirmation-email": "supabase functions deploy send-order-confirmation-email",
+    "fn:deploy:send-order-status-email": "supabase functions deploy send-order-status-email",
+    "fn:deploy:send-contact-email": "supabase functions deploy send-contact-email",
     "fn:deploy:all": "supabase functions deploy"
   },
   "dependencies": {

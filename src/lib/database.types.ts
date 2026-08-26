@@ -912,6 +912,27 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limit_attempts_anon: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          identifier: string
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          identifier: string
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          identifier?: string
+        }
+        Relationships: []
+      }
       refunds: {
         Row: {
           amount: number
@@ -954,6 +975,47 @@ export type Database = {
           {
             foreignKeyName: "refunds_requested_by_fkey"
             columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resend_settings: {
+        Row: {
+          api_key: string | null
+          connected_at: string | null
+          connected_by: string | null
+          contact_notification_email: string | null
+          from_email: string | null
+          from_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          api_key?: string | null
+          connected_at?: string | null
+          connected_by?: string | null
+          contact_notification_email?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string | null
+          connected_at?: string | null
+          connected_by?: string | null
+          contact_notification_email?: string | null
+          from_email?: string | null
+          from_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resend_settings_connected_by_fkey"
+            columns: ["connected_by"]
             isOneToOne: false
             referencedRelation: "users"
             referencedColumns: ["id"]
@@ -1217,6 +1279,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_and_record_rate_limit_by_ip: {
+        Args: {
+          p_endpoint: string
+          p_identifier: string
+          p_max_attempts: number
+          p_window_seconds: number
+        }
+        Returns: boolean
+      }
       create_order: {
         Args: {
           p_coupon_id?: string
@@ -1249,6 +1320,13 @@ export type Database = {
       log_login: { Args: never; Returns: undefined }
       log_logout: { Args: never; Returns: undefined }
       melhor_envio_secret_configured: { Args: never; Returns: boolean }
+      resend_secrets_configured: {
+        Args: never
+        Returns: {
+          api_key_configured: boolean
+          from_email_configured: boolean
+        }[]
+      }
     }
     Enums: {
       campaign_channel: "instagram_ads" | "google_ads" | "email" | "whatsapp"

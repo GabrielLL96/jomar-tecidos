@@ -1,6 +1,6 @@
 import { createServiceClient } from './melhor-envio.ts'
 
-export type IntegrationName = 'asaas' | 'melhor_envio'
+export type IntegrationName = 'asaas' | 'melhor_envio' | 'resend'
 export type LogDirection = 'outbound' | 'inbound'
 export type LogStatus = 'success' | 'failure' | 'timeout'
 export type LogEnvironment = 'sandbox' | 'production'

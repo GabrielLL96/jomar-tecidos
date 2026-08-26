@@ -40,6 +40,7 @@ import { useAuth } from '@/features/auth/AuthContext'
 import { useOrder } from '@/features/orders/hooks'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, ORDER_PAYMENT_STATUS_LABELS } from '@/features/orders/data'
 import { refundAsaasOrder } from '@/features/asaas/service'
+import { sendOrderStatusEmail } from '@/features/resend/service'
 import { PAYMENT_METHODS } from '@/pages/checkout/schema'
 import type { OrderStatus } from '@/features/orders/types'
 
@@ -156,6 +157,12 @@ export function AdminSalesOrderDetailPage() {
 
       toast.success('Status atualizado')
       await invalidate()
+
+      // Best-effort: falha ao enviar e-mail não desfaz a mudança de status
+      // real, que já foi persistida com sucesso.
+      sendOrderStatusEmail(order.id).catch((emailError) =>
+        console.error('Falha ao enviar e-mail de status:', emailError),
+      )
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível atualizar o status')
     } finally {
@@ -257,6 +264,10 @@ export function AdminSalesOrderDetailPage() {
       setCancelOpen(false)
       await invalidate()
       await queryClient.invalidateQueries({ queryKey: ['products'] })
+
+      sendOrderStatusEmail(order.id).catch((emailError) =>
+        console.error('Falha ao enviar e-mail de status:', emailError),
+      )
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível cancelar o pedido')
     } finally {

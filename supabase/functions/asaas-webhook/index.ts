@@ -1,6 +1,7 @@
 import { createServiceClient } from '../_shared/melhor-envio.ts'
 import { ASAAS_SETTINGS_ID } from '../_shared/asaas.ts'
 import { logIntegrationCall } from '../_shared/integration-logger.ts'
+import { sendOrderStatusEmail } from '../_shared/order-emails.ts'
 
 type OrderPaymentStatus = 'pending' | 'confirmed' | 'overdue' | 'cancelled' | 'refunded'
 
@@ -171,6 +172,15 @@ Deno.serve(async (req) => {
       changed_by_name: 'Asaas (webhook)',
     })
     if (historyError) console.error('[asaas-webhook] falha ao gravar order_status_history:', historyError.message)
+
+    // Best-effort: e-mail nunca deve derrubar o processamento do webhook —
+    // se o Resend falhar (chave não configurada, domínio não verificado),
+    // o status do pedido já foi atualizado corretamente, só o aviso falha.
+    try {
+      await sendOrderStatusEmail(order.id)
+    } catch (emailError) {
+      console.error('[asaas-webhook] falha ao enviar e-mail de status:', emailError)
+    }
   }
 
   await logIntegrationCall({

@@ -19,6 +19,7 @@ import type { Coupon } from '@/features/orders/types'
 import { useProducts } from '@/features/catalog/hooks'
 import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
 import { createAsaasCharge, chargeAsaasCard } from '@/features/asaas/service'
+import { sendOrderConfirmationEmail } from '@/features/resend/service'
 import { CreditCardFields } from '@/features/asaas/CreditCardFields'
 import { useSeoMeta } from '@/lib/seo'
 import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
@@ -170,6 +171,12 @@ export function CheckoutPage() {
       // carrinho é seguro independente do resultado da cobrança abaixo.
       clear()
       await queryClient.invalidateQueries({ queryKey: ['products'] })
+
+      // Best-effort: falha ao enviar e-mail nunca deve travar o checkout —
+      // o pedido já existe de verdade nesse ponto.
+      sendOrderConfirmationEmail(orderRow.id).catch((emailError) =>
+        console.error('Falha ao enviar e-mail de confirmação:', emailError),
+      )
 
       try {
         if (data.paymentMethod === 'credit_card') {

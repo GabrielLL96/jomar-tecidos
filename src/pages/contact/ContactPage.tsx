@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useBusinessInfo } from '@/features/site-settings/hooks'
+import { sendContactEmail } from '@/features/resend/service'
 import { useSeoMeta } from '@/lib/seo'
 import { contactSchema, type ContactInput } from './schema'
 
@@ -25,10 +26,14 @@ export function ContactPage() {
     path: '/contato',
   })
 
-  const onSubmit = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 400))
-    toast.success('Mensagem enviada! Retornaremos em breve.')
-    reset()
+  const onSubmit = async (data: ContactInput) => {
+    try {
+      await sendContactEmail(data)
+      toast.success('Mensagem enviada! Retornaremos em breve.')
+      reset()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível enviar sua mensagem')
+    }
   }
 
   return (
