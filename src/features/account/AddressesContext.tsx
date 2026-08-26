@@ -44,6 +44,7 @@ export function AddressesProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase
         .from('addresses')
         .select('id, label, street, city, state, zip_code, is_default')
+        .eq('user_id', user.id)
       if (error || !data) return []
       return data.map(adaptAddress)
     }
@@ -90,7 +91,11 @@ export function AddressesProvider({ children }: { children: ReactNode }) {
   // o escolhido, o resto é desmarcado atomicamente do lado de lá.
   const setDefaultAddress: AddressesContextValue['setDefaultAddress'] = async (addressId) => {
     if (!user) throw new Error('Usuário não autenticado')
-    const { error } = await supabase.from('addresses').update({ is_default: true }).eq('id', addressId)
+    const { error } = await supabase
+      .from('addresses')
+      .update({ is_default: true })
+      .eq('id', addressId)
+      .eq('user_id', user.id)
     if (error) throw new Error(error.message)
     setAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === addressId })))
   }
