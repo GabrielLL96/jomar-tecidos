@@ -137,7 +137,7 @@ function SignupForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="name">Nome completo</Label>
         <Input id="name" {...register('name')} />
@@ -182,17 +182,19 @@ function SignupForm() {
         <Input id="zipCode" {...register('zipCode')} />
         {errors.zipCode && <p className="text-destructive text-xs">{errors.zipCode.message}</p>}
       </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="signup-password">Senha</Label>
-        <Input id="signup-password" type="password" {...register('password')} />
-        {errors.password && <p className="text-destructive text-xs">{errors.password.message}</p>}
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="confirmPassword">Confirmar senha</Label>
-        <Input id="confirmPassword" type="password" {...register('confirmPassword')} />
-        {errors.confirmPassword && (
-          <p className="text-destructive text-xs">{errors.confirmPassword.message}</p>
-        )}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="signup-password">Senha</Label>
+          <Input id="signup-password" type="password" {...register('password')} />
+          {errors.password && <p className="text-destructive text-xs">{errors.password.message}</p>}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="confirmPassword">Confirmar senha</Label>
+          <Input id="confirmPassword" type="password" {...register('confirmPassword')} />
+          {errors.confirmPassword && (
+            <p className="text-destructive text-xs">{errors.confirmPassword.message}</p>
+          )}
+        </div>
       </div>
       <Button type="submit" size="lg" className="mt-2 h-auto rounded-sm py-4 text-sm">
         Criar conta
@@ -221,13 +223,13 @@ export function LoginPage() {
   if (isLoading || user) return null
 
   return (
-    <main className="mx-auto w-full max-w-(--breakpoint-sm) px-6 py-20">
-      <h1 className="text-navy-dark mb-8 text-center font-serif text-3xl font-medium">
+    <main className="mx-auto w-full max-w-(--breakpoint-sm) px-6 py-10">
+      <h1 className="text-navy-dark mb-5 text-center font-serif text-3xl font-medium">
         Minha conta
       </h1>
 
       <Tabs defaultValue="login">
-        <TabsList variant="line" className="mb-7 h-auto w-full">
+        <TabsList variant="line" className="mb-5 h-auto w-full">
           <TabsTrigger
             value="login"
             className="h-auto flex-1 rounded-none py-3 text-sm after:bottom-0 after:bg-navy data-active:text-navy data-active:font-semibold"
