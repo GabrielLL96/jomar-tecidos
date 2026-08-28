@@ -16,6 +16,10 @@ interface UseShippingQuoteResult {
   isCalculating: boolean
   error: string | null
   missingData: boolean
+  // Distinto de `error` genérico (falha de rede/API) — este é uma resposta
+  // válida da cotação dizendo que nenhuma transportadora atende o CEP.
+  // Usado pelo checkout pra travar a compra, não só avisar.
+  noCarriersAvailable: boolean
 }
 
 // Cotação real de frete com cálculo automático — usado no carrinho (simulação,
@@ -33,6 +37,7 @@ export function useShippingQuote(
   const [quoteId, setQuoteId] = useState<string | null>(null)
   const [isCalculating, setIsCalculating] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [noCarriersAvailable, setNoCarriersAvailable] = useState(false)
 
   // weightGrams do produto é peso por metro — a linha do carrinho pesa isso
   // vezes os metros comprados. Altura/largura/comprimento da embalagem NÃO
@@ -62,6 +67,7 @@ export function useShippingQuote(
     setSelectedServiceId(null)
     setQuoteId(null)
     setError(null)
+    setNoCarriersAvailable(false)
   }
 
   useEffect(() => {
@@ -70,6 +76,7 @@ export function useShippingQuote(
     const timer = setTimeout(async () => {
       setIsCalculating(true)
       setError(null)
+      setNoCarriersAvailable(false)
       try {
         const quoteItems = items.map((item) => {
           const product = products.find((p) => p.id === item.productId)
@@ -84,6 +91,7 @@ export function useShippingQuote(
         const { quoteId: id, options: opts } = await calculateShipping(cleanZip, quoteItems)
         if (opts.length === 0) {
           setError('Nenhuma transportadora disponível pra este CEP')
+          setNoCarriersAvailable(true)
           return
         }
         setOptions(opts)
@@ -107,5 +115,6 @@ export function useShippingQuote(
     isCalculating,
     error,
     missingData,
+    noCarriersAvailable,
   }
 }

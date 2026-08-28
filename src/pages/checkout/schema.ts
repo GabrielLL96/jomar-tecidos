@@ -27,9 +27,14 @@ export const checkoutSchema = z
     cardAddressNumber: z.string().optional(),
     cardAddressComplement: z.string().optional(),
     saveCard: z.boolean().optional(),
+    // Presente só quando o cliente escolhe pagar com um cartão já salvo —
+    // nesse caso nenhum campo de cartão cru é preenchido/validado (a cobrança
+    // vai por token, ver chargeAsaasWithSavedCard). Ausente = cartão novo.
+    savedCardId: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.paymentMethod !== 'credit_card') return
+    if (data.savedCardId) return
 
     const requireField = (field: keyof typeof data, message: string) => {
       const value = data[field]
