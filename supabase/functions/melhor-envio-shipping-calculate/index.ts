@@ -101,6 +101,12 @@ Deno.serve(async (req) => {
                 .filter((q) => !q.error && q.price)
                 .map((q) => Number(q.price))
                 .sort((a, b) => a - b)[0] ?? null,
+            // Sem isso, optionCount:0 não dizia o motivo — precisava re-testar
+            // manualmente pra descobrir se era CEP sem cobertura (esperado,
+            // ver rota intra-cidade) ou falha de verdade (token, config).
+            rejections: quotesResult
+              .filter((q) => q.error)
+              .map((q) => ({ carrier: q.company?.name ?? q.name, error: q.error })),
           }
         },
       },
