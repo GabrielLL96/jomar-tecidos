@@ -46,6 +46,11 @@ const AccountSummaryPage = lazy(() =>
 const AccountOrdersPage = lazy(() =>
   import('@/pages/auth/AccountOrdersPage').then((m) => ({ default: m.AccountOrdersPage })),
 )
+const AccountOrderDetailPage = lazy(() =>
+  import('@/pages/auth/AccountOrderDetailPage').then((m) => ({
+    default: m.AccountOrderDetailPage,
+  })),
+)
 const AccountAddressesPage = lazy(() =>
   import('@/pages/auth/AccountAddressesPage').then((m) => ({ default: m.AccountAddressesPage })),
 )
@@ -135,6 +140,7 @@ function App() {
             <Route path="/conta" element={<AccountLayout />}>
               <Route index element={<AccountSummaryPage />} />
               <Route path="pedidos" element={<AccountOrdersPage />} />
+              <Route path="pedidos/:id" element={<AccountOrderDetailPage />} />
               <Route path="enderecos" element={<AccountAddressesPage />} />
               <Route path="dados" element={<AccountDataPage />} />
             </Route>

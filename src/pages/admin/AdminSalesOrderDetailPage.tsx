@@ -42,50 +42,20 @@ import {
   ORDER_STATUS_LABELS,
   ORDER_STATUS_STYLES,
   ORDER_PAYMENT_STATUS_LABELS,
+  PAYMENT_METHOD_LABELS,
+  PROGRESS_STEPS,
+  progressStepIndex,
+  STATUS_MESSAGES,
 } from '@/features/orders/data'
 import { refundAsaasOrder } from '@/features/asaas/service'
 import { generateShippingLabel } from '@/features/melhor-envio/service'
 import { sendOrderStatusEmail } from '@/features/resend/service'
-import { PAYMENT_METHODS } from '@/pages/checkout/schema'
 import type { OrderStatus } from '@/features/orders/types'
-
-const PAYMENT_METHOD_LABELS: Record<string, string> = Object.fromEntries(
-  PAYMENT_METHODS.map((method) => [method.value, method.label]),
-)
 
 // "refunded" também conta como "teve pagamento aprovado" pra efeito de
 // bloquear exclusão — mesma regra já aplicada no servidor (delete_order,
 // migration 20260814000100).
 const APPROVED_PAYMENT_STATUSES: OrderStatus[] = ['paid', 'shipping', 'delivered', 'refunded']
-
-const PROGRESS_STEPS = ['Aguardando', 'Pago', 'Preparando', 'Enviado', 'Entregue']
-
-// "paid" nesse app já significa "em preparação" (não existe status separado
-// pra isso) — por isso cobre duas etapas do stepper de uma vez.
-function progressStepIndex(status: OrderStatus): number {
-  switch (status) {
-    case 'pending':
-      return 0
-    case 'paid':
-      return 2
-    case 'shipping':
-      return 3
-    case 'delivered':
-      return 4
-    default:
-      return -1
-  }
-}
-
-const STATUS_MESSAGES: Record<OrderStatus, string> = {
-  pending:
-    'Aguardando confirmação de pagamento pela Asaas — status muda sozinho quando o webhook confirmar.',
-  paid: 'Pagamento confirmado — pedido em preparação.',
-  shipping: 'Pedido a caminho do cliente.',
-  delivered: 'Pedido entregue com sucesso.',
-  cancelled: 'Pedido cancelado.',
-  refunded: 'Pedido reembolsado.',
-}
 
 const STATUS_FLOW: OrderStatus[] = ['pending', 'paid', 'shipping', 'delivered']
 

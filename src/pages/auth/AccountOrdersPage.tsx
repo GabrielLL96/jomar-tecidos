@@ -51,14 +51,14 @@ export function AccountOrdersPage() {
               {[order.delivery.carrier, order.delivery.trackingCode].filter(Boolean).join(' · ')}
             </div>
           )}
-          {order.status === 'pending' && order.payment?.status === 'pending' && (
-            <Link
-              to={`/pedido/${order.id}`}
-              className="text-navy mt-2 inline-block text-xs hover:underline"
-            >
-              {order.payment.paymentMethod === 'pix' ? 'Ver QR code Pix' : 'Ver boleto'} pra pagar
-            </Link>
-          )}
+          <Link
+            to={`/conta/pedidos/${order.id}`}
+            className="text-navy mt-2 inline-block text-xs hover:underline"
+          >
+            {order.status === 'pending' && order.payment?.status === 'pending'
+              ? `${order.payment.paymentMethod === 'pix' ? 'Ver QR code Pix' : 'Ver boleto'} pra pagar`
+              : 'Ver detalhes do pedido'}
+          </Link>
         </div>
       ))}
     </div>
