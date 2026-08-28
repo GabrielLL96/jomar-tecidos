@@ -46,16 +46,41 @@ export async function getAsaasCredentials(): Promise<AsaasCredentials> {
 // Formato real de erro da Asaas: { errors: [{ code, description }] }. Nunca
 // inclui dado de cartão de volta no erro (confirmado na doc antes de assumir
 // que era seguro repassar a mensagem pro client) — seguro propagar
-// `description` pro usuário final (ex: "cartão sem limite disponível").
-async function asaasErrorMessage(response: Response): Promise<string> {
+// `description` pro usuário final (ex: "cartão sem limite disponível") E
+// gravar o array inteiro (code+description) no log — antes só a description
+// do primeiro item ficava, o `code` real da recusa (ex: INVALID_CREDITCARD,
+// INSUFFICIENT_LIMIT) se perdia, tornando toda recusa investigável só pelo
+// texto genérico.
+interface AsaasErrorDetail {
+  code: string | null
+  description: string | null
+}
+
+async function asaasErrorInfo(
+  response: Response,
+): Promise<{ message: string; errors: AsaasErrorDetail[] | null }> {
   try {
     const body = await response.json()
-    const description = body?.errors?.[0]?.description
-    if (typeof description === 'string' && description) return description
+    const rawErrors = Array.isArray(body?.errors) ? body.errors : null
+    const description = rawErrors?.[0]?.description
+    const message =
+      typeof description === 'string' && description
+        ? description
+        : `Asaas recusou a chamada (HTTP ${response.status})`
+    const errors = rawErrors
+      ? rawErrors.map((e: unknown) => ({
+          code: typeof (e as { code?: unknown })?.code === 'string' ? (e as { code: string }).code : null,
+          description:
+            typeof (e as { description?: unknown })?.description === 'string'
+              ? (e as { description: string }).description
+              : null,
+        }))
+      : null
+    return { message, errors }
   } catch {
     // corpo não era JSON — cai no genérico abaixo
+    return { message: `Asaas recusou a chamada (HTTP ${response.status})`, errors: null }
   }
-  return `Asaas recusou a chamada (HTTP ${response.status})`
 }
 
 function asaasLogEnvironment(environment: string): LogEnvironment {
@@ -86,6 +111,7 @@ async function asaasFetch(
   let statusHttp: number | null = null
   let status: LogStatus = 'success'
   let errorMessage: string | null = null
+  let errorDetails: AsaasErrorDetail[] | null = null
   let parsed: unknown = null
 
   try {
@@ -97,7 +123,9 @@ async function asaasFetch(
     statusHttp = response.status
     if (!response.ok) {
       status = 'failure'
-      errorMessage = await asaasErrorMessage(response)
+      const info = await asaasErrorInfo(response)
+      errorMessage = info.message
+      errorDetails = info.errors
       throw new Error(errorMessage)
     }
     parsed = await response.json()
@@ -116,7 +144,9 @@ async function asaasFetch(
       responseSummary:
         status === 'success' && logMeta.summarizeResponse
           ? logMeta.summarizeResponse(parsed)
-          : null,
+          : errorDetails
+            ? { errors: errorDetails }
+            : null,
       statusHttp,
       status,
       errorMessage,
