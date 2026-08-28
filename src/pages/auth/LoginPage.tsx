@@ -58,8 +58,8 @@ function LoginForm() {
       // `void` nunca chama `.then`, então isso nunca gerava request nenhuma.
       // `.then(fn, fn)` é o que de fato dispara, engolindo sucesso/erro.
       supabase.rpc('log_failed_login', { p_email: data.email }).then(
-        () => {},
-        () => {},
+        () => { },
+        () => { },
       )
     }
   }
@@ -219,7 +219,7 @@ export function LoginPage() {
       </h1>
 
       <Tabs defaultValue="login">
-        <TabsList variant="line" className="border-border mb-7 h-auto w-full gap-0 border-b p-0">
+        <TabsList variant="line" className="mb-7 h-auto w-full">
           <TabsTrigger
             value="login"
             className="h-auto flex-1 rounded-none py-3 text-sm after:bottom-0 after:bg-navy data-active:text-navy data-active:font-semibold"
