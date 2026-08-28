@@ -21,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Dialog,
   DialogContent,
@@ -52,6 +51,11 @@ import {
 import type { AdminUser } from '@/features/users/types'
 
 const ALL_ROLES = 'all'
+// Bucket "Equipe interna" = qualquer papel != customer, de uma vez — sem
+// isso, achar alguém da equipe exige saber o papel exato dele de antemão
+// (Vendas? Estoque?) só pra filtrar. Convive com os papéis individuais no
+// mesmo dropdown, não é uma segunda dimensão de filtro.
+const STAFF_GROUP = 'staff'
 const ALL_STATUSES = 'all'
 // Paginação client-side — achado da auditoria LGPD (item de listagem de
 // dado pessoal sem limite): useAdminUsers() já busca tudo de uma vez, isso
@@ -77,7 +81,6 @@ export function AdminUsersPage() {
   const { data: users = [], isLoading } = useAdminUsers()
   const queryClient = useQueryClient()
 
-  const [tab, setTab] = useState<'clientes' | 'equipe'>('clientes')
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState(ALL_ROLES)
   const [statusFilter, setStatusFilter] = useState(ALL_STATUSES)
@@ -98,18 +101,10 @@ export function AdminUsersPage() {
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase()
     return users.filter((user) => {
-      // Papel escolhido explicitamente tem prioridade sobre o agrupamento
-      // padrão da aba (customer vs. staff) — sem isso, filtrar por "Cliente"
-      // na aba Equipe interna nunca mostraria nada, já que a aba já exclui
-      // role customer antes do filtro rodar. Isso permite achar um usuário
-      // classificado com papel diferente do esperado pra aba atual (ex.:
-      // um "cliente" que teve o papel trocado por engano pra staff).
-      if (tab === 'equipe' && roleFilter !== ALL_ROLES) {
-        if (user.role !== roleFilter) return false
-      } else {
-        const inTab = tab === 'clientes' ? user.role === 'customer' : user.role !== 'customer'
-        if (!inTab) return false
-        if (roleFilter !== ALL_ROLES && user.role !== roleFilter) return false
+      if (roleFilter === STAFF_GROUP) {
+        if (user.role === 'customer') return false
+      } else if (roleFilter !== ALL_ROLES && user.role !== roleFilter) {
+        return false
       }
       if (query) {
         const matches =
@@ -119,7 +114,7 @@ export function AdminUsersPage() {
       if (statusFilter !== ALL_STATUSES && user.status !== statusFilter) return false
       return true
     })
-  }, [users, tab, search, roleFilter, statusFilter])
+  }, [users, search, roleFilter, statusFilter])
 
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / PAGE_SIZE))
   // Guarda por identidade (padrão já usado no projeto pra ajustar state
@@ -265,27 +260,8 @@ export function AdminUsersPage() {
     }
   }
 
-  // Busca/papel/status são state único, não por aba — trocar de aba sem
-  // resetar deixava o filtro da aba anterior "vazando" pra próxima (ex.:
-  // filtrar por um papel de staff, trocar pra Clientes, tabela vinha vazia
-  // porque o filtro antigo não batia com nenhum cliente).
-  const handleTabChange = (value: string) => {
-    setTab(value as typeof tab)
-    setSearch('')
-    setRoleFilter(ALL_ROLES)
-    setStatusFilter(ALL_STATUSES)
-    setPage(1)
-  }
-
   return (
     <div>
-      <Tabs value={tab} onValueChange={handleTabChange} className="mb-[18px]">
-        <TabsList>
-          <TabsTrigger value="clientes">Clientes</TabsTrigger>
-          <TabsTrigger value="equipe">Equipe interna</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
       <div className="mb-[18px] flex flex-col gap-2.5 sm:flex-row sm:justify-between">
         <div className="flex flex-col gap-2.5 sm:flex-row">
           <Input
@@ -297,31 +273,27 @@ export function AdminUsersPage() {
             }}
             className="w-full bg-white sm:w-[260px]"
           />
-          {tab === 'equipe' && (
-            <Select
-              value={roleFilter}
-              onValueChange={(value) => {
-                setRoleFilter(value)
-                setPage(1)
-              }}
-            >
-              <SelectTrigger className="w-full bg-white sm:w-[160px]">
-                <SelectValue placeholder="Papel" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_ROLES}>Todos papéis</SelectItem>
-                {/* "Cliente" aqui é pra achar um usuário classificado com papel
-                    diferente do esperado — não é o uso normal da aba Equipe
-                    interna, ver filteredUsers. */}
-                <SelectItem value="customer">{ROLE_LABELS.customer}</SelectItem>
-                {STAFF_ROLES.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {ROLE_LABELS[role]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
+          <Select
+            value={roleFilter}
+            onValueChange={(value) => {
+              setRoleFilter(value)
+              setPage(1)
+            }}
+          >
+            <SelectTrigger className="w-full bg-white sm:w-[180px]">
+              <SelectValue placeholder="Papel" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_ROLES}>Todos papéis</SelectItem>
+              <SelectItem value="customer">{ROLE_LABELS.customer}</SelectItem>
+              <SelectItem value={STAFF_GROUP}>Equipe interna (todos)</SelectItem>
+              {STAFF_ROLES.map((role) => (
+                <SelectItem key={role} value={role}>
+                  {ROLE_LABELS[role]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Select
             value={statusFilter}
             onValueChange={(value) => {
