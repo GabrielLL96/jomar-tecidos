@@ -36,7 +36,7 @@ export function Header() {
   return (
     <header
       className={cn(
-        'border-border sticky top-0 z-20 flex items-center justify-between gap-6 border-b px-6 py-4 backdrop-blur-md transition-colors md:px-12',
+        'border-border sticky top-0 z-20 grid grid-cols-[auto_1fr_auto] items-center gap-6 border-b px-6 py-4 backdrop-blur-md transition-colors md:px-12',
         isScrolled ? 'bg-background/80' : 'bg-background',
       )}
     >
@@ -52,7 +52,7 @@ export function Header() {
         <Logo />
       </div>
 
-      <nav className="hidden items-center gap-8 text-sm lg:flex">
+      <nav className="hidden items-center justify-center gap-8 text-sm lg:flex">
         {NAV_ITEMS.map((item) => (
           <NavLink
             key={item.to}
@@ -67,7 +67,7 @@ export function Header() {
         ))}
       </nav>
 
-      <div className="ml-auto flex items-center gap-3 whitespace-nowrap sm:gap-4 md:gap-5">
+      <div className="flex items-center justify-self-end gap-3 whitespace-nowrap sm:gap-4 md:gap-5">
         {searchOpen ? (
           <form onSubmit={handleSearchSubmit} className="flex items-center gap-1.5">
             <input
