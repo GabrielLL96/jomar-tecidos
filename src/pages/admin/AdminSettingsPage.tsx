@@ -251,10 +251,10 @@ export function AdminSettingsPage() {
                 onChange={(event) => setField('promobar_text_3', event.target.value)}
               />
               <p className="text-text-meta text-xs">
-                Texto livre — não é gerado a partir do valor abaixo. Frases 2 e 3 são opcionais;
-                com mais de uma preenchida, a barra troca de frase a cada 10 segundos. Se mudar o
-                valor mínimo, atualize as frases manualmente pra não anunciar um número diferente
-                do que o checkout realmente usa.
+                Texto livre — não é gerado a partir do valor abaixo. Frases 2 e 3 são opcionais; com
+                mais de uma preenchida, a barra troca de frase a cada 10 segundos. Se mudar o valor
+                mínimo, atualize as frases manualmente pra não anunciar um número diferente do que o
+                checkout realmente usa.
               </p>
             </div>
             <div className="flex flex-col gap-1.5">
