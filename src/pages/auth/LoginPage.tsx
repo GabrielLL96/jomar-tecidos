@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
+import { Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -29,6 +30,7 @@ function LoginForm() {
   const { login } = useAuth()
   const navigate = useNavigate()
   const redirectParam = useRedirectParam()
+  const [showPassword, setShowPassword] = useState(false)
   const {
     register,
     handleSubmit,
@@ -63,7 +65,22 @@ function LoginForm() {
             Esqueci minha senha
           </Link>
         </div>
-        <Input id="password" type="password" {...register('password')} />
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPassword ? 'text' : 'password'}
+            className="pr-8"
+            {...register('password')}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((value) => !value)}
+            className="text-muted-foreground hover:text-foreground absolute inset-y-0 right-2 flex items-center"
+            aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+          >
+            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+          </button>
+        </div>
         {errors.password && <p className="text-destructive text-xs">{errors.password.message}</p>}
       </div>
       <Button type="submit" size="lg" className="mt-2 h-auto rounded-sm py-4 text-sm">
