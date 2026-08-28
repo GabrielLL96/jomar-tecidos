@@ -3,7 +3,12 @@ import { unwrapFunctionError } from '@/lib/edge-functions'
 import type { ShippingQuoteItemInput, ShippingQuoteResult } from './types'
 
 const MELHOR_ENVIO_SANDBOX_URL = 'https://sandbox.melhorenvio.com.br'
-const OAUTH_SCOPES = 'shipping-calculate'
+// cart-write/shipping-checkout/shipping-generate/shipping-print/shipping-tracking
+// adicionados pra Fase 2 (geração de etiqueta real) — conexão existente feita
+// só com shipping-calculate precisa reconectar (reautorizar) pra ganhar esses
+// escopos no token; token antigo continua só cotando frete.
+const OAUTH_SCOPES =
+  'shipping-calculate cart-write shipping-checkout shipping-generate shipping-print shipping-tracking'
 
 // Mensagem que a janela popup do callback OAuth manda pra janela principal
 // (window.opener) via postMessage.
@@ -45,4 +50,24 @@ export async function calculateShipping(
   )
   if (error) await unwrapFunctionError(error)
   return data ?? { quoteId: '', options: [] }
+}
+
+export interface GenerateShippingLabelResult {
+  shipmentId: string
+  labelUrl: string
+}
+
+// Admin-only. Requer token OAuth reconectado com os escopos novos (ver
+// OAUTH_SCOPES acima) e pedido com shipping_service_id + endereço de origem
+// preenchido (Configurações > Frete) -- a Edge Function falha com mensagem
+// clara se qualquer pré-requisito faltar, em vez de deixar a Melhor Envio
+// rejeitar com erro genérico.
+export async function generateShippingLabel(orderId: string): Promise<GenerateShippingLabelResult> {
+  const { data, error } = await supabase.functions.invoke<GenerateShippingLabelResult>(
+    'melhor-envio-generate-label',
+    { body: { orderId } },
+  )
+  if (error) await unwrapFunctionError(error)
+  if (!data) throw new Error('Resposta vazia ao gerar etiqueta')
+  return data
 }

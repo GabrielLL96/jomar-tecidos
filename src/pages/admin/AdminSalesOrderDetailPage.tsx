@@ -44,6 +44,7 @@ import {
   ORDER_PAYMENT_STATUS_LABELS,
 } from '@/features/orders/data'
 import { refundAsaasOrder } from '@/features/asaas/service'
+import { generateShippingLabel } from '@/features/melhor-envio/service'
 import { sendOrderStatusEmail } from '@/features/resend/service'
 import { PAYMENT_METHODS } from '@/pages/checkout/schema'
 import type { OrderStatus } from '@/features/orders/types'
@@ -134,6 +135,8 @@ export function AdminSalesOrderDetailPage() {
   const [refundReason, setRefundReason] = useState('')
   const [isRefunding, setIsRefunding] = useState(false)
 
+  const [isGeneratingLabel, setIsGeneratingLabel] = useState(false)
+
   // hidrata os campos de rastreio a partir do pedido carregado — ajuste de
   // state durante o render (guardado por order.id), não useEffect, pra não
   // disparar o setState-em-effect que o React Compiler rejeita aqui.
@@ -208,6 +211,20 @@ export function AdminSalesOrderDetailPage() {
       toast.error(error instanceof Error ? error.message : 'Não foi possível salvar o rastreio')
     } finally {
       setIsSavingTracking(false)
+    }
+  }
+
+  const handleGenerateLabel = async () => {
+    if (!order) return
+    setIsGeneratingLabel(true)
+    try {
+      await generateShippingLabel(order.id)
+      toast.success('Etiqueta gerada')
+      await invalidate()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível gerar a etiqueta')
+    } finally {
+      setIsGeneratingLabel(false)
     }
   }
 
@@ -488,6 +505,35 @@ export function AdminSalesOrderDetailPage() {
         <div className="rounded-md border border-[#e4ddd0] bg-white p-5">
           <div className="text-navy-dark mb-3 text-sm font-semibold">Rastreio</div>
           <div className="flex flex-col gap-3">
+            {order.delivery?.melhorEnvioLabelUrl ? (
+              <a
+                href={order.delivery.melhorEnvioLabelUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="border-border flex items-center justify-between rounded-sm border px-3 py-2 text-sm hover:bg-[#faf7f0]"
+              >
+                Etiqueta Melhor Envio gerada — abrir PDF
+                <ExternalLink className="size-3.5" />
+              </a>
+            ) : (
+              APPROVED_PAYMENT_STATUSES.includes(order.status) &&
+              order.status !== 'refunded' && (
+                <div className="flex flex-col gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleGenerateLabel}
+                    disabled={isGeneratingLabel}
+                  >
+                    {isGeneratingLabel ? 'Gerando…' : 'Gerar etiqueta (Melhor Envio)'}
+                  </Button>
+                  <p className="text-text-meta text-xs">
+                    Compra etiqueta real com saldo da carteira Melhor Envio — exige serviço de frete
+                    escolhido no checkout e Configurações &gt; Frete preenchido.
+                  </p>
+                </div>
+              )
+            )}
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="trackingCode">Código de rastreio</Label>
               <Input

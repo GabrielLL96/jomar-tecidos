@@ -87,6 +87,8 @@ export interface Delivery {
   trackingUrl?: string
   status: DeliveryStatus
   etaDate?: string
+  melhorEnvioShipmentId?: string
+  melhorEnvioLabelUrl?: string
 }
 
 export interface Coupon {

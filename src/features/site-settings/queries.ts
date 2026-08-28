@@ -35,6 +35,9 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   promobar_text_1: `Frete grátis para compras acima de ${formatPriceBRL(BUSINESS.freeShippingThreshold)}`,
   promobar_text_2: '',
   promobar_text_3: '',
+  origin_number: '',
+  origin_district: '',
+  origin_document: '',
 }
 
 export const siteSettingsQueryOptions = queryOptions({

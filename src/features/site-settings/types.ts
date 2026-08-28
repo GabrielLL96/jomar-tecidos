@@ -27,6 +27,12 @@ export interface SiteSettings {
   promobar_text_1: string
   promobar_text_2: string
   promobar_text_3: string
+  // Número/bairro/CNPJ da origem pra geração de etiqueta real (Melhor Envio
+  // Fase 2) — separados do footer_address (texto livre, não confiável pra
+  // parsing automático). Ver melhor-envio-generate-label.
+  origin_number: string
+  origin_district: string
+  origin_document: string
 }
 
 export type SiteSettingKey = keyof SiteSettings

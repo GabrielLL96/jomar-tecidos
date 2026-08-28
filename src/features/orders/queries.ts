@@ -8,7 +8,7 @@ const ORDER_SELECT = `
   users(name, email, phone),
   addresses(label, street, city, state, zip_code),
   order_items(id, product_id, color_id, meters, unit_price, total, products(name), product_colors(label)),
-  deliveries(id, order_id, carrier, tracking_code, tracking_url, status, eta_date),
+  deliveries(id, order_id, carrier, tracking_code, tracking_url, status, eta_date, melhor_envio_shipment_id, melhor_envio_label_url),
   order_status_history(id, status, changed_by_name, created_at),
   order_payments(id, status, payment_method, amount, pix_qr_code, pix_copy_paste, pix_expiration, boleto_url, boleto_barcode, invoice_url, due_date, confirmed_at, created_at, installment_count),
   refunds(id, amount, reason, requested_by_name, created_at)
@@ -50,6 +50,8 @@ interface OrderRow {
     tracking_url: string | null
     status: string
     eta_date: string | null
+    melhor_envio_shipment_id: string | null
+    melhor_envio_label_url: string | null
   } | null
   order_status_history: {
     id: string
@@ -138,6 +140,8 @@ function adaptOrder(row: OrderRow): Order {
           trackingUrl: deliveryRow.tracking_url ?? undefined,
           status: deliveryRow.status as DeliveryStatus,
           etaDate: deliveryRow.eta_date ?? undefined,
+          melhorEnvioShipmentId: deliveryRow.melhor_envio_shipment_id ?? undefined,
+          melhorEnvioLabelUrl: deliveryRow.melhor_envio_label_url ?? undefined,
         }
       : undefined,
     statusHistory: [...row.order_status_history]

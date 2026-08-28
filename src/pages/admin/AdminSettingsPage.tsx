@@ -271,6 +271,39 @@ export function AdminSettingsPage() {
               </p>
             </div>
           </SettingsCard>
+
+          <SettingsCard title="Endereço de origem (etiquetas)">
+            <p className="text-text-meta -mt-1 text-xs">
+              Complementa o endereço do rodapé (que é texto livre) com campos separados exigidos
+              pela Melhor Envio pra gerar etiqueta de envio real. Sem isso preenchido, "Gerar
+              etiqueta" no pedido falha.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label>Número</Label>
+                <Input
+                  value={form.origin_number}
+                  onChange={(event) => setField('origin_number', event.target.value)}
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label>Bairro</Label>
+                <Input
+                  value={form.origin_district}
+                  onChange={(event) => setField('origin_district', event.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label>CNPJ (só dígitos)</Label>
+              <Input
+                inputMode="numeric"
+                placeholder="00000000000000"
+                value={form.origin_document}
+                onChange={(event) => setField('origin_document', event.target.value)}
+              />
+            </div>
+          </SettingsCard>
         </TabsContent>
 
         <TabsContent value="integrations" className="flex flex-col gap-5">
