@@ -8,7 +8,7 @@ export function Logo() {
         alt="Jomar Tecidos e Enxovais"
         width={1536}
         height={1024}
-        className="h-20 w-auto shrink-0 object-contain"
+        className="h-12 w-auto shrink-0 object-contain"
       />
     </Link>
   )

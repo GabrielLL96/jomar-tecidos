@@ -36,7 +36,7 @@ export function Header() {
   return (
     <header
       className={cn(
-        'border-border sticky top-0 z-20 grid grid-cols-[auto_1fr_auto] items-center gap-6 border-b px-6 py-4 backdrop-blur-md transition-colors md:px-12',
+        'border-border sticky top-0 z-20 grid grid-cols-[auto_1fr_auto] items-center gap-6 border-b px-6 py-3 backdrop-blur-md transition-colors md:px-12',
         isScrolled ? 'bg-background/80' : 'bg-background',
       )}
     >
