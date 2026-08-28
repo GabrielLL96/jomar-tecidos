@@ -31,6 +31,8 @@
     "fn:deploy:asaas-validate-connection": "supabase functions deploy asaas-validate-connection",
     "fn:deploy:asaas-webhook": "supabase functions deploy asaas-webhook --no-verify-jwt",
     "fn:deploy:asaas-create-charge": "supabase functions deploy asaas-create-charge",
+    "fn:deploy:asaas-charge-card": "supabase functions deploy asaas-charge-card",
+    "fn:deploy:asaas-charge-with-token": "supabase functions deploy asaas-charge-with-token",
     "fn:deploy:asaas-refund": "supabase functions deploy asaas-refund",
     "fn:deploy:resend-validate-connection": "supabase functions deploy resend-validate-connection",
     "fn:deploy:send-order-confirmation-email": "supabase functions deploy send-order-confirmation-email",

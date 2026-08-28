@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
+import { Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -18,7 +19,8 @@ import { calculateDiscount, isCouponValid } from '@/features/orders/coupon-utils
 import type { Coupon } from '@/features/orders/types'
 import { useProducts } from '@/features/catalog/hooks'
 import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
-import { createAsaasCharge, chargeAsaasCard } from '@/features/asaas/service'
+import { createAsaasCharge, chargeAsaasCard, chargeAsaasWithSavedCard } from '@/features/asaas/service'
+import { useSavedCards } from '@/features/asaas/hooks'
 import { sendOrderConfirmationEmail } from '@/features/resend/service'
 import { CreditCardFields } from '@/features/asaas/CreditCardFields'
 import { useSeoMeta } from '@/lib/seo'
@@ -54,7 +56,7 @@ export function CheckoutPage() {
     handleSubmit,
     watch,
     setValue,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<CheckoutInput>({
     resolver: zodResolver(checkoutSchema),
     defaultValues: { paymentMethod: 'credit_card', installments: 1 },
@@ -63,6 +65,9 @@ export function CheckoutPage() {
   const paymentMethod = watch('paymentMethod')
   const installments = watch('installments')
   const zip = watch('zip')
+  const savedCardId = watch('savedCardId')
+  const [fullName, address, city, state] = watch(['fullName', 'address', 'city', 'state'])
+  const { data: savedCards = [] } = useSavedCards(!!user)
 
   const {
     options: shippingOptions,
@@ -72,6 +77,7 @@ export function CheckoutPage() {
     isCalculating: isCalculatingShipping,
     error: shippingQuoteError,
     missingData: cartItemsMissingShippingData,
+    noCarriersAvailable,
   } = useShippingQuote(zip, items, products, !isFreeShipping)
 
   const selectedShippingOption = shippingOptions.find(
@@ -80,8 +86,31 @@ export function CheckoutPage() {
   const cheapestShippingPrice =
     shippingOptions.length > 0 ? Math.min(...shippingOptions.map((option) => option.price)) : null
   // sem cotação real escolhida, cai na taxa fixa (fallback já usado antes desta
-  // feature existir) — nunca trava o checkout esperando integração conectada.
-  const shipping = isFreeShipping ? 0 : (selectedShippingOption?.price ?? business.flatShippingFee)
+  // feature existir) — segue valendo quando falta peso/dimensão do produto
+  // (cartItemsMissingShippingData) ou a API falha; só trava quando a API
+  // respondeu de verdade "nenhuma transportadora atende este CEP".
+  const shippingBlocked = !isFreeShipping && noCarriersAvailable
+  const shipping =
+    isFreeShipping || shippingBlocked
+      ? 0
+      : (selectedShippingOption?.price ?? business.flatShippingFee)
+
+  // Frete "decidido" cobre 3 casos: grátis (não depende de cotação), sem
+  // dado de peso/dimensão (cai na taxa fixa de propósito, ver comentário
+  // acima) ou cotação real com opção selecionada. `noCarriersAvailable` some
+  // desta lista por design — se travou, section 2 deve continuar trancada.
+  const shippingDecided =
+    isFreeShipping ||
+    cartItemsMissingShippingData ||
+    (!shippingBlocked && !isCalculatingShipping && selectedShippingServiceId !== null)
+  const deliveryZipDigits = (zip ?? '').replace(/\D/g, '')
+  const deliveryFilled =
+    (fullName ?? '').trim().length >= 3 &&
+    (address ?? '').trim().length >= 5 &&
+    (city ?? '').trim().length >= 2 &&
+    (state ?? '').trim().length === 2 &&
+    deliveryZipDigits.length === 8
+  const paymentSectionLocked = !deliveryFilled || !shippingDecided
   const discount = appliedCoupon ? calculateDiscount(appliedCoupon, subtotal, shipping) : 0
   const total = subtotal + shipping - discount
 
@@ -98,6 +127,16 @@ export function CheckoutPage() {
     setValue('city', defaultAddress.city)
     setValue('state', defaultAddress.state)
     setValue('zip', defaultAddress.zipCode)
+  }
+
+  // Mesmo padrão acima pro cartão salvo — pré-seleciona o mais recente assim
+  // que a lista carrega (um único disparo, guardado por uma flag simples em
+  // vez de um id porque aqui não há "troca" de item, só o carregamento
+  // inicial). Cliente pode trocar pra "Usar outro cartão" livremente depois.
+  const [savedCardsHydrated, setSavedCardsHydrated] = useState(false)
+  if (!savedCardsHydrated && savedCards.length > 0) {
+    setSavedCardsHydrated(true)
+    setValue('savedCardId', savedCards[0].id)
   }
 
   const handleApplyCoupon = async () => {
@@ -133,6 +172,14 @@ export function CheckoutPage() {
   const onSubmit = async (data: CheckoutInput) => {
     if (!user) {
       toast.error('Você precisa estar logado pra finalizar a compra')
+      return
+    }
+    if (shippingBlocked) {
+      toast.error('Nenhuma transportadora entrega neste CEP — ajuste o endereço pra continuar')
+      return
+    }
+    if (paymentSectionLocked) {
+      toast.error('Complete a entrega e a escolha do frete antes de pagar')
       return
     }
 
@@ -186,7 +233,11 @@ export function CheckoutPage() {
       )
 
       try {
-        if (data.paymentMethod === 'credit_card') {
+        if (data.paymentMethod === 'credit_card' && data.savedCardId) {
+          // Cartão já salvo — só o token viaja, nenhum dado de cartão cru
+          // passa pelo client neste submit (ver asaas-charge-with-token).
+          await chargeAsaasWithSavedCard(orderRow.id, data.savedCardId, data.installments)
+        } else if (data.paymentMethod === 'credit_card') {
           // Cobrança direta com o cartão digitado no próprio checkout —
           // autoriza na hora (sem redirect pra fatura hospedada). Dado de
           // cartão só existe no `data` deste submit, nunca persistido; a
@@ -209,6 +260,8 @@ export function CheckoutPage() {
             },
             saveCard: data.saveCard ?? false,
           })
+          if (data.saveCard)
+            await queryClient.invalidateQueries({ queryKey: ['asaas', 'saved-cards'] })
         } else {
           await createAsaasCharge(orderRow.id, data.paymentMethod)
         }
@@ -295,57 +348,113 @@ export function CheckoutPage() {
             <div className="text-navy-dark mb-3.5 text-sm font-semibold tracking-[0.05em] uppercase">
               2. Pagamento
             </div>
-            <div className="mb-3.5 flex gap-3">
-              {PAYMENT_METHODS.map((method) => (
-                <button
-                  key={method.value}
-                  type="button"
-                  onClick={() => setValue('paymentMethod', method.value)}
-                  className={cn(
-                    'flex-1 rounded-sm border px-3 py-3 text-center text-sm',
-                    paymentMethod === method.value
-                      ? 'border-navy bg-navy/5 text-navy'
-                      : 'border-input text-text-body',
-                  )}
-                >
-                  {method.label}
-                </button>
-              ))}
-            </div>
-            {paymentMethod === 'credit_card' && (
+            {paymentSectionLocked ? (
+              <p className="text-text-meta rounded-sm border border-dashed border-input px-3 py-3 text-sm">
+                Preencha a entrega e escolha o frete acima pra liberar o pagamento
+              </p>
+            ) : (
               <>
-                <CreditCardFields register={register} setValue={setValue} errors={errors} />
-                {total >= MIN_INSTALLMENT_TOTAL && (
-                  <div className="mt-3 flex gap-2">
-                    {[1, 2, 3].map((n) => (
-                      <button
-                        key={n}
-                        type="button"
-                        onClick={() => setValue('installments', n)}
-                        className={cn(
-                          'flex-1 rounded-sm border px-2 py-2 text-center text-xs',
-                          installments === n
-                            ? 'border-navy bg-navy/5 text-navy'
-                            : 'border-input text-text-body',
-                        )}
-                      >
-                        {n === 1 ? 'À vista' : `${n}x de ${formatPriceBRL(total / n)}`}
-                      </button>
-                    ))}
-                  </div>
+                <div className="mb-3.5 flex gap-3">
+                  {PAYMENT_METHODS.map((method) => (
+                    <button
+                      key={method.value}
+                      type="button"
+                      onClick={() => setValue('paymentMethod', method.value)}
+                      className={cn(
+                        'flex-1 rounded-sm border px-3 py-3 text-center text-sm',
+                        paymentMethod === method.value
+                          ? 'border-navy bg-navy/5 text-navy'
+                          : 'border-input text-text-body',
+                      )}
+                    >
+                      {method.label}
+                    </button>
+                  ))}
+                </div>
+                {paymentMethod === 'credit_card' && (
+                  <>
+                    {savedCards.length > 0 && (
+                      <div className="mb-3.5 flex flex-col gap-2">
+                        {savedCards.map((card) => (
+                          <label
+                            key={card.id}
+                            className={cn(
+                              'flex cursor-pointer items-center gap-2.5 rounded-sm border px-3 py-2.5 text-sm',
+                              savedCardId === card.id
+                                ? 'border-navy bg-navy/5'
+                                : 'border-input text-text-body',
+                            )}
+                          >
+                            <input
+                              type="radio"
+                              name="savedCard"
+                              className="accent-navy"
+                              checked={savedCardId === card.id}
+                              onChange={() => setValue('savedCardId', card.id)}
+                            />
+                            <span>
+                              •••• •••• •••• {card.lastFourDigits}
+                              {card.brand && (
+                                <span className="text-text-meta ml-1.5 uppercase">
+                                  {card.brand}
+                                </span>
+                              )}
+                            </span>
+                          </label>
+                        ))}
+                        <label
+                          className={cn(
+                            'flex cursor-pointer items-center gap-2.5 rounded-sm border px-3 py-2.5 text-sm',
+                            !savedCardId ? 'border-navy bg-navy/5' : 'border-input text-text-body',
+                          )}
+                        >
+                          <input
+                            type="radio"
+                            name="savedCard"
+                            className="accent-navy"
+                            checked={!savedCardId}
+                            onChange={() => setValue('savedCardId', undefined)}
+                          />
+                          Usar outro cartão
+                        </label>
+                      </div>
+                    )}
+                    {!savedCardId && (
+                      <CreditCardFields register={register} setValue={setValue} errors={errors} />
+                    )}
+                    {total >= MIN_INSTALLMENT_TOTAL && (
+                      <div className="mt-3 flex gap-2">
+                        {[1, 2, 3].map((n) => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => setValue('installments', n)}
+                            className={cn(
+                              'flex-1 rounded-sm border px-2 py-2 text-center text-xs',
+                              installments === n
+                                ? 'border-navy bg-navy/5 text-navy'
+                                : 'border-input text-text-body',
+                            )}
+                          >
+                            {n === 1 ? 'À vista' : `${n}x de ${formatPriceBRL(total / n)}`}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+                {paymentMethod === 'pix' && (
+                  <p className="text-text-meta text-xs">
+                    Ao confirmar, mostramos um QR code / código Pix copia-e-cola pra pagar na hora.
+                  </p>
+                )}
+                {paymentMethod === 'boleto' && (
+                  <p className="text-text-meta text-xs">
+                    Ao confirmar, geramos o boleto — o pagamento pode levar até 3 dias úteis pra ser
+                    confirmado.
+                  </p>
                 )}
               </>
-            )}
-            {paymentMethod === 'pix' && (
-              <p className="text-text-meta text-xs">
-                Ao confirmar, mostramos um QR code / código Pix copia-e-cola pra pagar na hora.
-              </p>
-            )}
-            {paymentMethod === 'boleto' && (
-              <p className="text-text-meta text-xs">
-                Ao confirmar, geramos o boleto — o pagamento pode levar até 3 dias úteis pra ser
-                confirmado.
-              </p>
             )}
           </div>
         </div>
@@ -396,8 +505,14 @@ export function CheckoutPage() {
               <div className="text-text-body mb-1.5 flex justify-between text-sm">
                 <span>Frete</span>
                 <span>
-                  {formatPriceBRL(shipping)}
-                  {!selectedShippingOption && ' (estimado)'}
+                  {noCarriersAvailable ? (
+                    '—'
+                  ) : (
+                    <>
+                      {formatPriceBRL(shipping)}
+                      {!selectedShippingOption && ' (estimado)'}
+                    </>
+                  )}
                 </span>
               </div>
               {cartItemsMissingShippingData ? (
@@ -460,7 +575,10 @@ export function CheckoutPage() {
                 )
               )}
               {shippingQuoteError && (
-                <p className="text-destructive mt-1 text-xs">{shippingQuoteError}</p>
+                <p className="text-destructive mt-1 text-xs">
+                  {shippingQuoteError}
+                  {noCarriersAvailable && ' — ajuste o endereço pra continuar a compra'}
+                </p>
               )}
             </div>
           )}
@@ -474,8 +592,24 @@ export function CheckoutPage() {
             <span>Total</span>
             <span>{formatPriceBRL(total)}</span>
           </div>
-          <Button type="submit" size="lg" className="mt-5 h-auto w-full rounded-sm py-4 text-sm">
-            Confirmar pedido
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isSubmitting || shippingBlocked || paymentSectionLocked}
+            className="mt-5 h-auto w-full rounded-sm py-4 text-sm"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                {paymentMethod === 'credit_card' ? 'Processando pagamento…' : 'Confirmando pedido…'}
+              </>
+            ) : shippingBlocked ? (
+              'Sem entrega pra este CEP'
+            ) : paymentSectionLocked ? (
+              'Complete a entrega primeiro'
+            ) : (
+              'Confirmar pedido'
+            )}
           </Button>
         </div>
       </form>

@@ -1,6 +1,7 @@
 import { queryOptions } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import type { AsaasEnvironment, AsaasStatus } from './types'
+import { fetchSavedCards } from './service'
+import type { AsaasEnvironment, AsaasStatus, SavedCard } from './types'
 
 export const ASAAS_SETTINGS_ID = '00000000-0000-0000-0000-000000000002'
 
@@ -28,5 +29,11 @@ export const asaasStatusQueryOptions = queryOptions({
       webhookTokenConfigured: secrets?.webhook_token_configured ?? false,
     }
   },
+  staleTime: 30 * 1000,
+})
+
+export const savedCardsQueryOptions = queryOptions({
+  queryKey: ['asaas', 'saved-cards'] as const,
+  queryFn: (): Promise<SavedCard[]> => fetchSavedCards(),
   staleTime: 30 * 1000,
 })
