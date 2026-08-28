@@ -1,7 +1,10 @@
-import { useMemo } from 'react'
+import { useState } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { formatDateBR } from '@/lib/format'
-import { useAdminOrders } from '@/features/orders/hooks'
+import { useAdminDeliveriesPage } from '@/features/orders/hooks'
+import { ADMIN_DELIVERIES_PAGE_SIZE } from '@/features/orders/queries'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/features/orders/data'
 import {
   Table,
@@ -13,19 +16,15 @@ import {
 } from '@/components/ui/table'
 
 export function AdminDeliveriesPage() {
-  const { data: orders = [], isLoading } = useAdminOrders()
-
+  const [page, setPage] = useState(0)
   // status exibido vem de order.status (mantido de verdade em todo o fluxo:
   // checkout/avançar status/cancelar), não de delivery.status — essa coluna
   // nasce em 'awaiting_pickup' e nenhum fluxo do app jamais escreve nela.
-  const deliveries = useMemo(
-    () =>
-      orders.filter(
-        (order) =>
-          order.status === 'paid' || order.status === 'shipping' || order.status === 'delivered',
-      ),
-    [orders],
-  )
+  // Filtro por status já acontece no servidor (adminDeliveriesPageQueryOptions).
+  const { data: pageResult, isLoading, isFetching } = useAdminDeliveriesPage(page)
+  const deliveries = pageResult?.rows ?? []
+  const totalCount = pageResult?.count ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalCount / ADMIN_DELIVERIES_PAGE_SIZE))
 
   return (
     <div>
@@ -91,6 +90,35 @@ export function AdminDeliveriesPage() {
           </TableBody>
         </Table>
       </div>
+
+      {totalCount > 0 && (
+        <div className="mt-4 flex items-center justify-between text-[13px] text-[#5c5648]">
+          <span>
+            {totalCount} {totalCount === 1 ? 'entrega' : 'entregas'} — página {page + 1} de{' '}
+            {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 0 || isFetching}
+              onClick={() => setPage((current) => current - 1)}
+            >
+              <ChevronLeft className="size-4" />
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page + 1 >= totalPages || isFetching}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              Próxima
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

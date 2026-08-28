@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
   adminCouponsQueryOptions,
+  adminDeliveriesPageQueryOptions,
   adminOrdersPageQueryOptions,
   adminOrdersQueryOptions,
   adminOrdersSinceQueryOptions,
@@ -15,6 +16,8 @@ export const useAdminOrdersPage = (page: number) =>
   useQuery({ ...adminOrdersPageQueryOptions(page), placeholderData: keepPreviousData })
 export const useAdminOrdersSince = (sinceIso: string) =>
   useQuery(adminOrdersSinceQueryOptions(sinceIso))
+export const useAdminDeliveriesPage = (page: number) =>
+  useQuery({ ...adminDeliveriesPageQueryOptions(page), placeholderData: keepPreviousData })
 export const useAdminCoupons = () => useQuery(adminCouponsQueryOptions)
 export const useMyOrders = (userId: string | undefined) =>
   useQuery(myOrdersQueryOptions(userId ?? ''))

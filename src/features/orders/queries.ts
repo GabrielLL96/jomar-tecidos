@@ -203,13 +203,12 @@ export interface AdminOrdersPageResult {
   count: number
 }
 
-// Tabela de Vendas no admin -- unico consumidor deste histórico completo que
-// é só pra navegar/procurar, não pra agregar nada (diferente de
-// adminOrdersQueryOptions, que Relatórios/Entregas ainda usam por completo
-// pra somar/filtrar em memória; separar em vez de paginar o hook
-// compartilhado evita quebrar esses dois). Cresce sem limite (1 pedido por
-// venda, pra sempre) -- era a listagem sem paginação de maior risco real
-// levantada na varredura.
+// Tabela de Vendas no admin -- só pra navegar/procurar, não pra agregar nada
+// (diferente de adminOrdersQueryOptions, que Relatórios ainda usa por
+// completo pra somar/exportar em CSV; separar em vez de paginar o hook
+// compartilhado evita quebrar isso). Cresce sem limite (1 pedido por venda,
+// pra sempre) -- era a listagem sem paginação de maior risco real levantada
+// na varredura.
 export function adminOrdersPageQueryOptions(page: number) {
   return queryOptions({
     queryKey: ['orders', 'admin', 'page', page] as const,
@@ -245,6 +244,34 @@ export function adminOrdersSinceQueryOptions(sinceIso: string) {
         .order('created_at', { ascending: false })
       if (error) throw new Error(error.message)
       return (data as unknown as OrderRow[]).map(adaptOrder)
+    },
+    staleTime: 30 * 1000,
+  })
+}
+
+export const ADMIN_DELIVERIES_PAGE_SIZE = 20
+
+// Mesmos status que AdminDeliveriesPage já filtrava no client -- movido pro
+// servidor porque paginar sem filtrar lá quebraria a contagem/páginas (uma
+// página de 20 pedidos crus podia render 0 linhas de entrega mesmo com mais
+// pedidos "shipping"/"delivered" esperando em outra página).
+const DELIVERY_ORDER_STATUSES: Order['status'][] = ['paid', 'shipping', 'delivered']
+
+export function adminDeliveriesPageQueryOptions(page: number) {
+  return queryOptions({
+    queryKey: ['orders', 'admin', 'deliveries', 'page', page] as const,
+    queryFn: async (): Promise<AdminOrdersPageResult> => {
+      const from = page * ADMIN_DELIVERIES_PAGE_SIZE
+      const to = from + ADMIN_DELIVERIES_PAGE_SIZE - 1
+      const { data, error, count } = await supabase
+        .from('orders')
+        .select(ORDER_SELECT, { count: 'exact' })
+        .is('deleted_at', null)
+        .in('status', DELIVERY_ORDER_STATUSES)
+        .order('created_at', { ascending: false })
+        .range(from, to)
+      if (error) throw new Error(error.message)
+      return { rows: (data as unknown as OrderRow[]).map(adaptOrder), count: count ?? 0 }
     },
     staleTime: 30 * 1000,
   })
