@@ -219,16 +219,16 @@ export function LoginPage() {
       </h1>
 
       <Tabs defaultValue="login">
-        <TabsList className="border-border mb-7 h-auto w-full gap-0 rounded-none border-b bg-transparent p-0">
+        <TabsList variant="line" className="border-border mb-7 h-auto w-full gap-0 border-b p-0">
           <TabsTrigger
             value="login"
-            className="h-auto flex-1 rounded-none border-b-2 border-transparent py-3 text-sm data-active:border-b-navy data-active:bg-transparent data-active:shadow-none"
+            className="h-auto flex-1 rounded-none py-3 text-sm after:bottom-0 after:bg-navy data-active:text-navy data-active:font-semibold"
           >
             Entrar
           </TabsTrigger>
           <TabsTrigger
             value="signup"
-            className="h-auto flex-1 rounded-none border-b-2 border-transparent py-3 text-sm data-active:border-b-navy data-active:bg-transparent data-active:shadow-none"
+            className="h-auto flex-1 rounded-none py-3 text-sm after:bottom-0 after:bg-navy data-active:text-navy data-active:font-semibold"
           >
             Criar conta
           </TabsTrigger>
