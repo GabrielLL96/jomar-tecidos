@@ -10,7 +10,7 @@ const ORDER_SELECT = `
   order_items(id, product_id, color_id, meters, unit_price, total, products(name), product_colors(label)),
   deliveries(id, order_id, carrier, tracking_code, tracking_url, status, eta_date),
   order_status_history(id, status, changed_by_name, created_at),
-  order_payments(id, status, payment_method, amount, pix_qr_code, pix_copy_paste, boleto_url, boleto_barcode, invoice_url, due_date, confirmed_at, created_at, installment_count),
+  order_payments(id, status, payment_method, amount, pix_qr_code, pix_copy_paste, pix_expiration, boleto_url, boleto_barcode, invoice_url, due_date, confirmed_at, created_at, installment_count),
   refunds(id, amount, reason, requested_by_name, created_at)
 `
 
@@ -69,6 +69,7 @@ interface OrderRow {
     amount: number
     pix_qr_code: string | null
     pix_copy_paste: string | null
+    pix_expiration: string | null
     boleto_url: string | null
     boleto_barcode: string | null
     invoice_url: string | null
@@ -155,6 +156,7 @@ function adaptOrder(row: OrderRow): Order {
           amount: Number(latestPayment.amount),
           pixQrCode: latestPayment.pix_qr_code ?? undefined,
           pixCopyPaste: latestPayment.pix_copy_paste ?? undefined,
+          pixExpiration: latestPayment.pix_expiration ?? undefined,
           boletoUrl: latestPayment.boleto_url ?? undefined,
           boletoBarcode: latestPayment.boleto_barcode ?? undefined,
           invoiceUrl: latestPayment.invoice_url ?? undefined,

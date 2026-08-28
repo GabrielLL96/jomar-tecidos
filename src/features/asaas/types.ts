@@ -11,6 +11,7 @@ export interface CreateChargeResult {
   invoiceUrl: string
   pixQrCode: string | null
   pixCopyPaste: string | null
+  pixExpiration: string | null
   boletoUrl: string | null
 }
 

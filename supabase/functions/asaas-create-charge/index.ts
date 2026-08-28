@@ -98,6 +98,7 @@ Deno.serve(async (req) => {
 
     let pixQrCode: string | null = null
     let pixCopyPaste: string | null = null
+    let pixExpiration: string | null = null
     if (billingType === 'PIX') {
       // Achado real testando em sandbox: buscar o QR code pode falhar por
       // motivo alheio à cobrança em si (ex: conta Asaas sem chave Pix
@@ -110,6 +111,7 @@ Deno.serve(async (req) => {
         const qrCode = await getAsaasPixQrCode(credentials, payment.id)
         pixQrCode = qrCode.encodedImage
         pixCopyPaste = qrCode.payload
+        pixExpiration = qrCode.expirationDate
       } catch (qrError) {
         console.error('[asaas-create-charge] falha ao buscar QR code Pix:', qrError)
       }
@@ -128,6 +130,7 @@ Deno.serve(async (req) => {
       amount: order.total,
       pix_qr_code: pixQrCode,
       pix_copy_paste: pixCopyPaste,
+      pix_expiration: pixExpiration,
       boleto_url: paymentRow.bankSlipUrl ?? null,
       boleto_barcode: paymentRow.identificationField ?? null,
       invoice_url: payment.invoiceUrl,
@@ -141,6 +144,7 @@ Deno.serve(async (req) => {
         invoiceUrl: payment.invoiceUrl,
         pixQrCode,
         pixCopyPaste,
+        pixExpiration,
         boletoUrl: paymentRow.bankSlipUrl ?? null,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },

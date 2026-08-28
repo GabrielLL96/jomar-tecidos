@@ -62,6 +62,7 @@ export interface OrderPayment {
   amount: number
   pixQrCode?: string
   pixCopyPaste?: string
+  pixExpiration?: string
   boletoUrl?: string
   boletoBarcode?: string
   invoiceUrl?: string

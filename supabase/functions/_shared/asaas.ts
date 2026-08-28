@@ -451,20 +451,38 @@ export interface AsaasPixQrCode {
   expirationDate: string | null
 }
 
+// A Asaas devolve expirationDate como "YYYY-MM-DD HH:MM:SS" sem offset —
+// documentação não declara o fuso explicitamente, mas é hora local do
+// Brasil (America/Sao_Paulo) como o resto da API/painel deles. Brasil aboliu
+// horário de verão em 2019, então o offset é fixo -03:00 o ano inteiro, sem
+// precisar de tabela de fuso. Sem essa conversão explícita, o Postgres
+// assume UTC ao gravar em timestamptz — expiração apareceria 3h depois da
+// hora real, cliente veria tempo sobrando que já não existe.
+function parseAsaasLocalDateTime(raw: string | null): string | null {
+  if (!raw) return null
+  return `${raw.replace(' ', 'T')}-03:00`
+}
+
 // QR code/copia-e-cola NÃO vem na resposta de criação da cobrança — exige
 // chamada separada (confirmado na doc antes de assumir o formato errado).
 export async function getAsaasPixQrCode(
   credentials: AsaasCredentials,
   paymentId: string,
 ): Promise<AsaasPixQrCode> {
-  return asaasFetch(credentials, `/v3/payments/${paymentId}/pixQrCode`, undefined, {
-    operation: 'get_pix_qrcode',
-    requestSummary: { paymentId },
-    // encodedImage/payload NUNCA entram no log — não são secret, mas são o
-    // próprio meio de pagamento (qualquer um com o payload consegue gerar o
-    // QR e pagar aquela cobrança); sem valor de debug em persistir.
-    summarizeResponse: () => ({ hasQrCode: true }),
-  }) as Promise<AsaasPixQrCode>
+  const result = (await asaasFetch(
+    credentials,
+    `/v3/payments/${paymentId}/pixQrCode`,
+    undefined,
+    {
+      operation: 'get_pix_qrcode',
+      requestSummary: { paymentId },
+      // encodedImage/payload NUNCA entram no log — não são secret, mas são o
+      // próprio meio de pagamento (qualquer um com o payload consegue gerar o
+      // QR e pagar aquela cobrança); sem valor de debug em persistir.
+      summarizeResponse: () => ({ hasQrCode: true }),
+    },
+  )) as AsaasPixQrCode
+  return { ...result, expirationDate: parseAsaasLocalDateTime(result.expirationDate) }
 }
 
 // Pix/cartão têm processamento imediato (dueDate = hoje só formaliza o
