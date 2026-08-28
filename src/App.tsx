@@ -94,6 +94,9 @@ const AdminMelhorEnvioCallbackPage = lazy(() =>
 const AdminUsersPage = lazy(() =>
   import('@/pages/admin/AdminUsersPage').then((m) => ({ default: m.AdminUsersPage })),
 )
+const AdminUserDetailPage = lazy(() =>
+  import('@/pages/admin/AdminUserDetailPage').then((m) => ({ default: m.AdminUserDetailPage })),
+)
 const AdminSettingsPage = lazy(() =>
   import('@/pages/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })),
 )
@@ -146,6 +149,7 @@ function App() {
             <Route path="entregas" element={<AdminDeliveriesPage />} />
             <Route path="cupons" element={<AdminCouponsPage />} />
             <Route path="usuarios" element={<AdminUsersPage />} />
+            <Route path="usuarios/:id" element={<AdminUserDetailPage />} />
             <Route path="relatorios" element={<AdminReportsPage />} />
             <Route path="configuracoes" element={<AdminSettingsPage />} />
             <Route path="logs" element={<AdminLogsPage />} />

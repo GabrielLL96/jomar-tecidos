@@ -84,6 +84,7 @@ export function AdminLayout() {
   const meta =
     PAGE_META[location.pathname] ??
     (location.pathname.startsWith('/admin/vendas/') ? PAGE_META['/admin/vendas'] : undefined) ??
+    (location.pathname.startsWith('/admin/usuarios/') ? PAGE_META['/admin/usuarios'] : undefined) ??
     PAGE_META['/admin']
 
 

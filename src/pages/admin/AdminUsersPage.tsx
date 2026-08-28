@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
-import { Eye, KeyRound, Pencil, UserCheck, UserX } from 'lucide-react'
+import { Eye, KeyRound, UserCheck, UserX } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -41,15 +42,14 @@ import {
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { unwrapFunctionError } from '@/lib/edge-functions'
-import { useAdminUsers, useUserAddresses } from '@/features/users/hooks'
+import { useAdminUsers } from '@/features/users/hooks'
 import {
   ROLE_LABELS,
   STAFF_ROLES,
   USER_STATUS_LABELS,
   USER_STATUS_STYLES,
 } from '@/features/users/data'
-import type { UserRole } from '@/features/auth/types'
-import type { AdminUser, UserStatus } from '@/features/users/types'
+import type { AdminUser } from '@/features/users/types'
 
 const ALL_ROLES = 'all'
 const ALL_STATUSES = 'all'
@@ -83,11 +83,6 @@ export function AdminUsersPage() {
   const [statusFilter, setStatusFilter] = useState(ALL_STATUSES)
   const [page, setPage] = useState(1)
 
-  const [editingUser, setEditingUser] = useState<AdminUser | null>(null)
-  const [editRole, setEditRole] = useState<UserRole>('customer')
-  const [editStatus, setEditStatus] = useState<UserStatus>('active')
-  const [isSaving, setIsSaving] = useState(false)
-
   const [createOpen, setCreateOpen] = useState(false)
   const [createForm, setCreateForm] = useState(EMPTY_CREATE_FORM)
   const [isCreating, setIsCreating] = useState(false)
@@ -99,12 +94,6 @@ export function AdminUsersPage() {
 
   const [deactivateUser, setDeactivateUser] = useState<AdminUser | null>(null)
   const [isDeactivating, setIsDeactivating] = useState(false)
-
-  const [detailUser, setDetailUser] = useState<AdminUser | null>(null)
-  const { data: addresses = [], isLoading: isLoadingAddresses } = useUserAddresses(
-    detailUser?.id ?? '',
-    !!detailUser,
-  )
 
   const filteredUsers = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -138,31 +127,6 @@ export function AdminUsersPage() {
   // intervalo válido, volta pra página 1 sem precisar de useEffect.
   if (page > totalPages) setPage(totalPages)
   const paginatedUsers = filteredUsers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-
-  const openEdit = (user: AdminUser) => {
-    setEditingUser(user)
-    setEditRole(user.role)
-    setEditStatus(user.status)
-  }
-
-  const handleSaveEdit = async () => {
-    if (!editingUser) return
-    setIsSaving(true)
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update({ role: editRole, status: editStatus })
-        .eq('id', editingUser.id)
-      if (error) throw new Error(error.message)
-      toast.success(`${editingUser.name} atualizado`)
-      setEditingUser(null)
-      await queryClient.invalidateQueries({ queryKey: ['admin-users'] })
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível atualizar o usuário')
-    } finally {
-      setIsSaving(false)
-    }
-  }
 
   const handleSendPasswordReset = async (email: string) => {
     try {
@@ -429,23 +393,10 @@ export function AdminUsersPage() {
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       <div className="flex justify-end gap-1">
-                        {tab === 'clientes' && (
-                          <Button
-                            variant="outline"
-                            size="icon-sm"
-                            onClick={() => setDetailUser(user)}
-                            title="Ver detalhes"
-                          >
+                        <Button variant="outline" size="icon-sm" asChild title="Ver detalhes">
+                          <Link to={`/admin/usuarios/${user.id}`}>
                             <Eye className="size-4" />
-                          </Button>
-                        )}
-                        <Button
-                          variant="outline"
-                          size="icon-sm"
-                          onClick={() => openEdit(user)}
-                          title="Editar"
-                        >
-                          <Pencil className="size-4" />
+                          </Link>
                         </Button>
                         <Button
                           variant="outline"
@@ -594,54 +545,6 @@ export function AdminUsersPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Editar — {editingUser?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-col gap-2">
-              <Label>Papel</Label>
-              <Select value={editRole} onValueChange={(value) => setEditRole(value as UserRole)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {(['customer', ...STAFF_ROLES] as UserRole[]).map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {ROLE_LABELS[role]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label>Status</Label>
-              <Select
-                value={editStatus}
-                onValueChange={(value) => setEditStatus(value as UserStatus)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Ativo</SelectItem>
-                  <SelectItem value="inactive">Inativo</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUser(null)}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSaveEdit} disabled={isSaving}>
-              {isSaving ? 'Salvando…' : 'Salvar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <Dialog
         open={!!passwordUser}
         onOpenChange={(open) => {
@@ -712,66 +615,6 @@ export function AdminUsersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      <Dialog open={!!detailUser} onOpenChange={(open) => !open && setDetailUser(null)}>
-        <DialogContent className="max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{detailUser?.name}</DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-4">
-            <div>
-              <div className="text-text-meta text-[11.5px]">E-mail</div>
-              <div className="text-[13.5px]">{detailUser?.email}</div>
-            </div>
-            {detailUser?.phone && (
-              <div>
-                <div className="text-text-meta text-[11.5px]">Telefone</div>
-                <div className="text-[13.5px]">{detailUser.phone}</div>
-              </div>
-            )}
-
-            <div>
-              <div className="text-navy-dark mb-2 text-[13.5px] font-semibold">Endereços</div>
-              {isLoadingAddresses ? (
-                <p className="text-text-meta text-sm">Carregando…</p>
-              ) : addresses.length === 0 ? (
-                <p className="text-text-meta text-sm">Nenhum endereço cadastrado.</p>
-              ) : (
-                <ul className="flex flex-col gap-2">
-                  {addresses.map((address) => (
-                    <li
-                      key={address.id}
-                      className="rounded-md border border-[#ede8de] p-3 text-[13px]"
-                    >
-                      <div className="flex items-center gap-1.5 font-medium">
-                        {address.label}
-                        {address.isDefault && (
-                          <span className="rounded-full bg-[#e6e4f5] px-2 py-0.5 text-[10.5px] font-semibold text-[#1c1a5e]">
-                            Padrão
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-text-meta mt-0.5">
-                        {address.street}, {address.city} - {address.state}, {address.zipCode}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-
-            <div>
-              <div className="text-navy-dark mb-2 text-[13.5px] font-semibold">
-                Pedidos e favoritos
-              </div>
-              <p className="text-text-meta text-sm">
-                Sem dado real disponível — pedidos e favoritos hoje são simulados localmente no
-                navegador de cada cliente, não chegam ao servidor.
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }
