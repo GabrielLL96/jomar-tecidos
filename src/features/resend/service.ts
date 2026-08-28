@@ -23,6 +23,12 @@ export async function sendOrderStatusEmail(orderId: string): Promise<void> {
   if (error) await unwrapFunctionError(error)
 }
 
+// Sem body — manda pro próprio usuário logado (ver send-welcome-email).
+export async function sendWelcomeEmail(): Promise<void> {
+  const { error } = await supabase.functions.invoke('send-welcome-email')
+  if (error) await unwrapFunctionError(error)
+}
+
 export interface ContactEmailInput {
   name: string
   email: string

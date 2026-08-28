@@ -34,6 +34,7 @@
     "fn:deploy:asaas-refund": "supabase functions deploy asaas-refund",
     "fn:deploy:resend-validate-connection": "supabase functions deploy resend-validate-connection",
     "fn:deploy:send-order-confirmation-email": "supabase functions deploy send-order-confirmation-email",
+    "fn:deploy:send-welcome-email": "supabase functions deploy send-welcome-email",
     "fn:deploy:send-order-status-email": "supabase functions deploy send-order-status-email",
     "fn:deploy:send-contact-email": "supabase functions deploy send-contact-email",
     "fn:deploy:all": "supabase functions deploy"

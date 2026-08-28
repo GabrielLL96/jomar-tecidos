@@ -35,7 +35,7 @@ const dateFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', tim
 // banco (nunca de input livre de visitante, diferente do formulário de
 // contato), mas ainda assim nomes de produto podem ter caracteres como
 // `&`/`<` em descrições futuras.
-function escapeHtml(value: string): string {
+export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -92,7 +92,7 @@ function itemsTableHtml(items: OrderForEmail['order_items']): string {
   return `<table style="width:100%;border-collapse:collapse;font-size:14px;color:#2b2b2b;">${rows}</table>`
 }
 
-function emailLayout(title: string, bodyHtml: string): string {
+export function emailLayout(title: string, bodyHtml: string): string {
   return `<!doctype html>
 <html lang="pt-BR">
   <body style="margin:0;padding:24px;background:#f6f3ec;font-family:Arial,Helvetica,sans-serif;">

@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth, type AuthUser } from '@/features/auth/AuthContext'
+import { sendWelcomeEmail } from '@/features/resend/service'
 import { useSeoMeta } from '@/lib/seo'
 import { supabase } from '@/lib/supabase'
 import {
@@ -58,8 +59,8 @@ function LoginForm() {
       // `void` nunca chama `.then`, então isso nunca gerava request nenhuma.
       // `.then(fn, fn)` é o que de fato dispara, engolindo sucesso/erro.
       supabase.rpc('log_failed_login', { p_email: data.email }).then(
-        () => { },
-        () => { },
+        () => {},
+        () => {},
       )
     }
   }
@@ -122,6 +123,13 @@ function SignupForm() {
         return
       }
       toast.success('Conta criada com sucesso')
+      // Best-effort: sem sessão confirmada não dá pra chamar autenticado (ramo
+      // acima); com sessão já ativa aqui, igual ao padrão de e-mail do
+      // checkout — falha no e-mail nunca deve travar a criação de conta, que
+      // já aconteceu de verdade.
+      sendWelcomeEmail().catch((emailError) =>
+        console.error('Falha ao enviar e-mail de boas-vindas:', emailError),
+      )
       navigate(redirectParam || '/conta')
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível criar a conta')
