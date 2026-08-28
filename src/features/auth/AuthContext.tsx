@@ -75,15 +75,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      // log_login() precisa rodar só quando a sessão está de fato pronta no
-      // client — chamá-la logo após signInWithPassword() (dentro de login(),
-      // abaixo) resolve auth.uid() como null do lado do servidor às vezes
-      // (a propagação da sessão não é síncrona com o resolve da promise),
-      // e a function faz no-op silencioso nesse caso — achado real testando
-      // no browser, sem erro nenhum, só a linha de log que nunca aparecia.
-      // 'SIGNED_IN' só dispara em sign-in novo de verdade (não em
-      // 'INITIAL_SESSION' de reload de página nem em 'TOKEN_REFRESHED').
-      if (_event === 'SIGNED_IN') void supabase.rpc('log_login')
+      // log_login() e o update de last_login_at precisam rodar só quando a
+      // sessão está de fato pronta no client — chamá-los logo após
+      // signInWithPassword() (dentro de login(), abaixo) resolve auth.uid()
+      // como null do lado do servidor às vezes (a propagação da sessão não é
+      // síncrona com o resolve da promise). 'SIGNED_IN' só dispara em
+      // sign-in novo de verdade (não em 'INITIAL_SESSION' de reload de
+      // página nem em 'TOKEN_REFRESHED').
+      //
+      // `void builder` NÃO executa a query — os builders do supabase-js são
+      // thenables preguiçosos, só disparam a request de verdade dentro do
+      // próprio `.then()`. `void` só descarta o valor, nunca chama `.then`,
+      // então a call nunca saía do papel (achado real: log_login() e este
+      // update nunca geravam nenhuma request de rede, em sessão nenhuma —
+      // por isso "Último login" sempre ficava "Nunca"). `.then(fn, fn)` no
+      // lugar de `void` é o que de fato dispara, best-effort dos dois lados.
+      if (_event === 'SIGNED_IN') {
+        supabase.rpc('log_login').then(
+          () => {},
+          () => {},
+        )
+        supabase
+          .from('users')
+          .update({ last_login_at: new Date().toISOString() })
+          .eq('id', session.user.id)
+          .then(
+            () => {},
+            () => {},
+          )
+      }
 
       if (!hasLoadedOnce) setIsLoading(true)
       fetchProfile(session.user.id).then((profile) => {
@@ -104,13 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login: AuthContextValue['login'] = async ({ email, password }) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw new Error(error.message)
-    // best-effort — não deve bloquear o login se falhar
-    void supabase
-      .from('users')
-      .update({ last_login_at: new Date().toISOString() })
-      .eq('id', data.user.id)
-    // log_login() em si roda no listener onAuthStateChange (evento
-    // 'SIGNED_IN'), não aqui — ver comentário lá.
+    // log_login() e o update de last_login_at rodam no listener
+    // onAuthStateChange (evento 'SIGNED_IN'), não aqui — ver comentário lá.
 
     // Devolve o profile (com role) pro chamador decidir o redirect na hora —
     // não dá pra esperar o listener onAuthStateChange (assíncrono) resolver

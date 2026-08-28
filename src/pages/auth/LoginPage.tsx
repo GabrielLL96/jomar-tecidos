@@ -52,7 +52,15 @@ function LoginForm() {
       // Sem sessão, não há auth.uid() verificável — user_email aqui é o que
       // o formulário tentou, não uma identidade confirmada (mesma limitação
       // inerente a qualquer log de tentativa que falhou). Best-effort.
-      void supabase.rpc('log_failed_login', { p_email: data.email })
+      //
+      // `void builder` não dispara a query (builders do supabase-js são
+      // thenables preguiçosos, só executam dentro do próprio `.then()`) —
+      // `void` nunca chama `.then`, então isso nunca gerava request nenhuma.
+      // `.then(fn, fn)` é o que de fato dispara, engolindo sucesso/erro.
+      supabase.rpc('log_failed_login', { p_email: data.email }).then(
+        () => {},
+        () => {},
+      )
     }
   }
 
