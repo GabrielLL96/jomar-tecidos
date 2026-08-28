@@ -108,7 +108,8 @@ Deno.serve(async (req) => {
         ...(nextPaymentStatus === 'confirmed' ? { confirmed_at: new Date().toISOString() } : {}),
       })
       .eq('id', orderPayment.id)
-    if (updateError) console.error('[asaas-webhook] falha ao atualizar order_payments:', updateError.message)
+    if (updateError)
+      console.error('[asaas-webhook] falha ao atualizar order_payments:', updateError.message)
   }
 
   const { data: order, error: orderError } = await supabase
@@ -133,7 +134,8 @@ Deno.serve(async (req) => {
   // idempotente por design: só transiciona se o pedido ainda estiver no
   // status "de origem" esperado — reenvio do mesmo evento não duplica
   // order_status_history nem regride status.
-  const isConfirmEvent = payload.event === 'PAYMENT_CONFIRMED' || payload.event === 'PAYMENT_RECEIVED'
+  const isConfirmEvent =
+    payload.event === 'PAYMENT_CONFIRMED' || payload.event === 'PAYMENT_RECEIVED'
   const isRefundEvent = payload.event === 'PAYMENT_REFUNDED'
 
   let nextOrderStatus: string | null = null
@@ -149,7 +151,10 @@ Deno.serve(async (req) => {
   }
 
   if (nextOrderStatus) {
-    const { error: statusError } = await supabase.from('orders').update({ status: nextOrderStatus }).eq('id', order.id)
+    const { error: statusError } = await supabase
+      .from('orders')
+      .update({ status: nextOrderStatus })
+      .eq('id', order.id)
     if (statusError) {
       console.error('[asaas-webhook] falha ao atualizar orders.status:', statusError.message)
       await logIntegrationCall({
@@ -171,7 +176,8 @@ Deno.serve(async (req) => {
       status: nextOrderStatus,
       changed_by_name: 'Asaas (webhook)',
     })
-    if (historyError) console.error('[asaas-webhook] falha ao gravar order_status_history:', historyError.message)
+    if (historyError)
+      console.error('[asaas-webhook] falha ao gravar order_status_history:', historyError.message)
 
     // Best-effort: e-mail nunca deve derrubar o processamento do webhook —
     // se o Resend falhar (chave não configurada, domínio não verificado),
@@ -189,7 +195,11 @@ Deno.serve(async (req) => {
     direction: 'inbound',
     relatedEntity: 'orders',
     relatedEntityId: order.id,
-    requestSummary: { event: payload.event, nextPaymentStatus: nextPaymentStatus ?? null, nextOrderStatus },
+    requestSummary: {
+      event: payload.event,
+      nextPaymentStatus: nextPaymentStatus ?? null,
+      nextOrderStatus,
+    },
     status: 'success',
     statusHttp: 200,
     environment,

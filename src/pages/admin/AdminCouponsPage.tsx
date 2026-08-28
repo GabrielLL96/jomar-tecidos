@@ -4,9 +4,28 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { toDateOnly } from '@/lib/format'
@@ -260,7 +279,10 @@ export function AdminCouponsPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-1.5">
                 <Label>Tipo</Label>
-                <Select value={form.type} onValueChange={(value) => setField('type', value as CouponType)}>
+                <Select
+                  value={form.type}
+                  onValueChange={(value) => setField('type', value as CouponType)}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
@@ -321,7 +343,10 @@ export function AdminCouponsPage() {
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label>Status</Label>
-                <Select value={form.status} onValueChange={(value) => setField('status', value as CouponStatus)}>
+                <Select
+                  value={form.status}
+                  onValueChange={(value) => setField('status', value as CouponStatus)}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>

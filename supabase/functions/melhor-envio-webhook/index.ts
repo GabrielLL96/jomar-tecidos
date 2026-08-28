@@ -125,7 +125,10 @@ Deno.serve(async (req) => {
 
   let updateFailed = false
   if (Object.keys(update).length > 0) {
-    const { error: updateError } = await supabase.from('deliveries').update(update).eq('id', delivery.id)
+    const { error: updateError } = await supabase
+      .from('deliveries')
+      .update(update)
+      .eq('id', delivery.id)
     if (updateError) {
       console.error('Falha ao atualizar delivery:', updateError.message)
       updateFailed = true

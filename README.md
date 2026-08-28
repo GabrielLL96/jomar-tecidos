@@ -27,20 +27,20 @@ npm run dev            # servidor de desenvolvimento
 
 ### Scripts
 
-| Comando           | Descrição                          |
-| ----------------- | ----------------------------------- |
-| `npm run dev`      | Servidor de desenvolvimento (Vite) |
-| `npm run build`    | Type-check (`tsc -b`) + build de produção |
-| `npm run preview`  | Preview local do build de produção |
-| `npm run lint`     | ESLint                             |
-| `npm run format`   | Prettier (`--write`)               |
+| Comando           | Descrição                                 |
+| ----------------- | ----------------------------------------- |
+| `npm run dev`     | Servidor de desenvolvimento (Vite)        |
+| `npm run build`   | Type-check (`tsc -b`) + build de produção |
+| `npm run preview` | Preview local do build de produção        |
+| `npm run lint`    | ESLint                                    |
+| `npm run format`  | Prettier (`--write`)                      |
 
 ### Variáveis de ambiente
 
-| Variável                  | Descrição                                                              |
-| -------------------------- | ------------------------------------------------------------------------ |
-| `VITE_API_URL`              | Base URL da API (não utilizada nesta fase — catálogo é mockado)         |
-| `VITE_PUBLIC_CRYPTO_KEY`    | Chave de criptografia do `useSecureStorage`. Sem ela, o hook salva sem criptografia (fallback seguro) |
+| Variável                 | Descrição                                                                                             |
+| ------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `VITE_API_URL`           | Base URL da API (não utilizada nesta fase — catálogo é mockado)                                       |
+| `VITE_PUBLIC_CRYPTO_KEY` | Chave de criptografia do `useSecureStorage`. Sem ela, o hook salva sem criptografia (fallback seguro) |
 
 ## Estrutura de pastas
 

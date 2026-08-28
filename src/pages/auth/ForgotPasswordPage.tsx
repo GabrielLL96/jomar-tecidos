@@ -65,7 +65,12 @@ export function ForgotPasswordPage() {
             <Input id="email" type="email" {...register('email')} autoFocus />
             {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
           </div>
-          <Button type="submit" size="lg" disabled={isSubmitting} className="mt-2 h-auto rounded-sm py-4 text-sm">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isSubmitting}
+            className="mt-2 h-auto rounded-sm py-4 text-sm"
+          >
             {isSubmitting ? 'Enviando…' : 'Enviar link de redefinição'}
           </Button>
           <Link to="/conta/entrar" className="text-navy text-center text-sm">

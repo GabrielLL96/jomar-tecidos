@@ -28,7 +28,12 @@ import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
 const MIN_INSTALLMENT_TOTAL = 30
 
 export function CheckoutPage() {
-  useSeoMeta({ title: 'Finalizar Compra', description: 'Checkout Jomar Tecidos.', path: '/checkout', noindex: true })
+  useSeoMeta({
+    title: 'Finalizar Compra',
+    description: 'Checkout Jomar Tecidos.',
+    path: '/checkout',
+    noindex: true,
+  })
 
   const { items, subtotal, clear } = useCart()
   const { addresses, addOrFindAddress } = useAddresses()
@@ -69,7 +74,9 @@ export function CheckoutPage() {
     missingData: cartItemsMissingShippingData,
   } = useShippingQuote(zip, items, products, !isFreeShipping)
 
-  const selectedShippingOption = shippingOptions.find((option) => option.serviceId === selectedShippingServiceId)
+  const selectedShippingOption = shippingOptions.find(
+    (option) => option.serviceId === selectedShippingServiceId,
+  )
   const cheapestShippingPrice =
     shippingOptions.length > 0 ? Math.min(...shippingOptions.map((option) => option.price)) : null
   // sem cotação real escolhida, cai na taxa fixa (fallback já usado antes desta
@@ -255,12 +262,16 @@ export function CheckoutPage() {
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <Label htmlFor="fullName">Nome completo</Label>
                 <Input id="fullName" {...register('fullName')} />
-                {errors.fullName && <p className="text-destructive text-xs">{errors.fullName.message}</p>}
+                {errors.fullName && (
+                  <p className="text-destructive text-xs">{errors.fullName.message}</p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <Label htmlFor="address">Endereço</Label>
                 <Input id="address" {...register('address')} />
-                {errors.address && <p className="text-destructive text-xs">{errors.address.message}</p>}
+                {errors.address && (
+                  <p className="text-destructive text-xs">{errors.address.message}</p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="city">Cidade</Label>
@@ -332,7 +343,8 @@ export function CheckoutPage() {
             )}
             {paymentMethod === 'boleto' && (
               <p className="text-text-meta text-xs">
-                Ao confirmar, geramos o boleto — o pagamento pode levar até 3 dias úteis pra ser confirmado.
+                Ao confirmar, geramos o boleto — o pagamento pode levar até 3 dias úteis pra ser
+                confirmado.
               </p>
             )}
           </div>
@@ -420,7 +432,9 @@ export function CheckoutPage() {
                               {option.carrierName} {option.serviceName}
                             </span>
                             <span className="text-text-meta">
-                              {option.deliveryDays ? `${option.deliveryDays} dias úteis` : 'Prazo não informado'}
+                              {option.deliveryDays
+                                ? `${option.deliveryDays} dias úteis`
+                                : 'Prazo não informado'}
                             </span>
                           </span>
                         </span>
@@ -430,7 +444,9 @@ export function CheckoutPage() {
                               Mais barato
                             </span>
                           )}
-                          <span className="text-navy font-medium">{formatPriceBRL(option.price)}</span>
+                          <span className="text-navy font-medium">
+                            {formatPriceBRL(option.price)}
+                          </span>
                         </span>
                       </label>
                     )
@@ -438,7 +454,9 @@ export function CheckoutPage() {
                 </div>
               ) : (
                 zip?.replace(/\D/g, '').length !== 8 && (
-                  <p className="text-text-meta text-xs">Digite o CEP completo pra calcular o frete real.</p>
+                  <p className="text-text-meta text-xs">
+                    Digite o CEP completo pra calcular o frete real.
+                  </p>
                 )
               )}
               {shippingQuoteError && (

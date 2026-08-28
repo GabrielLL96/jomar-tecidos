@@ -1,4 +1,11 @@
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { formatPriceBRL } from '@/lib/format'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/features/orders/data'
 import { useAdminOrders } from '@/features/orders/hooks'
@@ -20,14 +27,19 @@ function computeKpis(products: Product[], orders: Order[]) {
     { label: 'Faturamento (total)', value: formatPriceBRL(revenue) },
     { label: 'Pedidos', value: String(orderCount) },
     { label: 'Ticket médio', value: formatPriceBRL(avgTicket) },
-    { label: 'Estoque crítico', value: `${criticalStock} ${criticalStock === 1 ? 'item' : 'itens'}` },
+    {
+      label: 'Estoque crítico',
+      value: `${criticalStock} ${criticalStock === 1 ? 'item' : 'itens'}`,
+    },
   ]
 }
 
 // Mesmo critério já usado em /admin/vendas e /admin/relatorios: pedido
 // cancelado ou reembolsado não conta como venda real.
 function computeSalesBars(orders: Order[]) {
-  const valid = orders.filter((order) => order.status !== 'cancelled' && order.status !== 'refunded')
+  const valid = orders.filter(
+    (order) => order.status !== 'cancelled' && order.status !== 'refunded',
+  )
   const revenueByDay = new Map<string, number>()
   const today = new Date()
   const days: { key: string; label: string }[] = []
@@ -36,7 +48,10 @@ function computeSalesBars(orders: Order[]) {
     // componentes locais, não toISOString — evita o deslocamento de data já
     // documentado em fuso negativo (ver skills/reactjs.md deste vault).
     const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
-    days.push({ key, label: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) })
+    days.push({
+      key,
+      label: date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+    })
     revenueByDay.set(key, 0)
   }
 
@@ -60,7 +75,9 @@ function computeSalesBars(orders: Order[]) {
 // faturamento de cada composição na proporção do seu percentual no produto
 // (mesmo cálculo já usado em exportCompositionPerformance, /admin/relatorios).
 function computeTopCompositions(products: Product[], orders: Order[], compositions: Composition[]) {
-  const valid = orders.filter((order) => order.status !== 'cancelled' && order.status !== 'refunded')
+  const valid = orders.filter(
+    (order) => order.status !== 'cancelled' && order.status !== 'refunded',
+  )
   const productsById = new Map(products.map((product) => [product.id, product]))
   const revenueByComposition = new Map<string, number>()
 
@@ -70,7 +87,10 @@ function computeTopCompositions(products: Product[], orders: Order[], compositio
       if (!product) continue
       for (const { compositionId, percentage } of product.compositions) {
         const share = item.total * (percentage / 100)
-        revenueByComposition.set(compositionId, (revenueByComposition.get(compositionId) ?? 0) + share)
+        revenueByComposition.set(
+          compositionId,
+          (revenueByComposition.get(compositionId) ?? 0) + share,
+        )
       }
     }
   }
@@ -102,7 +122,9 @@ export function AdminDashboardPage() {
         {kpis.map((kpi) => (
           <div key={kpi.label} className="rounded-md border border-[#e4ddd0] bg-white p-[22px]">
             <div className="text-xs text-[#8c8375]">{kpi.label}</div>
-            <div className="text-navy-dark mt-1.5 font-serif text-[28px] font-semibold">{kpi.value}</div>
+            <div className="text-navy-dark mt-1.5 font-serif text-[28px] font-semibold">
+              {kpi.value}
+            </div>
           </div>
         ))}
       </div>
@@ -135,7 +157,10 @@ export function AdminDashboardPage() {
                   <span className="text-[#8c8375]">{c.pct.toFixed(0)}%</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-[#ede8de]">
-                  <div className="bg-brand-red h-full rounded-full" style={{ width: `${c.pct}%` }} />
+                  <div
+                    className="bg-brand-red h-full rounded-full"
+                    style={{ width: `${c.pct}%` }}
+                  />
                 </div>
               </div>
             ))

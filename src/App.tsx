@@ -104,7 +104,9 @@ const AdminLogsPage = lazy(() =>
   import('@/pages/admin/AdminLogsPage').then((m) => ({ default: m.AdminLogsPage })),
 )
 const AdminIntegrationLogPage = lazy(() =>
-  import('@/pages/admin/AdminIntegrationLogPage').then((m) => ({ default: m.AdminIntegrationLogPage })),
+  import('@/pages/admin/AdminIntegrationLogPage').then((m) => ({
+    default: m.AdminIntegrationLogPage,
+  })),
 )
 const NotFoundPage = lazy(() =>
   import('@/pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage })),

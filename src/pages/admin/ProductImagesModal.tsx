@@ -3,7 +3,13 @@ import { ArrowDown, ArrowUp, Loader2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
 import { Button, buttonVariants } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { limitProductImageSelection, MAX_PRODUCT_IMAGES } from '@/features/catalog/data'
 import {
@@ -84,7 +90,9 @@ export function ProductImagesModal({ product, onOpenChange }: ProductImagesModal
     setImages(withSortOrder)
 
     try {
-      await reorderProductImages(withSortOrder.map((image) => ({ id: image.id, sortOrder: image.sortOrder })))
+      await reorderProductImages(
+        withSortOrder.map((image) => ({ id: image.id, sortOrder: image.sortOrder })),
+      )
       await invalidate()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível reordenar')
@@ -132,7 +140,12 @@ export function ProductImagesModal({ product, onOpenChange }: ProductImagesModal
                 >
                   <ArrowDown className="size-4" />
                 </Button>
-                <Button type="button" variant="outline" size="icon" onClick={() => handleRemove(image)}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleRemove(image)}
+                >
                   <X className="size-4" />
                 </Button>
               </div>
@@ -141,7 +154,8 @@ export function ProductImagesModal({ product, onOpenChange }: ProductImagesModal
 
           {images.length >= MAX_PRODUCT_IMAGES ? (
             <p className="text-text-meta text-xs">
-              Limite de {MAX_PRODUCT_IMAGES} imagens por produto atingido — remova uma pra adicionar outra.
+              Limite de {MAX_PRODUCT_IMAGES} imagens por produto atingido — remova uma pra adicionar
+              outra.
             </p>
           ) : (
             <label

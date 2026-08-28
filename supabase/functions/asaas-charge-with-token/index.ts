@@ -55,7 +55,8 @@ Deno.serve(async (req) => {
       .select('id')
       .eq('order_id', orderId)
       .maybeSingle()
-    if (existingError) throw new Error(`Falha ao checar cobrança existente: ${existingError.message}`)
+    if (existingError)
+      throw new Error(`Falha ao checar cobrança existente: ${existingError.message}`)
     if (existingPayment) throw new Error('Esse pedido já tem uma cobrança criada')
 
     // Cartão salvo precisa ser do próprio chamador — nunca confia só no id
@@ -101,9 +102,13 @@ Deno.serve(async (req) => {
       confirmed_at: new Date().toISOString(),
       installment_count: installments ?? 1,
     })
-    if (insertPaymentError) throw new Error(`Falha ao salvar cobrança: ${insertPaymentError.message}`)
+    if (insertPaymentError)
+      throw new Error(`Falha ao salvar cobrança: ${insertPaymentError.message}`)
 
-    const { error: statusError } = await supabase.from('orders').update({ status: 'paid' }).eq('id', order.id)
+    const { error: statusError } = await supabase
+      .from('orders')
+      .update({ status: 'paid' })
+      .eq('id', order.id)
     if (statusError) throw new Error(`Falha ao atualizar status do pedido: ${statusError.message}`)
     const { error: historyError } = await supabase.from('order_status_history').insert({
       order_id: order.id,
@@ -111,11 +116,18 @@ Deno.serve(async (req) => {
       changed_by_name: 'Asaas (cartão salvo)',
     })
     if (historyError) {
-      console.error('[asaas-charge-with-token] falha ao gravar order_status_history:', historyError.message)
+      console.error(
+        '[asaas-charge-with-token] falha ao gravar order_status_history:',
+        historyError.message,
+      )
     }
 
     return new Response(
-      JSON.stringify({ orderId: order.id, status: charge.status, last4: savedCard.last_four_digits }),
+      JSON.stringify({
+        orderId: order.id,
+        status: charge.status,
+        last4: savedCard.last_four_digits,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error) {

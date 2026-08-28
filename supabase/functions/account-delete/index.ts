@@ -29,7 +29,13 @@ Deno.serve(async (req) => {
     const placeholderEmail = `removido-${userId}@jomartecidos.invalid`
     const { error: userError } = await supabase
       .from('users')
-      .update({ name: 'Usuário removido', email: placeholderEmail, phone: null, cpf: null, status: 'inactive' })
+      .update({
+        name: 'Usuário removido',
+        email: placeholderEmail,
+        phone: null,
+        cpf: null,
+        status: 'inactive',
+      })
       .eq('id', userId)
     if (userError) throw new Error(`Falha ao anonimizar cadastro: ${userError.message}`)
 
@@ -39,12 +45,17 @@ Deno.serve(async (req) => {
       .from('reviews')
       .update({ author_name: 'Usuário removido' })
       .eq('user_id', userId)
-    if (reviewsError) console.error('[account-delete] falha ao anonimizar reviews:', reviewsError.message)
+    if (reviewsError)
+      console.error('[account-delete] falha ao anonimizar reviews:', reviewsError.message)
 
     // Token de cartão salvo não tem motivo pra sobreviver ao encerramento
     // da conta.
-    const { error: cardsError } = await supabase.from('saved_credit_cards').delete().eq('user_id', userId)
-    if (cardsError) console.error('[account-delete] falha ao remover cartões salvos:', cardsError.message)
+    const { error: cardsError } = await supabase
+      .from('saved_credit_cards')
+      .delete()
+      .eq('user_id', userId)
+    if (cardsError)
+      console.error('[account-delete] falha ao remover cartões salvos:', cardsError.message)
 
     // Bloqueia autenticação de verdade — banimento bem longo em vez de
     // exclusão da conta no GoTrue (excluir auth.users derrubaria o próprio

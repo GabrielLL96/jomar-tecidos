@@ -56,8 +56,11 @@ export function ConfirmationPage() {
         {order?.status === 'pending' ? 'Pedido recebido!' : 'Pedido confirmado!'}
       </h1>
       <p className="text-text-body mb-2 text-sm leading-relaxed">
-        Obrigado por comprar na Jomar Tecidos. Seu pedido <strong>#{order?.orderNumber ?? id}</strong>{' '}
-        {order?.status === 'pending' ? 'está aguardando confirmação do pagamento.' : 'está sendo preparado.'}
+        Obrigado por comprar na Jomar Tecidos. Seu pedido{' '}
+        <strong>#{order?.orderNumber ?? id}</strong>{' '}
+        {order?.status === 'pending'
+          ? 'está aguardando confirmação do pagamento.'
+          : 'está sendo preparado.'}
       </p>
       <p className="text-text-body mb-8 text-sm leading-relaxed">
         Você receberá atualizações por e-mail e poderá acompanhar o status a qualquer momento.
@@ -76,7 +79,9 @@ export function ConfirmationPage() {
 
       {order?.payment?.paymentMethod === 'pix' && order.payment.status === 'pending' && (
         <div className="border-border mb-8 rounded-md border bg-white p-6 text-left">
-          <p className="text-navy-dark mb-3 text-sm font-semibold">Pague com Pix pra confirmar o pedido</p>
+          <p className="text-navy-dark mb-3 text-sm font-semibold">
+            Pague com Pix pra confirmar o pedido
+          </p>
           {order.payment.pixQrCode && (
             <img
               src={`data:image/png;base64,${order.payment.pixQrCode}`}
@@ -126,7 +131,9 @@ export function ConfirmationPage() {
 
       {order?.payment?.paymentMethod === 'boleto' && order.payment.status === 'pending' && (
         <div className="border-border mb-8 rounded-md border bg-white p-6 text-left">
-          <p className="text-navy-dark mb-3 text-sm font-semibold">Pague o boleto pra confirmar o pedido</p>
+          <p className="text-navy-dark mb-3 text-sm font-semibold">
+            Pague o boleto pra confirmar o pedido
+          </p>
           {order.payment.boletoUrl && (
             <a
               href={order.payment.boletoUrl}

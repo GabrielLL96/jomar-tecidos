@@ -17,7 +17,13 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import {
@@ -48,9 +54,18 @@ const productFormSchema = z.object({
   widthM: z.preprocess(decimalPtBR, z.coerce.number().positive('Informe uma largura válida')),
   pricePerMeter: z.preprocess(decimalPtBR, z.coerce.number().positive('Informe um preço válido')),
   stockMeters: z.preprocess(decimalPtBR, z.coerce.number().min(0, 'Informe o estoque inicial')),
-  weightGrams: z.preprocess(decimalPtBROptional, z.coerce.number().positive('Peso inválido').optional()),
-  packageHeightCm: z.preprocess(decimalPtBROptional, z.coerce.number().positive('Altura inválida').optional()),
-  packageWidthCm: z.preprocess(decimalPtBROptional, z.coerce.number().positive('Largura inválida').optional()),
+  weightGrams: z.preprocess(
+    decimalPtBROptional,
+    z.coerce.number().positive('Peso inválido').optional(),
+  ),
+  packageHeightCm: z.preprocess(
+    decimalPtBROptional,
+    z.coerce.number().positive('Altura inválida').optional(),
+  ),
+  packageWidthCm: z.preprocess(
+    decimalPtBROptional,
+    z.coerce.number().positive('Largura inválida').optional(),
+  ),
   packageLengthCm: z.preprocess(
     decimalPtBROptional,
     z.coerce.number().positive('Comprimento inválido').optional(),
@@ -134,11 +149,17 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
         stockMeters: String(product.stockMeters).replace('.', ','),
         weightGrams: product.weightGrams !== undefined ? String(product.weightGrams) : '',
         packageHeightCm:
-          product.packageHeightCm !== undefined ? String(product.packageHeightCm).replace('.', ',') : '',
+          product.packageHeightCm !== undefined
+            ? String(product.packageHeightCm).replace('.', ',')
+            : '',
         packageWidthCm:
-          product.packageWidthCm !== undefined ? String(product.packageWidthCm).replace('.', ',') : '',
+          product.packageWidthCm !== undefined
+            ? String(product.packageWidthCm).replace('.', ',')
+            : '',
         packageLengthCm:
-          product.packageLengthCm !== undefined ? String(product.packageLengthCm).replace('.', ',') : '',
+          product.packageLengthCm !== undefined
+            ? String(product.packageLengthCm).replace('.', ',')
+            : '',
         description: product.description,
       })
       setCompositionPct(
@@ -350,7 +371,10 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="flex flex-col gap-4">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as typeof activeTab)}>
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => setActiveTab(value as typeof activeTab)}
+          >
             <TabsList className="w-full max-w-full justify-start overflow-x-auto overflow-y-hidden">
               <TabsTrigger value="dados">Dados</TabsTrigger>
               <TabsTrigger value="composicao">
@@ -373,7 +397,9 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
                 <Label>Categoria</Label>
                 <Select
                   value={watch('categorySlug')}
-                  onValueChange={(value) => setValue('categorySlug', value, { shouldValidate: true })}
+                  onValueChange={(value) =>
+                    setValue('categorySlug', value, { shouldValidate: true })
+                  }
                 >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Selecione a categoria" />
@@ -395,7 +421,9 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="widthM">Largura (m)</Label>
                   <Input id="widthM" placeholder="1,40" {...register('widthM')} />
-                  {errors.widthM && <p className="text-destructive text-xs">{errors.widthM.message}</p>}
+                  {errors.widthM && (
+                    <p className="text-destructive text-xs">{errors.widthM.message}</p>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="pricePerMeter">Preço/m (R$)</Label>
@@ -454,7 +482,8 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
                   </div>
                 </div>
                 <p className="text-text-meta text-xs">
-                  Obrigatório em produto novo — usado pra cotar frete real (Melhor Envio) no checkout.
+                  Obrigatório em produto novo — usado pra cotar frete real (Melhor Envio) no
+                  checkout.
                 </p>
               </div>
 
@@ -566,8 +595,14 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
                             disabled={!checked}
                             value={checked ? compositionPct[composition.id] : 0}
                             onChange={(event) => {
-                              const value = Math.max(0, Math.min(100, Number(event.target.value) || 0))
-                              setCompositionPct((current) => ({ ...current, [composition.id]: value }))
+                              const value = Math.max(
+                                0,
+                                Math.min(100, Number(event.target.value) || 0),
+                              )
+                              setCompositionPct((current) => ({
+                                ...current,
+                                [composition.id]: value,
+                              }))
                             }}
                             className="w-[70px] rounded border border-[#d8d0c0] px-2 py-1.5 text-[13px] disabled:opacity-50"
                           />
@@ -602,8 +637,8 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
                     </Button>
                   </div>
                   <p className="text-text-meta text-xs">
-                    Fica disponível pra todos os produtos assim que criada — depois de salvar, volte pra
-                    "Selecionar" pra marcar o percentual.
+                    Fica disponível pra todos os produtos assim que criada — depois de salvar, volte
+                    pra "Selecionar" pra marcar o percentual.
                   </p>
                 </TabsContent>
               </Tabs>
@@ -628,7 +663,9 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
                       <button
                         type="button"
                         aria-label="Remover imagem"
-                        onClick={() => setPendingImages((current) => current.filter((_, i) => i !== index))}
+                        onClick={() =>
+                          setPendingImages((current) => current.filter((_, i) => i !== index))
+                        }
                         className="bg-foreground absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full text-white"
                       >
                         <X className="size-3" />

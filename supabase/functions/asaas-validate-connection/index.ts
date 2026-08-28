@@ -1,4 +1,9 @@
-import { corsHeaders, createCallerClient, createServiceClient, requireAdmin } from '../_shared/melhor-envio.ts'
+import {
+  corsHeaders,
+  createCallerClient,
+  createServiceClient,
+  requireAdmin,
+} from '../_shared/melhor-envio.ts'
 import { ASAAS_SETTINGS_ID, asaasAuthHeaders, getAsaasBaseUrl } from '../_shared/asaas.ts'
 
 // Diferente da Melhor Envio (OAuth), a Asaas autentica por API key estática
@@ -37,7 +42,9 @@ Deno.serve(async (req) => {
       // colada com ambiente "sandbox" selecionado). Mensagem já deixa isso
       // explícito em vez de só repassar o corpo cru da Asaas.
       if (response.status === 401) {
-        throw new Error(`API key inválida para o ambiente "${settings.environment}" (${response.status})`)
+        throw new Error(
+          `API key inválida para o ambiente "${settings.environment}" (${response.status})`,
+        )
       }
       throw new Error(`Asaas recusou a chave (${response.status}): ${body}`)
     }

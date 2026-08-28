@@ -16,6 +16,7 @@
 
 Siga a estrutura já validada em features existentes (`catalog/`, `orders/` são bons
 exemplos):
+
 - `types.ts` — tipo de domínio (camelCase) e, se houver dado relacional, o tipo `XxxRow`
   (snake_case, espelhando o Postgres).
 - `queries.ts` — `xxxQueryOptions` via `queryOptions()`, com `adaptXxx(row)` fazendo a
@@ -47,10 +48,10 @@ exemplos):
 ## Adicionando/alterando uma function `security definer`
 
 - Se está só adicionando `default` a um parâmetro que já existia (mesmo tipo), `create or
-  replace function` substitui normalmente.
+replace function` substitui normalmente.
 - Se está adicionando um parâmetro **novo** (mudando a lista de tipos da assinatura), você
   precisa de `drop function if exists nome(<assinatura antiga exata>)` **antes** do `create or
-  replace` — senão o Postgres cria uma segunda function sobrecarregada e a versão antiga
+replace` — senão o Postgres cria uma segunda function sobrecarregada e a versão antiga
   (sem sua validação nova) continua chamável. Teste depois chamando no formato antigo para
   confirmar que resolve para a versão nova. Detalhe completo no arquivo 04.
 - Se a function usa `RETURNS TABLE (id uuid, ...)` ou qualquer nome de coluna comum, qualifique
@@ -74,6 +75,7 @@ exemplos):
 ## Adicionando uma integração externa nova (novo gateway, novo serviço de terceiro)
 
 Use `melhor_envio_settings`/`asaas_settings` como modelo:
+
 1. Tabela singleton própria para config + segredos, com GRANT de coluna separando o que
    `authenticated` pode ver (config pública) do que só `service_role` vê (segredo real).
 2. Function `security definer` que devolve só `boolean` de "está configurado", para a UI

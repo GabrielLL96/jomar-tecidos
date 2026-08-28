@@ -41,7 +41,14 @@ function upsertLink(rel: string, href: string) {
 // Efeito legítimo com useEffect (não é "ajustar state durante o render") —
 // está sincronizando um sistema externo real (document.title, <head> do
 // DOM), mesma categoria já documentada em skills/reactjs.md.
-export function useSeoMeta({ title, description, path, image, type = 'website', noindex = false }: SeoMetaInput) {
+export function useSeoMeta({
+  title,
+  description,
+  path,
+  image,
+  type = 'website',
+  noindex = false,
+}: SeoMetaInput) {
   useEffect(() => {
     const fullTitle = `${title} | ${SITE_NAME}`
     const url = `${SITE_URL}${path}`
@@ -108,7 +115,9 @@ export function useProductJsonLd(input: ProductJsonLdInput | null) {
         '@type': 'Offer',
         priceCurrency: 'BRL',
         price: input.priceBRL.toFixed(2),
-        availability: input.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        availability: input.inStock
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
         url: `${SITE_URL}/tecidos/${input.slug}`,
       },
       ...(input.ratingValue && input.reviewCount

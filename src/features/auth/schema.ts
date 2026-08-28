@@ -60,7 +60,11 @@ export const accountDataSchema = z.object({
   name: z.string().min(3, 'Informe seu nome completo'),
   email: z.string().email('Informe um e-mail válido'),
   phone: z.string().optional(),
-  password: z.string().min(6, 'A senha deve ter ao menos 6 caracteres').optional().or(z.literal('')),
+  password: z
+    .string()
+    .min(6, 'A senha deve ter ao menos 6 caracteres')
+    .optional()
+    .or(z.literal('')),
 })
 
 export type AccountDataInput = z.infer<typeof accountDataSchema>

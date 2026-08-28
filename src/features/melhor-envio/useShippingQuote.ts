@@ -39,7 +39,12 @@ export function useShippingQuote(
   // escalam por metro (caixa/rolo padrão do produto).
   const missingData = items.some((item) => {
     const product = products.find((p) => p.id === item.productId)
-    return !product?.weightGrams || !product.packageHeightCm || !product.packageWidthCm || !product.packageLengthCm
+    return (
+      !product?.weightGrams ||
+      !product.packageHeightCm ||
+      !product.packageWidthCm ||
+      !product.packageLengthCm
+    )
   })
 
   const cleanZip = (zip ?? '').replace(/\D/g, '')
@@ -94,5 +99,13 @@ export function useShippingQuote(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cleanZip, enabled, missingData, items.length])
 
-  return { options, selectedServiceId, setSelectedServiceId, quoteId, isCalculating, error, missingData }
+  return {
+    options,
+    selectedServiceId,
+    setSelectedServiceId,
+    quoteId,
+    isCalculating,
+    error,
+    missingData,
+  }
 }

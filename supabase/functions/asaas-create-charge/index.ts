@@ -15,7 +15,10 @@ interface CreateChargeRequestBody {
   installments?: number
 }
 
-const BILLING_TYPE_BY_METHOD: Record<CreateChargeRequestBody['paymentMethod'], CreateAsaasPaymentInput['billingType']> = {
+const BILLING_TYPE_BY_METHOD: Record<
+  CreateChargeRequestBody['paymentMethod'],
+  CreateAsaasPaymentInput['billingType']
+> = {
   credit_card: 'CREDIT_CARD',
   pix: 'PIX',
   boleto: 'BOLETO',
@@ -43,7 +46,8 @@ Deno.serve(async (req) => {
     // client sozinho pra decidir a parcela, é dinheiro (mesmo princípio já
     // usado no resto desta function e em create_order() pro unit_price).
     if (installments !== undefined) {
-      if (paymentMethod !== 'credit_card') throw new Error('Parcelamento só é válido pra cartão de crédito')
+      if (paymentMethod !== 'credit_card')
+        throw new Error('Parcelamento só é válido pra cartão de crédito')
       if (!Number.isInteger(installments) || installments < 1 || installments > 3) {
         throw new Error('Número de parcelas inválido')
       }
@@ -72,7 +76,8 @@ Deno.serve(async (req) => {
       .select('id')
       .eq('order_id', orderId)
       .maybeSingle()
-    if (existingError) throw new Error(`Falha ao checar cobrança existente: ${existingError.message}`)
+    if (existingError)
+      throw new Error(`Falha ao checar cobrança existente: ${existingError.message}`)
     if (existingPayment) throw new Error('Esse pedido já tem uma cobrança criada')
 
     const credentials = await getAsaasCredentials()

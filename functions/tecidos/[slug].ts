@@ -70,7 +70,8 @@ export const onRequestGet: PagesFunction = async (context) => {
   const priceLabel = Number(product.price_per_meter).toFixed(2).replace('.', ',')
   const description = `${(product.description ?? '').slice(0, 140)} — R$ ${priceLabel}/metro na Jomar Tecidos.`
   const image =
-    [...product.product_images].sort((a, b) => a.sort_order - b.sort_order)[0]?.url ?? DEFAULT_OG_IMAGE
+    [...product.product_images].sort((a, b) => a.sort_order - b.sort_order)[0]?.url ??
+    DEFAULT_OG_IMAGE
   const url = `${SITE_URL}/tecidos/${slug}`
 
   const rewritten = new HTMLRewriter()

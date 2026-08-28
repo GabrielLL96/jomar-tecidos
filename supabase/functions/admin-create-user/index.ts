@@ -1,5 +1,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.112.0'
-import { corsHeaders, createCallerClient, createServiceClient, requireAdmin } from '../_shared/melhor-envio.ts'
+import {
+  corsHeaders,
+  createCallerClient,
+  createServiceClient,
+  requireAdmin,
+} from '../_shared/melhor-envio.ts'
 import { logActivity } from '../_shared/activity-logger.ts'
 
 type CreatableRole = 'customer' | 'admin'
@@ -43,7 +48,8 @@ Deno.serve(async (req) => {
     // a própria via e-mail de reset, mesma convenção já usada no modal de
     // Editar ("não existe senha temporária configurável por aqui"). Admin
     // define a senha na hora — exceção deliberada, confirmada com o usuário.
-    const finalPassword = role === 'admin' ? (password as string) : crypto.randomUUID() + crypto.randomUUID()
+    const finalPassword =
+      role === 'admin' ? (password as string) : crypto.randomUUID() + crypto.randomUUID()
 
     const { data, error } = await supabase.auth.admin.createUser({
       email,
@@ -53,7 +59,8 @@ Deno.serve(async (req) => {
     })
 
     if (error) {
-      const message = error.code === 'email_exists' ? 'Este e-mail já está cadastrado' : error.message
+      const message =
+        error.code === 'email_exists' ? 'Este e-mail já está cadastrado' : error.message
       throw new Error(message)
     }
 
@@ -65,10 +72,15 @@ Deno.serve(async (req) => {
     // a conta inteira — nunca deixar um "admin" pedido virar customer
     // silencioso, nem um usuário órfão.
     if (role === 'admin') {
-      const { error: roleError } = await supabase.from('users').update({ role: 'admin' }).eq('id', data.user.id)
+      const { error: roleError } = await supabase
+        .from('users')
+        .update({ role: 'admin' })
+        .eq('id', data.user.id)
       if (roleError) {
         await supabase.auth.admin.deleteUser(data.user.id)
-        throw new Error('Não foi possível definir o papel de administrador — operação revertida, tente novamente')
+        throw new Error(
+          'Não foi possível definir o papel de administrador — operação revertida, tente novamente',
+        )
       }
       await logActivity({
         userId: callerData.user?.id ?? null,

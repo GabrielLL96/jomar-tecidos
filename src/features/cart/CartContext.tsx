@@ -18,7 +18,9 @@ const CartContext = createContext<CartContextValue | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const { getItem, setItem } = useSecureStorage()
-  const [items, setItems] = useState<CartItem[]>(() => getItem<CartItem[]>(CART_STORAGE_KEY, []) ?? [])
+  const [items, setItems] = useState<CartItem[]>(
+    () => getItem<CartItem[]>(CART_STORAGE_KEY, []) ?? [],
+  )
 
   const persist = (next: CartItem[]) => {
     setItems(next)
@@ -61,7 +63,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <CartContext.Provider value={{ items, itemCount, subtotal, addItem, updateMeters, removeItem, clear }}>
+    <CartContext.Provider
+      value={{ items, itemCount, subtotal, addItem, updateMeters, removeItem, clear }}
+    >
       {children}
     </CartContext.Provider>
   )

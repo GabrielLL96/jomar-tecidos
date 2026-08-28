@@ -13,7 +13,12 @@ import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
 import { useSeoMeta } from '@/lib/seo'
 
 export function CartPage() {
-  useSeoMeta({ title: 'Carrinho', description: 'Seu carrinho de compras Jomar Tecidos.', path: '/carrinho', noindex: true })
+  useSeoMeta({
+    title: 'Carrinho',
+    description: 'Seu carrinho de compras Jomar Tecidos.',
+    path: '/carrinho',
+    noindex: true,
+  })
 
   const { items, subtotal, updateMeters, removeItem } = useCart()
   const business = useBusinessInfo()
@@ -41,7 +46,9 @@ export function CartPage() {
   if (items.length === 0) {
     return (
       <main className="mx-auto w-full max-w-(--breakpoint-md) px-6 py-20 text-center">
-        <h1 className="text-navy-dark mb-4 font-serif text-3xl font-medium">Sua sacola está vazia</h1>
+        <h1 className="text-navy-dark mb-4 font-serif text-3xl font-medium">
+          Sua sacola está vazia
+        </h1>
         <Link to="/tecidos">
           <Button size="lg" className="h-auto rounded-sm px-8 py-4 text-sm">
             Ver coleção

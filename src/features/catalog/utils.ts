@@ -7,7 +7,9 @@ function dominantComposition(compositions: ProductComposition[]): ProductComposi
 }
 
 function compositionName(compositionId: string, allCompositions: Composition[]): string {
-  return allCompositions.find((composition) => composition.id === compositionId)?.name ?? compositionId
+  return (
+    allCompositions.find((composition) => composition.id === compositionId)?.name ?? compositionId
+  )
 }
 
 export function formatCompositionLabel(
@@ -22,7 +24,10 @@ export function formatCompositionBreakdown(
   allCompositions: Composition[],
 ): string {
   return compositions
-    .map(({ compositionId, percentage }) => `${percentage}% ${compositionName(compositionId, allCompositions)}`)
+    .map(
+      ({ compositionId, percentage }) =>
+        `${percentage}% ${compositionName(compositionId, allCompositions)}`,
+    )
     .join(' / ')
 }
 
@@ -56,7 +61,9 @@ export function buildStockCSV(products: Product[], compositions: Composition[]):
     products.map((product) => [
       product.name,
       product.sku,
-      product.compositions.length > 0 ? formatCompositionLabel(product.compositions, compositions) : '',
+      product.compositions.length > 0
+        ? formatCompositionLabel(product.compositions, compositions)
+        : '',
       String(product.stockMeters),
       String(product.minStockMeters),
       STATUS_LABELS[product.status],

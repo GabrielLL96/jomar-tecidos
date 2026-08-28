@@ -64,25 +64,43 @@ export function ProductsPage() {
         !selectedMaterials.includes(formatCompositionLabel(product.compositions, compositions))
       )
         return false
-      if (selectedColors.length && !product.colorOptions.some((option) => selectedColors.includes(option.hex)))
+      if (
+        selectedColors.length &&
+        !product.colorOptions.some((option) => selectedColors.includes(option.hex))
+      )
         return false
       if (maxPrice !== null && product.pricePerMeter > maxPrice) return false
       return true
     })
-  }, [products, compositions, categoria, novidades, busca, selectedMaterials, selectedColors, maxPrice])
+  }, [
+    products,
+    compositions,
+    categoria,
+    novidades,
+    busca,
+    selectedMaterials,
+    selectedColors,
+    maxPrice,
+  ])
 
   const toggleMaterial = (label: string) =>
-    setSelectedMaterials((prev) => (prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label]))
+    setSelectedMaterials((prev) =>
+      prev.includes(label) ? prev.filter((item) => item !== label) : [...prev, label],
+    )
 
   const toggleColor = (hex: string) =>
-    setSelectedColors((prev) => (prev.includes(hex) ? prev.filter((item) => item !== hex) : [...prev, hex]))
+    setSelectedColors((prev) =>
+      prev.includes(hex) ? prev.filter((item) => item !== hex) : [...prev, hex],
+    )
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-2xl) px-6 py-10 md:px-12">
       <div className="text-text-meta mb-2 text-xs">
         <Link to="/">Início</Link> / Tecidos
       </div>
-      <h1 className="text-navy-dark mb-8 font-serif text-4xl font-medium">Nossa coleção de tecidos</h1>
+      <h1 className="text-navy-dark mb-8 font-serif text-4xl font-medium">
+        Nossa coleção de tecidos
+      </h1>
 
       <div className="grid grid-cols-1 gap-10 md:grid-cols-[230px_1fr]">
         <ProductFilters

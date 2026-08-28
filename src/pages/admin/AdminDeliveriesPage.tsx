@@ -3,7 +3,14 @@ import { cn } from '@/lib/utils'
 import { formatDateBR } from '@/lib/format'
 import { useAdminOrders } from '@/features/orders/hooks'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/features/orders/data'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 
 export function AdminDeliveriesPage() {
   const { data: orders = [], isLoading } = useAdminOrders()
@@ -12,7 +19,11 @@ export function AdminDeliveriesPage() {
   // checkout/avançar status/cancelar), não de delivery.status — essa coluna
   // nasce em 'awaiting_pickup' e nenhum fluxo do app jamais escreve nela.
   const deliveries = useMemo(
-    () => orders.filter((order) => order.status === 'paid' || order.status === 'shipping' || order.status === 'delivered'),
+    () =>
+      orders.filter(
+        (order) =>
+          order.status === 'paid' || order.status === 'shipping' || order.status === 'delivered',
+      ),
     [orders],
   )
 
@@ -61,7 +72,9 @@ export function AdminDeliveriesPage() {
                       (order.delivery?.trackingCode ?? '—')
                     )}
                   </TableCell>
-                  <TableCell>{order.delivery?.etaDate ? formatDateBR(order.delivery.etaDate) : '—'}</TableCell>
+                  <TableCell>
+                    {order.delivery?.etaDate ? formatDateBR(order.delivery.etaDate) : '—'}
+                  </TableCell>
                   <TableCell>
                     <span
                       className={cn(

@@ -9,6 +9,7 @@ decisão específica.
 ## Modelo de dados por domínio
 
 ### Catálogo
+
 - **`products`** — SKU, nome, `slug`/`category_slug`, `price_per_meter`, `width_m`,
   `stock_meters`, `min_sale_meters`, `min_stock_meters`, `status`
   (`active|low_stock|out_of_stock|draft` — `draft` é também o soft-delete), `is_bestseller`,
@@ -24,6 +25,7 @@ decisão específica.
 - **`stock_movements`** — ledger de ajuste de estoque (entrada/saída com motivo obrigatório).
 
 ### Usuários e endereços
+
 - **`users`** — espelha `auth.users` (mesmo `id`), populada automaticamente por trigger no
   cadastro. `role` (enum: `customer|admin|vendas|estoque|marketing|suporte`), `cpf` (unique,
   exigido desde a integração de pagamento), `asaas_customer_id`, `last_login_at`.
@@ -31,6 +33,7 @@ decisão específica.
   (`fn_enforce_single_default_address`, a mudança mais recente do projeto).
 
 ### Pedidos e checkout
+
 - **`orders`** — `order_number` (via sequence), `status`
   (`pending|paid|shipping|delivered|cancelled|refunded`), `subtotal`/`shipping_cost`/
   `discount_total`/`total`, `deleted_at` (soft-delete, só gravável pela function
@@ -47,6 +50,7 @@ decisão específica.
   futura não implementada).
 
 ### Pagamentos (Asaas)
+
 - **`order_payments`** — uma linha por tentativa de cobrança real (`asaas_payment_id`
   unique), `status` (`pending|confirmed|overdue|cancelled|refunded`), campos específicos por
   método (QR code Pix, boleto, parcelamento).
@@ -56,6 +60,7 @@ decisão específica.
 - **`rate_limit_attempts`** — controle de tentativas de cobrança por usuário/endpoint.
 
 ### Configuração de integrações
+
 - **`melhor_envio_settings`**, **`asaas_settings`** — cada uma é uma tabela singleton
   (uma única linha) com colunas de config editáveis por admin e colunas de segredo
   (`client_secret`/`access_token`/`api_key`) graváveis e legíveis **só** por `service_role`.
@@ -63,6 +68,7 @@ decisão específica.
   CEP de origem).
 
 ### Auditoria e logs
+
 - **`activity_logs`** — auditoria real de escrita bem-sucedida (produtos, pedidos, usuários,
   composições, cupons, entregas, estoque, reembolso, pagamento). Imutável para
   `authenticated` — só triggers `security definer` escrevem.
@@ -135,6 +141,7 @@ cliente não daria, e precisa travar linhas (`FOR UPDATE`) em `products`/`coupon
 `shipping_quotes` para evitar concorrência.
 
 **Nunca confia em valor vindo do client**:
+
 - `unit_price` sempre relido de `products.price_per_meter`.
 - `FOR UPDATE` em `products` durante a transação — evita overselling em compra concorrente.
 - Frete: cotação real validada contra `shipping_quotes` (rejeitando se expirada); sem
@@ -150,7 +157,7 @@ cria uma variável implícita `id` no escopo — qualquer `where id = ...` não 
 query interna vira ambíguo (`column reference "id" is ambiguous`), erro só em runtime, nada
 acusa em lint/type-check. Sempre qualifique (`products.id = ...`) dentro dessa function.
 
-**Outra armadilha real**: se você adicionar parâmetros novos (mudando a lista de *tipos* da
+**Outra armadilha real**: se você adicionar parâmetros novos (mudando a lista de _tipos_ da
 assinatura, não só valores default de parâmetros existentes), `create or replace function`
 **não substitui** a function antiga — cria uma segunda function sobrecarregada, deixando a
 versão antiga (sem sua validação nova) ainda chamável. Sempre faça
@@ -159,19 +166,23 @@ versão antiga (sem sua validação nova) ainda chamável. Sempre faça
 formato antigo resolve para a versão nova.
 
 ### `delete_order(p_order_id uuid)`
+
 Único jeito de gravar `orders.deleted_at` (coluna com `UPDATE` revogado de `authenticated`).
 Admin-only. Bloqueia exclusão se `status in ('paid','shipping','delivered','refunded')` —
 tem que cancelar/estornar antes.
 
 ### `check_and_record_rate_limit(...)`
+
 `security definer`, `GRANT EXECUTE` só para `service_role` — usada pelas Edge Functions de
 cobrança para limitar tentativas (mitigação de card testing fraud).
 
 ### `melhor_envio_secret_configured()` / `asaas_secrets_configured()`
+
 Devolvem só booleano — nunca o valor do segredo. É assim que a UI mostra "✓ Configurado" sem
 nunca reabrir o secret salvo.
 
 ### Triggers de auditoria (`fn_audit_log()` e dedicados)
+
 `fn_audit_log()` cobre a maioria das tabelas; `fn_audit_stock_movement()`,
 `fn_audit_refund()`, `fn_audit_order_payment()` são dedicados porque precisam apontar
 `entity_id` para o **pedido relacionado**, não para o id da própria linha (permite "clicar no
@@ -179,6 +190,7 @@ log → ir direto pro pedido"). CPF é mascarado automaticamente quando a tabela
 `users`.
 
 ### `handle_new_user()`
+
 Trigger em `auth.users` que cria a linha em `public.users` no cadastro. **Não** tenta ler
 `role` de `raw_app_meta_data` dentro de si mesma (uma tentativa anterior foi revertida — o
 GoTrue popula `app_metadata` numa operação separada, depois do INSERT que dispara o

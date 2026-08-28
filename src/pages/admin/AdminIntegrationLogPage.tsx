@@ -9,14 +9,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 import { downloadCSV, buildCSV } from '@/lib/csv'
 import { toDateOnly } from '@/lib/format'
 import { useIntegrationLogs, useIntegrationStats } from '@/features/integration-logs/hooks'
-import { ALL_FILTER, INTEGRATION_LOGS_PAGE_SIZE, type IntegrationLogFilters } from '@/features/integration-logs/queries'
+import {
+  ALL_FILTER,
+  INTEGRATION_LOGS_PAGE_SIZE,
+  type IntegrationLogFilters,
+} from '@/features/integration-logs/queries'
 import {
   ENVIRONMENT_LABELS,
   INTEGRATION_LABELS,
@@ -26,8 +37,14 @@ import {
 } from '@/features/integration-logs/data'
 import type { IntegrationLog } from '@/features/integration-logs/types'
 
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
-const percentFormatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+})
+const percentFormatter = new Intl.NumberFormat('pt-BR', {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+})
 
 const DEFAULT_FILTERS: IntegrationLogFilters = {
   page: 0,
@@ -41,7 +58,17 @@ const DEFAULT_FILTERS: IntegrationLogFilters = {
 
 function buildIntegrationLogCSV(logs: IntegrationLog[]): string {
   return buildCSV(
-    ['Data/Hora', 'Integração', 'Operação', 'Direção', 'Status', 'HTTP', 'Duração (ms)', 'Ambiente', 'Erro'],
+    [
+      'Data/Hora',
+      'Integração',
+      'Operação',
+      'Direção',
+      'Status',
+      'HTTP',
+      'Duração (ms)',
+      'Ambiente',
+      'Erro',
+    ],
     logs.map((log) => [
       new Date(log.createdAt).toLocaleString('pt-BR'),
       INTEGRATION_LABELS[log.integration] ?? log.integration,
@@ -66,8 +93,15 @@ export function AdminIntegrationLogPage() {
   const count = data?.count ?? 0
   const totalPages = Math.max(1, Math.ceil(count / INTEGRATION_LOGS_PAGE_SIZE))
 
-  const updateFilter = <K extends keyof IntegrationLogFilters>(key: K, value: IntegrationLogFilters[K]) => {
-    setFilters((current) => ({ ...current, [key]: value, page: key === 'page' ? (value as number) : 0 }))
+  const updateFilter = <K extends keyof IntegrationLogFilters>(
+    key: K,
+    value: IntegrationLogFilters[K],
+  ) => {
+    setFilters((current) => ({
+      ...current,
+      [key]: value,
+      page: key === 'page' ? (value as number) : 0,
+    }))
   }
 
   const hasActiveFilters =
@@ -115,7 +149,10 @@ export function AdminIntegrationLogPage() {
 
       <div className="mb-[18px] flex flex-col gap-2.5">
         <div className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap">
-          <Select value={filters.integration} onValueChange={(value) => updateFilter('integration', value)}>
+          <Select
+            value={filters.integration}
+            onValueChange={(value) => updateFilter('integration', value)}
+          >
             <SelectTrigger className="w-full bg-white sm:w-[170px]">
               <SelectValue placeholder="Integração" />
             </SelectTrigger>
@@ -128,7 +165,10 @@ export function AdminIntegrationLogPage() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={filters.operation} onValueChange={(value) => updateFilter('operation', value)}>
+          <Select
+            value={filters.operation}
+            onValueChange={(value) => updateFilter('operation', value)}
+          >
             <SelectTrigger className="w-full bg-white sm:w-[190px]">
               <SelectValue placeholder="Operação" />
             </SelectTrigger>
@@ -154,7 +194,10 @@ export function AdminIntegrationLogPage() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={filters.environment} onValueChange={(value) => updateFilter('environment', value)}>
+          <Select
+            value={filters.environment}
+            onValueChange={(value) => updateFilter('environment', value)}
+          >
             <SelectTrigger className="w-full bg-white sm:w-[140px]">
               <SelectValue placeholder="Ambiente" />
             </SelectTrigger>
@@ -186,7 +229,10 @@ export function AdminIntegrationLogPage() {
           <Button
             variant="outline"
             onClick={() =>
-              downloadCSV(buildIntegrationLogCSV(rows), `logs-integracao-${toDateOnly(new Date())}.csv`)
+              downloadCSV(
+                buildIntegrationLogCSV(rows),
+                `logs-integracao-${toDateOnly(new Date())}.csv`,
+              )
             }
             disabled={rows.length === 0}
           >
@@ -222,7 +268,12 @@ export function AdminIntegrationLogPage() {
                       : 'Nenhuma chamada registrada ainda.'}
                   </p>
                   {hasActiveFilters && (
-                    <Button variant="outline" size="sm" className="mt-3" onClick={() => setFilters(DEFAULT_FILTERS)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => setFilters(DEFAULT_FILTERS)}
+                    >
                       Limpar filtros
                     </Button>
                   )}
@@ -230,7 +281,11 @@ export function AdminIntegrationLogPage() {
               </TableRow>
             ) : (
               rows.map((log) => (
-                <TableRow key={log.id} className="cursor-pointer" onClick={() => setSelectedLog(log)}>
+                <TableRow
+                  key={log.id}
+                  className="cursor-pointer"
+                  onClick={() => setSelectedLog(log)}
+                >
                   <TableCell className="whitespace-nowrap">
                     {dateTimeFormatter.format(new Date(log.createdAt))}
                   </TableCell>
@@ -247,9 +302,14 @@ export function AdminIntegrationLogPage() {
                     </span>
                   </TableCell>
                   <TableCell>{log.durationMs != null ? `${log.durationMs}ms` : '—'}</TableCell>
-                  <TableCell onClick={(event) => log.relatedEntity === 'orders' && event.stopPropagation()}>
+                  <TableCell
+                    onClick={(event) => log.relatedEntity === 'orders' && event.stopPropagation()}
+                  >
                     {log.relatedEntity === 'orders' && log.relatedEntityId ? (
-                      <Link to={`/admin/vendas/${log.relatedEntityId}`} className="text-brand-red underline">
+                      <Link
+                        to={`/admin/vendas/${log.relatedEntityId}`}
+                        className="text-brand-red underline"
+                      >
                         Ver pedido
                       </Link>
                     ) : (
@@ -266,7 +326,8 @@ export function AdminIntegrationLogPage() {
       {count > 0 && (
         <div className="mt-4 flex items-center justify-between text-[13px] text-[#5c5648]">
           <span>
-            {count} {count === 1 ? 'registro' : 'registros'} — página {filters.page + 1} de {totalPages}
+            {count} {count === 1 ? 'registro' : 'registros'} — página {filters.page + 1} de{' '}
+            {totalPages}
           </span>
           <div className="flex gap-2">
             <Button
@@ -295,8 +356,9 @@ export function AdminIntegrationLogPage() {
         <DialogContent className="max-h-[80vh] overflow-y-auto sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>
-              {selectedLog && (INTEGRATION_LABELS[selectedLog.integration] ?? selectedLog.integration)} —{' '}
-              {selectedLog && (OPERATION_LABELS[selectedLog.operation] ?? selectedLog.operation)}
+              {selectedLog &&
+                (INTEGRATION_LABELS[selectedLog.integration] ?? selectedLog.integration)}{' '}
+              — {selectedLog && (OPERATION_LABELS[selectedLog.operation] ?? selectedLog.operation)}
             </DialogTitle>
           </DialogHeader>
           {selectedLog && (

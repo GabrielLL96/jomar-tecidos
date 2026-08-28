@@ -10,12 +10,16 @@ export async function validateResendConnection(): Promise<void> {
 // no admin) — falha de e-mail nunca deve travar o fluxo real (pedido criado,
 // status atualizado); erro só é logado no console pelo chamador.
 export async function sendOrderConfirmationEmail(orderId: string): Promise<void> {
-  const { error } = await supabase.functions.invoke('send-order-confirmation-email', { body: { orderId } })
+  const { error } = await supabase.functions.invoke('send-order-confirmation-email', {
+    body: { orderId },
+  })
   if (error) await unwrapFunctionError(error)
 }
 
 export async function sendOrderStatusEmail(orderId: string): Promise<void> {
-  const { error } = await supabase.functions.invoke('send-order-status-email', { body: { orderId } })
+  const { error } = await supabase.functions.invoke('send-order-status-email', {
+    body: { orderId },
+  })
   if (error) await unwrapFunctionError(error)
 }
 

@@ -45,9 +45,10 @@ export const secureCookieStorage = {
   getItem(key: string): string | null {
     const cookies = readAllCookies()
     const chunkCount = countChunks(cookies, key)
-    const raw = chunkCount > 0
-      ? Array.from({ length: chunkCount }, (_, i) => cookies[`${key}.${i}`]).join('')
-      : cookies[key]
+    const raw =
+      chunkCount > 0
+        ? Array.from({ length: chunkCount }, (_, i) => cookies[`${key}.${i}`]).join('')
+        : cookies[key]
 
     if (raw === undefined) return null
 

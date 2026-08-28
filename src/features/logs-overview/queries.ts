@@ -40,7 +40,13 @@ export const unifiedLogsQueryOptions = (filters: UnifiedLogFilters) =>
             if (error) throw new Error(error.message)
             return (data ?? []).map((row) => {
               const log = adaptLog(row)
-              return { kind: 'activity' as const, id: log.id, createdAt: log.createdAt, userEmail: log.userEmail, raw: log }
+              return {
+                kind: 'activity' as const,
+                id: log.id,
+                createdAt: log.createdAt,
+                userEmail: log.userEmail,
+                raw: log,
+              }
             })
           })(),
         )
@@ -60,7 +66,13 @@ export const unifiedLogsQueryOptions = (filters: UnifiedLogFilters) =>
             if (error) throw new Error(error.message)
             return (data ?? []).map((row) => {
               const log = adaptErrorLog(row)
-              return { kind: 'error' as const, id: log.id, createdAt: log.createdAt, userEmail: log.userEmail, raw: log }
+              return {
+                kind: 'error' as const,
+                id: log.id,
+                createdAt: log.createdAt,
+                userEmail: log.userEmail,
+                raw: log,
+              }
             })
           })(),
         )
@@ -71,8 +83,12 @@ export const unifiedLogsQueryOptions = (filters: UnifiedLogFilters) =>
       const search = filters.search.trim().toLowerCase()
       const filtered = search
         ? merged.filter((entry) => {
-            const summary = entry.kind === 'activity' ? (entry.raw.details ?? '') : entry.raw.message
-            return entry.userEmail?.toLowerCase().includes(search) || summary.toLowerCase().includes(search)
+            const summary =
+              entry.kind === 'activity' ? (entry.raw.details ?? '') : entry.raw.message
+            return (
+              entry.userEmail?.toLowerCase().includes(search) ||
+              summary.toLowerCase().includes(search)
+            )
           })
         : merged
 

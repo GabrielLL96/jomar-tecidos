@@ -13,15 +13,22 @@ export async function createAsaasCharge(
   paymentMethod: PaymentMethod,
   installments?: number,
 ): Promise<CreateChargeResult> {
-  const { data, error } = await supabase.functions.invoke<CreateChargeResult>('asaas-create-charge', {
-    body: { orderId, paymentMethod, installments },
-  })
+  const { data, error } = await supabase.functions.invoke<CreateChargeResult>(
+    'asaas-create-charge',
+    {
+      body: { orderId, paymentMethod, installments },
+    },
+  )
   if (error) await unwrapFunctionError(error)
   if (!data) throw new Error('Resposta vazia ao criar cobrança')
   return data
 }
 
-export async function refundAsaasOrder(orderId: string, reason: string, amount?: number): Promise<void> {
+export async function refundAsaasOrder(
+  orderId: string,
+  reason: string,
+  amount?: number,
+): Promise<void> {
   const { error } = await supabase.functions.invoke('asaas-refund', {
     body: { orderId, reason, amount },
   })
@@ -44,9 +51,12 @@ export async function chargeAsaasWithSavedCard(
   savedCardId: string,
   installments?: number,
 ): Promise<ChargeCardResult> {
-  const { data, error } = await supabase.functions.invoke<ChargeCardResult>('asaas-charge-with-token', {
-    body: { orderId, savedCardId, installments },
-  })
+  const { data, error } = await supabase.functions.invoke<ChargeCardResult>(
+    'asaas-charge-with-token',
+    {
+      body: { orderId, savedCardId, installments },
+    },
+  )
   if (error) await unwrapFunctionError(error)
   if (!data) throw new Error('Resposta vazia ao cobrar cartão salvo')
   return data

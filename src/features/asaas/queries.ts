@@ -12,7 +12,11 @@ export const asaasStatusQueryOptions = queryOptions({
     // "*Configured" vem de uma function security definer à parte
     // (asaas_secrets_configured), nunca o valor do secret em si.
     const [{ data, error }, { data: secrets, error: secretsError }] = await Promise.all([
-      supabase.from('asaas_settings').select('environment, connected_at').eq('id', ASAAS_SETTINGS_ID).maybeSingle(),
+      supabase
+        .from('asaas_settings')
+        .select('environment, connected_at')
+        .eq('id', ASAAS_SETTINGS_ID)
+        .maybeSingle(),
       supabase.rpc('asaas_secrets_configured').maybeSingle(),
     ])
     if (error) throw new Error(error.message)

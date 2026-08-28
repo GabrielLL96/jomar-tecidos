@@ -96,7 +96,9 @@ export function ResetPasswordPage() {
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="password">Nova senha</Label>
             <Input id="password" type="password" {...register('password')} autoFocus />
-            {errors.password && <p className="text-destructive text-xs">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-destructive text-xs">{errors.password.message}</p>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
@@ -105,7 +107,12 @@ export function ResetPasswordPage() {
               <p className="text-destructive text-xs">{errors.confirmPassword.message}</p>
             )}
           </div>
-          <Button type="submit" size="lg" disabled={isSubmitting} className="mt-2 h-auto rounded-sm py-4 text-sm">
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isSubmitting}
+            className="mt-2 h-auto rounded-sm py-4 text-sm"
+          >
             {isSubmitting ? 'Salvando…' : 'Redefinir senha'}
           </Button>
         </form>

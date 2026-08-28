@@ -38,7 +38,11 @@ export function Footer() {
             <Link to="/politica-de-privacidade" className={inertLinkClass}>
               Política de Privacidade
             </Link>
-            <button type="button" onClick={reopen} className={cn(inertLinkClass, 'cursor-pointer text-left')}>
+            <button
+              type="button"
+              onClick={reopen}
+              className={cn(inertLinkClass, 'cursor-pointer text-left')}
+            >
               Preferências de Cookies
             </button>
             <Link to="/tecidos" className={inertLinkClass}>
@@ -117,9 +121,12 @@ export function Footer() {
       </div>
 
       <div className="mx-auto flex max-w-(--breakpoint-xl) flex-wrap items-center justify-between gap-3 border-t border-[#2a2778] px-6 py-5 text-xs text-[#8b86b8] md:px-12">
-        <span>© {new Date().getFullYear()} {business.name}. Todos os direitos reservados.</span>
+        <span>
+          © {new Date().getFullYear()} {business.name}. Todos os direitos reservados.
+        </span>
         <span className="tracking-[0.04em]">
-          SITE DESENVOLVIDO POR: <strong className="text-[#c9c5e2]">GPM Grupo Pedro Matos Tecnologia</strong>
+          SITE DESENVOLVIDO POR:{' '}
+          <strong className="text-[#c9c5e2]">GPM Grupo Pedro Matos Tecnologia</strong>
         </span>
         <button
           type="button"

@@ -35,7 +35,9 @@ Deno.serve(async (req) => {
 
     if (settingsError) throw new Error(`Falha ao ler configuração: ${settingsError.message}`)
     if (!settings?.client_id || !settings.client_secret || !settings.redirect_uri) {
-      throw new Error('client_id/client_secret/redirect_uri não configurados em Configurações > Integrações')
+      throw new Error(
+        'client_id/client_secret/redirect_uri não configurados em Configurações > Integrações',
+      )
     }
 
     // code/client_secret NUNCA entram no log — code é secret de uso único,

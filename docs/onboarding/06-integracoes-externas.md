@@ -15,8 +15,9 @@ cobrar um cartão de verdade.
 
 `asaas_settings` (singleton) guarda `api_key` e `webhook_token` com **GRANT de coluna em
 duas camadas**:
+
 - `authenticated` (mesmo sendo admin) tem `SELECT` só em `id, environment, connected_at,
-  connected_by, updated_at` — **nunca** consegue ler `api_key`/`webhook_token` de volta,
+connected_by, updated_at` — **nunca** consegue ler `api_key`/`webhook_token` de volta,
   mesmo com RLS permitindo a linha inteira.
 - Só `service_role` tem `SELECT`/`UPDATE` nessas colunas — e só as Edge Functions rodam com
   esse role.

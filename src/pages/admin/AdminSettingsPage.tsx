@@ -153,7 +153,10 @@ export function AdminSettingsPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col gap-1.5">
             <Label>Telefone (exibição)</Label>
-            <Input value={form.footer_phone} onChange={(event) => setField('footer_phone', event.target.value)} />
+            <Input
+              value={form.footer_phone}
+              onChange={(event) => setField('footer_phone', event.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>Telefone (link, só dígitos com DDI)</Label>
@@ -171,7 +174,10 @@ export function AdminSettingsPage() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>E-mail</Label>
-            <Input value={form.footer_email} onChange={(event) => setField('footer_email', event.target.value)} />
+            <Input
+              value={form.footer_email}
+              onChange={(event) => setField('footer_email', event.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>Endereço</Label>
@@ -182,15 +188,24 @@ export function AdminSettingsPage() {
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>Cidade/UF</Label>
-            <Input value={form.footer_city} onChange={(event) => setField('footer_city', event.target.value)} />
+            <Input
+              value={form.footer_city}
+              onChange={(event) => setField('footer_city', event.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>CEP</Label>
-            <Input value={form.footer_zip} onChange={(event) => setField('footer_zip', event.target.value)} />
+            <Input
+              value={form.footer_zip}
+              onChange={(event) => setField('footer_zip', event.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>Horário de funcionamento</Label>
-            <Input value={form.footer_hours} onChange={(event) => setField('footer_hours', event.target.value)} />
+            <Input
+              value={form.footer_hours}
+              onChange={(event) => setField('footer_hours', event.target.value)}
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label>Instagram (link)</Label>
@@ -221,10 +236,10 @@ export function AdminSettingsPage() {
             onChange={(event) => setField('promobar_text_3', event.target.value)}
           />
           <p className="text-text-meta text-xs">
-            Texto livre — não é gerado a partir do valor abaixo. Frases 2 e 3 são opcionais; com mais
-            de uma preenchida, a barra troca de frase a cada 10 segundos. Se mudar o valor mínimo,
-            atualize as frases manualmente pra não anunciar um número diferente do que o checkout
-            realmente usa.
+            Texto livre — não é gerado a partir do valor abaixo. Frases 2 e 3 são opcionais; com
+            mais de uma preenchida, a barra troca de frase a cada 10 segundos. Se mudar o valor
+            mínimo, atualize as frases manualmente pra não anunciar um número diferente do que o
+            checkout realmente usa.
           </p>
         </div>
         <div className="flex flex-col gap-1.5">

@@ -15,7 +15,10 @@ import {
 } from '@/features/melhor-envio/service'
 import { SettingsCard } from './SettingsCard'
 
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+})
 const WEBHOOK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/melhor-envio-webhook`
 
 export function MelhorEnvioIntegrationCard() {
@@ -23,7 +26,9 @@ export function MelhorEnvioIntegrationCard() {
   const { data: status } = useMelhorEnvioStatus()
   const [clientId, setClientId] = useState('')
   const [clientSecret, setClientSecret] = useState('')
-  const [redirectUri, setRedirectUri] = useState(`${window.location.origin}/admin/melhor-envio/callback`)
+  const [redirectUri, setRedirectUri] = useState(
+    `${window.location.origin}/admin/melhor-envio/callback`,
+  )
   const [isSaving, setIsSaving] = useState(false)
   const [connectError, setConnectError] = useState<string | null>(null)
   const syncedStatus = useRef(false)
@@ -119,7 +124,11 @@ export function MelhorEnvioIntegrationCard() {
     // reaproveitar uma janela de OUTRA aba (ex.: se /admin/configuracoes estiver
     // aberto em 2 abas) — o `opener` dessa janela reaproveitada fica preso na
     // aba antiga, e a aba atual nunca recebe o postMessage de volta.
-    const popup = window.open(url, `melhor-envio-oauth-${crypto.randomUUID()}`, 'width=520,height=680')
+    const popup = window.open(
+      url,
+      `melhor-envio-oauth-${crypto.randomUUID()}`,
+      'width=520,height=680',
+    )
     if (!popup) {
       toast.error('Não foi possível abrir a janela de conexão — verifique o bloqueador de pop-ups')
       return
@@ -154,7 +163,9 @@ export function MelhorEnvioIntegrationCard() {
           </div>
           <Input
             type="password"
-            placeholder={status?.secretConfigured ? '•••• já configurado — digite pra substituir' : ''}
+            placeholder={
+              status?.secretConfigured ? '•••• já configurado — digite pra substituir' : ''
+            }
             value={clientSecret}
             onChange={(event) => setClientSecret(event.target.value)}
           />
@@ -163,17 +174,18 @@ export function MelhorEnvioIntegrationCard() {
           <Label>Redirect URI</Label>
           <Input value={redirectUri} onChange={(event) => setRedirectUri(event.target.value)} />
           <p className="text-text-meta text-xs">
-            Precisa ser exatamente igual ao cadastrado no painel da Melhor Envio (Integrações {'>'} Área Dev.)
+            Precisa ser exatamente igual ao cadastrado no painel da Melhor Envio (Integrações {'>'}{' '}
+            Área Dev.)
           </p>
         </div>
         <div className="col-span-2 flex flex-col gap-1.5">
           <Label>URL do webhook</Label>
           <Input value={WEBHOOK_URL} readOnly onFocus={(event) => event.target.select()} />
           <p className="text-text-meta text-xs">
-            Cadastre essa URL em Integrações {'>'} Área Dev. {'>'} Webhooks no painel da Melhor Envio pra
-            receber atualizações de status de etiqueta em tempo real. Só recebe eventos de etiquetas
-            geradas por este app — sem efeito enquanto nenhuma etiqueta é comprada (fora do escopo
-            desta fase).
+            Cadastre essa URL em Integrações {'>'} Área Dev. {'>'} Webhooks no painel da Melhor
+            Envio pra receber atualizações de status de etiqueta em tempo real. Só recebe eventos de
+            etiquetas geradas por este app — sem efeito enquanto nenhuma etiqueta é comprada (fora
+            do escopo desta fase).
           </p>
         </div>
       </div>

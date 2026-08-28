@@ -33,7 +33,9 @@ const ConsentContext = createContext<ConsentContextValue | null>(null)
 
 export function ConsentProvider({ children }: { children: ReactNode }) {
   const { getItem, setItem } = useSecureStorage()
-  const [consent, setConsent] = useState<ConsentRecord | null>(() => getItem<ConsentRecord>('cookie-consent', null))
+  const [consent, setConsent] = useState<ConsentRecord | null>(() =>
+    getItem<ConsentRecord>('cookie-consent', null),
+  )
   const [forceOpen, setForceOpen] = useState(false)
 
   const saveConsent = (categories: ConsentCategories, channel: ConsentRecord['channel']) => {

@@ -55,8 +55,13 @@ individual):
 ```tsx
 useEffect(() => {
   if (isLoading) return
-  if (!user) { navigate('/conta/entrar', { replace: true }); return }
-  if (user.role !== 'admin') { navigate('/', { replace: true }) }
+  if (!user) {
+    navigate('/conta/entrar', { replace: true })
+    return
+  }
+  if (user.role !== 'admin') {
+    navigate('/', { replace: true })
+  }
 }, [user, isLoading, navigate])
 
 if (isLoading || !user || user.role !== 'admin') return null

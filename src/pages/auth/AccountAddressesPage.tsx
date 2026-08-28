@@ -18,7 +18,9 @@ export function AccountAddressesPage() {
     try {
       await setDefaultAddress(addressId)
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Não foi possível definir o endereço padrão')
+      toast.error(
+        error instanceof Error ? error.message : 'Não foi possível definir o endereço padrão',
+      )
     } finally {
       setSettingDefaultId(null)
     }

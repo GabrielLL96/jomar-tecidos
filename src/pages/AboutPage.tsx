@@ -14,7 +14,10 @@ export function AboutPage() {
 
   return (
     <main>
-      <ImagePlaceholder colors={['#131047', '#1c1a5e']} className="flex h-[280px] items-center justify-center">
+      <ImagePlaceholder
+        colors={['#131047', '#1c1a5e']}
+        className="flex h-[280px] items-center justify-center"
+      >
         <h1 className="font-serif text-4xl font-medium text-white">Nossa história</h1>
       </ImagePlaceholder>
 
@@ -23,14 +26,14 @@ export function AboutPage() {
 
         <div className="mx-auto flex w-full max-w-(--breakpoint-sm) flex-col gap-5 px-6 md:px-8">
           <p className="text-base leading-relaxed text-[#3a352b]">
-            A <strong>{business.name}</strong> é uma loja especializada em tecidos finos e enxovais de
-            qualidade, localizada em Minas Gerais. Com tradição no mercado têxtil, oferecemos uma vasta
-            seleção de tecidos nacionais e importados para todos os gostos e necessidades.
+            A <strong>{business.name}</strong> é uma loja especializada em tecidos finos e enxovais
+            de qualidade, localizada em Minas Gerais. Com tradição no mercado têxtil, oferecemos uma
+            vasta seleção de tecidos nacionais e importados para todos os gostos e necessidades.
           </p>
           <p className="text-base leading-relaxed text-[#3a352b]">
             Nosso compromisso é proporcionar a melhor experiência de compra, com atendimento
-            personalizado e produtos que superam expectativas. Cada tecido é cuidadosamente selecionado
-            para garantir qualidade, durabilidade e beleza.
+            personalizado e produtos que superam expectativas. Cada tecido é cuidadosamente
+            selecionado para garantir qualidade, durabilidade e beleza.
           </p>
           <p className="text-base leading-relaxed text-[#3a352b]">
             Atendemos costureiras, estilistas, decoradores, ateliês e todos que buscam tecidos de

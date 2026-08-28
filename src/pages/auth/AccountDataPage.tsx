@@ -179,8 +179,8 @@ export function AccountDataPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Excluir sua conta?</AlertDialogTitle>
             <AlertDialogDescription>
-              Nome, e-mail, telefone e CPF serão apagados e o login será desativado
-              permanentemente. Não é possível desfazer essa ação.
+              Nome, e-mail, telefone e CPF serão apagados e o login será desativado permanentemente.
+              Não é possível desfazer essa ação.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

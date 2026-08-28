@@ -15,4 +15,5 @@ export const useAdminCompositions = () => useQuery(adminCompositionsQueryOptions
 export const useProducts = () => useQuery(productsQueryOptions)
 export const useAdminProducts = () => useQuery(adminProductsQueryOptions)
 export const useProduct = (slug: string) => useQuery(productQueryOptions(slug))
-export const useProductReviews = (productId: string) => useQuery(productReviewsQueryOptions(productId))
+export const useProductReviews = (productId: string) =>
+  useQuery(productReviewsQueryOptions(productId))

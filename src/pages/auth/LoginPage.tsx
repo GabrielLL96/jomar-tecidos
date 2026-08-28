@@ -11,7 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth, type AuthUser } from '@/features/auth/AuthContext'
 import { useSeoMeta } from '@/lib/seo'
 import { supabase } from '@/lib/supabase'
-import { loginSchema, signupSchema, type LoginInput, type SignupInput } from '@/features/auth/schema'
+import {
+  loginSchema,
+  signupSchema,
+  type LoginInput,
+  type SignupInput,
+} from '@/features/auth/schema'
 
 // Sem `?redirect=` explícito (ex.: checkout mandando de volta pra si mesmo),
 // o destino padrão depende do papel do usuário — admin vai pro painel, não
@@ -193,14 +198,17 @@ export function LoginPage() {
   })
 
   useEffect(() => {
-    if (!isLoading && user) navigate(redirectParam || defaultRedirectFor(user.role), { replace: true })
+    if (!isLoading && user)
+      navigate(redirectParam || defaultRedirectFor(user.role), { replace: true })
   }, [user, isLoading, navigate, redirectParam])
 
   if (isLoading || user) return null
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-sm) px-6 py-20">
-      <h1 className="text-navy-dark mb-8 text-center font-serif text-3xl font-medium">Minha conta</h1>
+      <h1 className="text-navy-dark mb-8 text-center font-serif text-3xl font-medium">
+        Minha conta
+      </h1>
 
       <Tabs defaultValue="login">
         <TabsList className="border-border mb-7 h-auto w-full gap-0 rounded-none border-b bg-transparent p-0">

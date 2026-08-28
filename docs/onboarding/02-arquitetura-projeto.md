@@ -45,24 +45,24 @@ Cada feature segue o mesmo padrão interno: `queries.ts` (acesso a dados + adapt
 Postgres→domínio), `hooks.ts` (wrapper fino de `useQuery`/`useMutation` em cima das
 queryOptions), `types.ts`, e ocasionalmente um `*Context.tsx` para estado global client-side.
 
-| Feature | Responsabilidade |
-|---|---|
-| `account/` | Endereços do usuário logado (`AddressesContext`) — dado real no Supabase |
-| `asaas/` | Integração de pagamento: chamadas às Edge Functions de cobrança/reembolso, status de conexão |
-| `audit/` | Leitura de `activity_logs` (auditoria de ações administrativas) para a tela de logs |
-| `auth/` | `AuthContext` — login/sessão/papel do usuário, fonte de verdade do gate do admin |
-| `cart/` | Carrinho de compras (`CartContext`) |
-| `catalog/` | Produtos, composições, categorias — queries públicas e variante admin (sem filtro de rascunho) |
-| `consent/` | Consentimento LGPD de cookies/analytics (`ConsentContext`), controla injeção do GTM |
-| `error-logs/` | Leitura de `error_logs` (erros de runtime capturados no client) |
-| `favorites/` | Lista de favoritos — client-side puro, via `useSecureStorage`, sem tabela no banco |
-| `integration-logs/` | Leitura de `integration_logs` (chamadas a Asaas/Melhor Envio) para o admin |
-| `logs-overview/` | Agrega `audit` + `error-logs` num único feed unificado, para a tela `/admin/logs` |
-| `melhor-envio/` | Fluxo OAuth de conexão e cotação de frete |
-| `orders/` | Pedidos — monta o objeto `Order` completo (itens, entrega, pagamento, reembolsos, histórico) num único `select` com joins |
-| `site-settings/` | Conteúdo editável da Home/rodapé, configs internas (frete grátis, etc.) |
-| `stock/` | Movimentações de estoque |
-| `users/` | Gestão de usuários no admin |
+| Feature             | Responsabilidade                                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `account/`          | Endereços do usuário logado (`AddressesContext`) — dado real no Supabase                                                  |
+| `asaas/`            | Integração de pagamento: chamadas às Edge Functions de cobrança/reembolso, status de conexão                              |
+| `audit/`            | Leitura de `activity_logs` (auditoria de ações administrativas) para a tela de logs                                       |
+| `auth/`             | `AuthContext` — login/sessão/papel do usuário, fonte de verdade do gate do admin                                          |
+| `cart/`             | Carrinho de compras (`CartContext`)                                                                                       |
+| `catalog/`          | Produtos, composições, categorias — queries públicas e variante admin (sem filtro de rascunho)                            |
+| `consent/`          | Consentimento LGPD de cookies/analytics (`ConsentContext`), controla injeção do GTM                                       |
+| `error-logs/`       | Leitura de `error_logs` (erros de runtime capturados no client)                                                           |
+| `favorites/`        | Lista de favoritos — client-side puro, via `useSecureStorage`, sem tabela no banco                                        |
+| `integration-logs/` | Leitura de `integration_logs` (chamadas a Asaas/Melhor Envio) para o admin                                                |
+| `logs-overview/`    | Agrega `audit` + `error-logs` num único feed unificado, para a tela `/admin/logs`                                         |
+| `melhor-envio/`     | Fluxo OAuth de conexão e cotação de frete                                                                                 |
+| `orders/`           | Pedidos — monta o objeto `Order` completo (itens, entrega, pagamento, reembolsos, histórico) num único `select` com joins |
+| `site-settings/`    | Conteúdo editável da Home/rodapé, configs internas (frete grátis, etc.)                                                   |
+| `stock/`            | Movimentações de estoque                                                                                                  |
+| `users/`            | Gestão de usuários no admin                                                                                               |
 
 ## Convenções de código (observadas no código real, não aspiracionais)
 
@@ -91,8 +91,8 @@ queryOptions), `types.ts`, e ocasionalmente um `*Context.tsx` para estado global
   dominante (função local) a menos que haja necessidade real de optimistic update.
 - **Export**: named exports em tudo dentro de `features/`/`pages/` — sem `export default`
   (exceção: `App.tsx`, exigido pelo entry point do Vite).
-- **Comentários**: só onde explicam *por que* (edge case de Postgrest, race condition,
-  comportamento de trigger) — não *o que* o código faz. Siga esse padrão ao adicionar código.
+- **Comentários**: só onde explicam _por que_ (edge case de Postgrest, race condition,
+  comportamento de trigger) — não _o que_ o código faz. Siga esse padrão ao adicionar código.
 - **Formatação**: sem ponto-e-vírgula, aspas simples, `printWidth: 100` (`.prettierrc`).
 
 ## Tooling

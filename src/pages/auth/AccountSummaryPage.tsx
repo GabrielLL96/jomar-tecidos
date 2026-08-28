@@ -24,7 +24,9 @@ export function AccountSummaryPage() {
         </div>
         <div className="bg-cream-secondary rounded-md p-5">
           <div className="text-text-meta text-xs">Favoritos</div>
-          <div className="text-navy mt-1.5 font-serif text-2xl font-medium">{favoriteIds.length}</div>
+          <div className="text-navy mt-1.5 font-serif text-2xl font-medium">
+            {favoriteIds.length}
+          </div>
         </div>
         <div className="bg-cream-secondary rounded-md p-5">
           <div className="text-text-meta text-xs">Endereços salvos</div>

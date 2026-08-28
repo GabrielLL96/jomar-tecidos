@@ -97,7 +97,11 @@ export function Header() {
           </button>
         )}
 
-        <NavLink to="/favoritos" aria-label="Favoritos" className="relative flex items-center text-foreground">
+        <NavLink
+          to="/favoritos"
+          aria-label="Favoritos"
+          className="relative flex items-center text-foreground"
+        >
           <Heart className="size-[18px]" />
           {favoriteIds.length > 0 && (
             <span className="bg-brand-red absolute -top-2 -right-2 flex size-4 items-center justify-center rounded-full text-xs font-semibold text-white">

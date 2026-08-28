@@ -236,7 +236,10 @@ export function AdminStockPage() {
         <Button
           variant="outline"
           onClick={() =>
-            downloadCSV(buildStockCSV(filteredProducts, compositions), `estoque-${toDateOnly(new Date())}.csv`)
+            downloadCSV(
+              buildStockCSV(filteredProducts, compositions),
+              `estoque-${toDateOnly(new Date())}.csv`,
+            )
           }
           className="sm:self-start"
         >

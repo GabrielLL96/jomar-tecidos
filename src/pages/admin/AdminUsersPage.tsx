@@ -591,7 +591,10 @@ export function AdminUsersPage() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deactivateUser} onOpenChange={(open) => !open && setDeactivateUser(null)}>
+      <AlertDialog
+        open={!!deactivateUser}
+        onOpenChange={(open) => !open && setDeactivateUser(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Desativar {deactivateUser?.name}?</AlertDialogTitle>

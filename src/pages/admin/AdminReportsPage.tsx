@@ -17,7 +17,10 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = Object.fromEntries(
   PAYMENT_METHODS.map((method) => [method.value, method.label]),
 )
 
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+})
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' })
 
 // fim do dia local da previsão, pra comparar contra um timestamp real —
@@ -35,11 +38,24 @@ export function AdminReportsPage() {
   const { data: coupons = [] } = useAdminCoupons()
   const { data: users = [] } = useAdminUsers()
 
-  const productsById = useMemo(() => new Map(products.map((product) => [product.id, product])), [products])
+  const productsById = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products],
+  )
 
   const exportSales = () => {
     const csv = buildCSV(
-      ['Pedido', 'Data', 'Cliente', 'Pagamento', 'Subtotal', 'Frete', 'Desconto', 'Total', 'Status'],
+      [
+        'Pedido',
+        'Data',
+        'Cliente',
+        'Pagamento',
+        'Subtotal',
+        'Frete',
+        'Desconto',
+        'Total',
+        'Status',
+      ],
       orders.map((order) => [
         `#${order.orderNumber}`,
         dateTimeFormatter.format(new Date(order.createdAt)),
@@ -58,7 +74,9 @@ export function AdminReportsPage() {
   const exportCompositionPerformance = () => {
     // pedido cancelado ou reembolsado não conta como venda real — mesmo
     // critério já usado no KPI "Faturamento" de /admin/vendas.
-    const valid = orders.filter((order) => order.status !== 'cancelled' && order.status !== 'refunded')
+    const valid = orders.filter(
+      (order) => order.status !== 'cancelled' && order.status !== 'refunded',
+    )
 
     const byComposition = new Map<string, { orders: number; meters: number; revenue: number }>()
     for (const order of valid) {
@@ -96,7 +114,10 @@ export function AdminReportsPage() {
   }
 
   const exportStock = () => {
-    downloadCSV(buildStockCSV(products, compositions), `estoque-reposicao-${toDateOnly(new Date())}.csv`)
+    downloadCSV(
+      buildStockCSV(products, compositions),
+      `estoque-reposicao-${toDateOnly(new Date())}.csv`,
+    )
   }
 
   const exportCoupons = () => {
@@ -117,7 +138,8 @@ export function AdminReportsPage() {
   const exportCustomers = () => {
     const byEmail = new Map<string, { count: number; total: number }>()
     for (const order of orders) {
-      if (!order.customerEmail || order.status === 'cancelled' || order.status === 'refunded') continue
+      if (!order.customerEmail || order.status === 'cancelled' || order.status === 'refunded')
+        continue
       const entry = byEmail.get(order.customerEmail) ?? { count: 0, total: 0 }
       entry.count += 1
       entry.total += order.total

@@ -20,8 +20,14 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = Object.fromEntries(
   PAYMENT_METHODS.map((method) => [method.value, method.label]),
 )
 
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
-const percentFormatter = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+})
+const percentFormatter = new Intl.NumberFormat('pt-BR', {
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
+})
 
 export function AdminSalesPage() {
   const { data: orders = [], isLoading } = useAdminOrders()
@@ -36,7 +42,9 @@ export function AdminSalesPage() {
     // "refunded" sai do faturamento junto com "cancelled" — dinheiro que
     // voltou pro cliente não é receita real (achado ao adicionar o status
     // novo, não existia antes do reembolso real via Asaas).
-    const valid = monthOrders.filter((order) => order.status !== 'cancelled' && order.status !== 'refunded')
+    const valid = monthOrders.filter(
+      (order) => order.status !== 'cancelled' && order.status !== 'refunded',
+    )
     const revenue = valid.reduce((sum, order) => sum + order.total, 0)
     const cancelledCount = monthOrders.filter((order) => order.status === 'cancelled').length
     const cancellationRate = monthOrders.length ? (cancelledCount / monthOrders.length) * 100 : 0
@@ -54,7 +62,9 @@ export function AdminSalesPage() {
         {kpis.map((kpi) => (
           <div key={kpi.label} className="rounded-md border border-[#e4ddd0] bg-white p-5">
             <div className="text-xs text-[#8c8375]">{kpi.label}</div>
-            <div className="text-navy-dark mt-1.5 font-serif text-2xl font-semibold">{kpi.value}</div>
+            <div className="text-navy-dark mt-1.5 font-serif text-2xl font-semibold">
+              {kpi.value}
+            </div>
           </div>
         ))}
       </div>
@@ -89,7 +99,9 @@ export function AdminSalesPage() {
                   <TableCell>#{order.orderNumber}</TableCell>
                   <TableCell>{dateTimeFormatter.format(new Date(order.createdAt))}</TableCell>
                   <TableCell>{order.customerName ?? '—'}</TableCell>
-                  <TableCell>{PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod}</TableCell>
+                  <TableCell>
+                    {PAYMENT_METHOD_LABELS[order.paymentMethod] ?? order.paymentMethod}
+                  </TableCell>
                   <TableCell>{formatPriceBRL(order.total)}</TableCell>
                   <TableCell>
                     <span

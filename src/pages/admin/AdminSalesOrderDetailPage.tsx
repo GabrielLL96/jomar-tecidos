@@ -38,7 +38,11 @@ import { formatPriceBRL } from '@/lib/format'
 import { computeStockStatus } from '@/features/catalog/utils'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useOrder } from '@/features/orders/hooks'
-import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES, ORDER_PAYMENT_STATUS_LABELS } from '@/features/orders/data'
+import {
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_STYLES,
+  ORDER_PAYMENT_STATUS_LABELS,
+} from '@/features/orders/data'
 import { refundAsaasOrder } from '@/features/asaas/service'
 import { sendOrderStatusEmail } from '@/features/resend/service'
 import { PAYMENT_METHODS } from '@/pages/checkout/schema'
@@ -73,7 +77,8 @@ function progressStepIndex(status: OrderStatus): number {
 }
 
 const STATUS_MESSAGES: Record<OrderStatus, string> = {
-  pending: 'Aguardando confirmação de pagamento pela Asaas — status muda sozinho quando o webhook confirmar.',
+  pending:
+    'Aguardando confirmação de pagamento pela Asaas — status muda sozinho quando o webhook confirmar.',
   paid: 'Pagamento confirmado — pedido em preparação.',
   shipping: 'Pedido a caminho do cliente.',
   delivered: 'Pedido entregue com sucesso.',
@@ -98,7 +103,10 @@ function nextStatus(current: OrderStatus): OrderStatus | null {
   return STATUS_FLOW[index + 1]
 }
 
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+})
 
 export function AdminSalesOrderDetailPage() {
   const { id } = useParams()
@@ -235,7 +243,11 @@ export function AdminSalesOrderDetailPage() {
         if (productError) throw new Error(productError.message)
 
         const newStock = Number(product.stock_meters) + item.meters
-        const newStatus = computeStockStatus(product.status, newStock, Number(product.min_stock_meters))
+        const newStatus = computeStockStatus(
+          product.status,
+          newStock,
+          Number(product.min_stock_meters),
+        )
 
         const { error: updateError } = await supabase
           .from('products')
@@ -342,7 +354,8 @@ export function AdminSalesOrderDetailPage() {
   const canDelete = isAdmin && !approvedPayment
   const refundedTotal = order.refunds.reduce((sum, refund) => sum + refund.amount, 0)
   const remainingToRefund = Number(order.total) - refundedTotal
-  const canRefund = ['paid', 'shipping', 'delivered'].includes(order.status) && remainingToRefund > 0
+  const canRefund =
+    ['paid', 'shipping', 'delivered'].includes(order.status) && remainingToRefund > 0
 
   return (
     <div>
@@ -356,7 +369,9 @@ export function AdminSalesOrderDetailPage() {
       <div className="mb-[18px] flex flex-wrap items-start justify-between gap-3 rounded-md border border-[#e4ddd0] bg-white p-5">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-navy-dark font-serif text-xl font-semibold">Pedido #{order.orderNumber}</h1>
+            <h1 className="text-navy-dark font-serif text-xl font-semibold">
+              Pedido #{order.orderNumber}
+            </h1>
             <span
               className={cn(
                 'rounded-full px-2.5 py-1 text-[11.5px] font-semibold',
@@ -430,7 +445,9 @@ export function AdminSalesOrderDetailPage() {
                         {index + 1}
                       </div>
                       {index < PROGRESS_STEPS.length - 1 && (
-                        <div className={cn('mx-1 h-0.5 flex-1', reached ? 'bg-navy' : 'bg-[#ede8de]')} />
+                        <div
+                          className={cn('mx-1 h-0.5 flex-1', reached ? 'bg-navy' : 'bg-[#ede8de]')}
+                        />
                       )}
                     </div>
                     <span className="mt-1 text-center text-[10.5px] text-[#8c8375]">{step}</span>
@@ -550,7 +567,9 @@ export function AdminSalesOrderDetailPage() {
           {order.payment && (
             <div className="mt-2 flex justify-between border-t border-[#ede8de] pt-1.5">
               <span className="text-text-meta">Status da cobrança</span>
-              <span>{ORDER_PAYMENT_STATUS_LABELS[order.payment.status] ?? order.payment.status}</span>
+              <span>
+                {ORDER_PAYMENT_STATUS_LABELS[order.payment.status] ?? order.payment.status}
+              </span>
             </div>
           )}
           {order.payment && order.payment.installmentCount > 1 && (
@@ -586,7 +605,9 @@ export function AdminSalesOrderDetailPage() {
           </DialogHeader>
           <div className="flex flex-col gap-3">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="refundAmount">Valor (R$) — deixe em branco pra reembolsar tudo que resta</Label>
+              <Label htmlFor="refundAmount">
+                Valor (R$) — deixe em branco pra reembolsar tudo que resta
+              </Label>
               <Input
                 id="refundAmount"
                 inputMode="decimal"
@@ -617,7 +638,11 @@ export function AdminSalesOrderDetailPage() {
             <Button variant="outline" onClick={() => setRefundOpen(false)}>
               Voltar
             </Button>
-            <Button variant="destructive" onClick={handleRefund} disabled={isRefunding || !refundReason.trim()}>
+            <Button
+              variant="destructive"
+              onClick={handleRefund}
+              disabled={isRefunding || !refundReason.trim()}
+            >
               {isRefunding ? 'Processando…' : 'Confirmar reembolso'}
             </Button>
           </DialogFooter>

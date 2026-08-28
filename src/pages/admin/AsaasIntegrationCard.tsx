@@ -4,7 +4,13 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { supabase } from '@/lib/supabase'
 import type { TablesUpdate } from '@/lib/database.types'
 import { useAsaasStatus } from '@/features/asaas/hooks'
@@ -13,7 +19,10 @@ import { validateAsaasConnection } from '@/features/asaas/service'
 import type { AsaasEnvironment } from '@/features/asaas/types'
 import { SettingsCard } from './SettingsCard'
 
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+})
 const WEBHOOK_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/asaas-webhook`
 
 export function AsaasIntegrationCard() {
@@ -51,7 +60,10 @@ export function AsaasIntegrationCard() {
       if (apiKey.trim()) payload.api_key = apiKey.trim()
       if (webhookToken.trim()) payload.webhook_token = webhookToken.trim()
 
-      const { error } = await supabase.from('asaas_settings').update(payload).eq('id', ASAAS_SETTINGS_ID)
+      const { error } = await supabase
+        .from('asaas_settings')
+        .update(payload)
+        .eq('id', ASAAS_SETTINGS_ID)
       if (error) throw new Error(error.message)
       setApiKey('')
       setWebhookToken('')
@@ -80,7 +92,10 @@ export function AsaasIntegrationCard() {
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1.5">
           <Label>Ambiente</Label>
-          <Select value={environment} onValueChange={(value) => setEnvironment(value as AsaasEnvironment)}>
+          <Select
+            value={environment}
+            onValueChange={(value) => setEnvironment(value as AsaasEnvironment)}
+          >
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
@@ -99,7 +114,11 @@ export function AsaasIntegrationCard() {
           </div>
           <Input
             type="password"
-            placeholder={status?.apiKeyConfigured ? '•••• já configurado — digite pra substituir' : '$aact_hmlg_...'}
+            placeholder={
+              status?.apiKeyConfigured
+                ? '•••• já configurado — digite pra substituir'
+                : '$aact_hmlg_...'
+            }
             value={apiKey}
             onChange={(event) => setApiKey(event.target.value)}
           />
@@ -114,7 +133,9 @@ export function AsaasIntegrationCard() {
           <div className="flex gap-2">
             <Input
               placeholder={
-                status?.webhookTokenConfigured ? '•••• já configurado — digite ou gere pra substituir' : ''
+                status?.webhookTokenConfigured
+                  ? '•••• já configurado — digite ou gere pra substituir'
+                  : ''
               }
               value={webhookToken}
               onChange={(event) => setWebhookToken(event.target.value)}
@@ -124,16 +145,16 @@ export function AsaasIntegrationCard() {
             </Button>
           </div>
           <p className="text-text-meta text-xs">
-            Cadastre esse MESMO valor no painel da Asaas (Configurações {'>'} Integrações {'>'} Webhooks) — nunca
-            use a API key aqui.
+            Cadastre esse MESMO valor no painel da Asaas (Configurações {'>'} Integrações {'>'}{' '}
+            Webhooks) — nunca use a API key aqui.
           </p>
         </div>
         <div className="col-span-2 flex flex-col gap-1.5">
           <Label>URL do webhook</Label>
           <Input value={WEBHOOK_URL} readOnly onFocus={(event) => event.target.select()} />
           <p className="text-text-meta text-xs">
-            Cadastre essa URL no painel da Asaas junto com o token acima. Só recebe eventos — nenhuma cobrança
-            real é criada por este app ainda (fora do escopo desta fase).
+            Cadastre essa URL no painel da Asaas junto com o token acima. Só recebe eventos —
+            nenhuma cobrança real é criada por este app ainda (fora do escopo desta fase).
           </p>
         </div>
       </div>

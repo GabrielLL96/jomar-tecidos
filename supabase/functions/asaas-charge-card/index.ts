@@ -75,7 +75,8 @@ Deno.serve(async (req) => {
       .select('id')
       .eq('order_id', orderId)
       .maybeSingle()
-    if (existingError) throw new Error(`Falha ao checar cobrança existente: ${existingError.message}`)
+    if (existingError)
+      throw new Error(`Falha ao checar cobrança existente: ${existingError.message}`)
     if (existingPayment) throw new Error('Esse pedido já tem uma cobrança criada')
 
     // Holder info é montado no servidor a partir do cadastro real (nome,
@@ -138,20 +139,28 @@ Deno.serve(async (req) => {
       confirmed_at: new Date().toISOString(),
       installment_count: installments ?? 1,
     })
-    if (insertPaymentError) throw new Error(`Falha ao salvar cobrança: ${insertPaymentError.message}`)
+    if (insertPaymentError)
+      throw new Error(`Falha ao salvar cobrança: ${insertPaymentError.message}`)
 
     // Cobrança com cartão autoriza na hora — não espera o webhook pra marcar
     // como pago (diferente do fluxo de invoiceUrl/Pix/boleto, que são
     // assíncronos por natureza). O webhook ainda chega depois e é idempotente
     // (asaas-webhook só transiciona se o pedido ainda estiver 'pending').
-    const { error: statusError } = await supabase.from('orders').update({ status: 'paid' }).eq('id', order.id)
+    const { error: statusError } = await supabase
+      .from('orders')
+      .update({ status: 'paid' })
+      .eq('id', order.id)
     if (statusError) throw new Error(`Falha ao atualizar status do pedido: ${statusError.message}`)
     const { error: historyError } = await supabase.from('order_status_history').insert({
       order_id: order.id,
       status: 'paid',
       changed_by_name: 'Asaas (cartão)',
     })
-    if (historyError) console.error('[asaas-charge-card] falha ao gravar order_status_history:', historyError.message)
+    if (historyError)
+      console.error(
+        '[asaas-charge-card] falha ao gravar order_status_history:',
+        historyError.message,
+      )
 
     if (saveCard) {
       const { error: saveCardError } = await supabase.from('saved_credit_cards').insert({
@@ -164,11 +173,16 @@ Deno.serve(async (req) => {
       // ao salvar o token pra reuso futuro não deve desfazer nada, só fica
       // registrada no log (mesmo princípio já usado no QR code Pix de
       // asaas-create-charge: falha em algo acessório não derruba o pedido).
-      if (saveCardError) console.error('[asaas-charge-card] falha ao salvar cartão:', saveCardError.message)
+      if (saveCardError)
+        console.error('[asaas-charge-card] falha ao salvar cartão:', saveCardError.message)
     }
 
     return new Response(
-      JSON.stringify({ orderId: order.id, status: charge.status, last4: charge.creditCardLastFour }),
+      JSON.stringify({
+        orderId: order.id,
+        status: charge.status,
+        last4: charge.creditCardLastFour,
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error) {

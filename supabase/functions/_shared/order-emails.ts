@@ -125,7 +125,11 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<void>
   `
   await sendEmail(
     credentials,
-    { to: order.users.email, subject: `Pedido #${order.order_number} recebido`, html: emailLayout('Pedido recebido!', body) },
+    {
+      to: order.users.email,
+      subject: `Pedido #${order.order_number} recebido`,
+      html: emailLayout('Pedido recebido!', body),
+    },
     { operation: 'order_confirmation', relatedEntity: 'orders', relatedEntityId: order.id },
   )
 }
@@ -149,7 +153,16 @@ export async function sendOrderStatusEmail(orderId: string): Promise<void> {
   `
   await sendEmail(
     credentials,
-    { to: order.users.email, subject: `Pedido #${order.order_number}: ${subjectLabel}`, html: emailLayout(subjectLabel, body) },
-    { operation: 'order_status_change', relatedEntity: 'orders', relatedEntityId: order.id, requestSummary: { status: order.status } },
+    {
+      to: order.users.email,
+      subject: `Pedido #${order.order_number}: ${subjectLabel}`,
+      html: emailLayout(subjectLabel, body),
+    },
+    {
+      operation: 'order_status_change',
+      relatedEntity: 'orders',
+      relatedEntityId: order.id,
+      requestSummary: { status: order.status },
+    },
   )
 }

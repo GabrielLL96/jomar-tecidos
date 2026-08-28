@@ -15,7 +15,12 @@ export function AccountLayout() {
   const { user, isLoading, logout } = useAuth()
   const navigate = useNavigate()
 
-  useSeoMeta({ title: 'Minha Conta', description: 'Área do cliente Jomar Tecidos.', path: '/conta', noindex: true })
+  useSeoMeta({
+    title: 'Minha Conta',
+    description: 'Área do cliente Jomar Tecidos.',
+    path: '/conta',
+    noindex: true,
+  })
 
   useEffect(() => {
     if (!isLoading && !user) navigate('/conta/entrar', { replace: true })

@@ -126,7 +126,10 @@ export const adminCompositionsQueryOptions = queryOptions({
 export const categoriesQueryOptions = queryOptions({
   queryKey: ['categories'] as const,
   queryFn: async (): Promise<CategoryCard[]> => {
-    const { data, error } = await supabase.from('products').select('category_slug').neq('status', 'draft')
+    const { data, error } = await supabase
+      .from('products')
+      .select('category_slug')
+      .neq('status', 'draft')
     if (error) throw new Error(error.message)
 
     return Object.entries(CATEGORY_DISPLAY).map(([id, display]) => ({

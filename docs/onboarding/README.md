@@ -11,6 +11,7 @@ arquivos — cada um pressupõe o anterior.
 ## ⚠️ Avisos críticos — leia antes de tocar em qualquer coisa
 
 ### 1. Não existe ambiente de staging. Dev local aponta pro banco de produção real.
+
 O `.env` local usa o mesmo projeto Supabase (`ooghhxcrdndulzlrsliz`) que roda em produção em
 `jomartecidos.com.br`. Não há um segundo projeto Supabase para testes. Isso já causou dano
 real: durante o desenvolvimento da integração de pagamento, pedidos de teste foram criados
@@ -18,6 +19,7 @@ no banco de produção e precisaram ser apagados manualmente (ver
 [08-evolucao-historica.md](./08-evolucao-historica.md) e `docs/lgpd/auditoria-2026-08-15.md`).
 
 **Na prática, isso significa:**
+
 - Qualquer checkout testado localmente cria um pedido **real** na tabela `orders` de produção.
 - Se a Asaas estiver configurada em modo `production` (`asaas_settings.environment`), uma
   cobrança de cartão testada localmente **cobra o cartão de verdade**. Confirme o ambiente
@@ -33,6 +35,7 @@ Isso está registrado como item de Prioridade Alta pendente em `docs/lgpd/plano-
 teste com a mesma cautela que teria em produção, porque é produção.
 
 ### 2. Webhook da Asaas usa token estático, não HMAC
+
 `supabase/functions/asaas-webhook/index.ts` autentica comparando um token fixo
 (`asaas_settings.webhook_token`) direto contra o header `asaas-access-token`. O webhook da
 Melhor Envio, em contraste, valida uma assinatura HMAC-SHA256 real. Se o `webhook_token`
@@ -41,6 +44,7 @@ forjar confirmação de pagamento ou reembolso. É uma limitação conhecida do 
 segurança atual — ver [06-integracoes-externas.md](./06-integracoes-externas.md).
 
 ### 3. Cobrança com cartão de crédito passa dado de cartão pela nossa infraestrutura
+
 O fluxo atual (`asaas-charge-card`) recebe número/validade/CVV no frontend e envia para uma
 Edge Function, que repassa para a Asaas. O dado nunca é persistido, mas **transita** pela
 nossa Edge Function — isso coloca esse código path em escopo de PCI-DSS. A alternativa mais

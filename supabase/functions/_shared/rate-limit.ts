@@ -19,7 +19,8 @@ export async function enforceRateLimit(
     p_window_seconds: windowSeconds,
   })
   if (error) throw new Error(`Falha ao checar limite de tentativas: ${error.message}`)
-  if (!allowed) throw new Error('Muitas tentativas em pouco tempo — aguarde alguns minutos e tente de novo')
+  if (!allowed)
+    throw new Error('Muitas tentativas em pouco tempo — aguarde alguns minutos e tente de novo')
 }
 
 // Mesmo princípio, mas pra chamador anônimo (sem user_id) — usa IP como
@@ -40,5 +41,6 @@ export async function enforceRateLimitByIp(
     p_window_seconds: windowSeconds,
   })
   if (error) throw new Error(`Falha ao checar limite de tentativas: ${error.message}`)
-  if (!allowed) throw new Error('Muitas tentativas em pouco tempo — aguarde alguns minutos e tente de novo')
+  if (!allowed)
+    throw new Error('Muitas tentativas em pouco tempo — aguarde alguns minutos e tente de novo')
 }

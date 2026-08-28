@@ -32,7 +32,9 @@ export function ProductFilters({
   return (
     <aside className="flex flex-col gap-7">
       <div>
-        <div className="text-navy-dark mb-3 text-xs font-semibold tracking-[0.06em] uppercase">Material</div>
+        <div className="text-navy-dark mb-3 text-xs font-semibold tracking-[0.06em] uppercase">
+          Material
+        </div>
         {materials.map((material) => (
           <label
             key={material.label}
@@ -49,7 +51,9 @@ export function ProductFilters({
       </div>
 
       <div>
-        <div className="text-navy-dark mb-3 text-xs font-semibold tracking-[0.06em] uppercase">Cor</div>
+        <div className="text-navy-dark mb-3 text-xs font-semibold tracking-[0.06em] uppercase">
+          Cor
+        </div>
         <div className="flex flex-wrap gap-2">
           {colors.map((hex) => (
             <button

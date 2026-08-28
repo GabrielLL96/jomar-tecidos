@@ -2,7 +2,10 @@
 // `error.message` — o corpo real ({error: "..."}) que as Edge Functions
 // devolvem fica em `error.context`, uma Response que precisa ser lida à
 // parte.
-export async function unwrapFunctionError(error: { message: string; context?: Response }): Promise<never> {
+export async function unwrapFunctionError(error: {
+  message: string
+  context?: Response
+}): Promise<never> {
   let specificMessage: string | undefined
   if (error.context) {
     try {

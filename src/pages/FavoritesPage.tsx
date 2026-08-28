@@ -6,7 +6,12 @@ import { useFavorites } from '@/features/favorites/FavoritesContext'
 import { useSeoMeta } from '@/lib/seo'
 
 export function FavoritesPage() {
-  useSeoMeta({ title: 'Favoritos', description: 'Seus tecidos favoritos.', path: '/favoritos', noindex: true })
+  useSeoMeta({
+    title: 'Favoritos',
+    description: 'Seus tecidos favoritos.',
+    path: '/favoritos',
+    noindex: true,
+  })
 
   const { data: products } = useProducts()
   const { favoriteIds } = useFavorites()

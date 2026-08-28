@@ -26,7 +26,8 @@ export function CategoryCarousel({ categories }: CategoryCarouselProps) {
     return () => observer.disconnect()
   }, [categories.length])
 
-  const scrollBy = (delta: number) => scrollerRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
+  const scrollBy = (delta: number) =>
+    scrollerRef.current?.scrollBy({ left: delta, behavior: 'smooth' })
 
   return (
     <div className="relative mx-auto max-w-(--breakpoint-xl)">

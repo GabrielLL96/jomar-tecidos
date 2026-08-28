@@ -4,8 +4,20 @@ import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -52,7 +64,10 @@ export function AdminCompositionsPage() {
     setIsSaving(true)
     try {
       const { error } = editingComposition
-        ? await supabase.from('compositions').update({ name: trimmed }).eq('id', editingComposition.id)
+        ? await supabase
+            .from('compositions')
+            .update({ name: trimmed })
+            .eq('id', editingComposition.id)
         : await supabase.from('compositions').insert({
             name: trimmed,
             // novo item sempre vai pro fim da lista — sem isso, o default 0 da coluna
@@ -125,7 +140,10 @@ export function AdminCompositionsPage() {
         }
       }
 
-      const { error } = await supabase.from('compositions').delete().eq('id', deletingComposition.id)
+      const { error } = await supabase
+        .from('compositions')
+        .delete()
+        .eq('id', deletingComposition.id)
       if (error) throw new Error(error.message)
 
       toast.success(
@@ -191,7 +209,9 @@ export function AdminCompositionsPage() {
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingComposition ? 'Editar composição' : 'Nova composição'}</DialogTitle>
+            <DialogTitle>
+              {editingComposition ? 'Editar composição' : 'Nova composição'}
+            </DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-2">
             <Label htmlFor="compositionName">Nome</Label>
@@ -254,9 +274,7 @@ export function AdminCompositionsPage() {
             <Button
               variant="destructive"
               onClick={handleDelete}
-              disabled={
-                isDeleting || (!!deletingComposition?.products.length && !reassignTargetId)
-              }
+              disabled={isDeleting || (!!deletingComposition?.products.length && !reassignTargetId)}
             >
               {isDeleting
                 ? 'Excluindo…'

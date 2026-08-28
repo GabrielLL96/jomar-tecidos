@@ -30,8 +30,8 @@ confirme antes de assumir que é dívida técnica.
 
 Ver detalhe técnico completo no arquivo 04. A decisão de design é: **regra de negócio que
 não pode ser violada (preço, estoque, quem pode excluir o quê) vive dentro de uma function
-`security definer` no Postgres, não em RLS/GRANT sozinhos**. RLS/GRANT decidem *quem pode
-tocar a tabela*; a function decide *o que é uma operação válida*. Isso é mais trabalho para
+`security definer` no Postgres, não em RLS/GRANT sozinhos**. RLS/GRANT decidem _quem pode
+tocar a tabela_; a function decide _o que é uma operação válida_. Isso é mais trabalho para
 escrever (SQL puro, sem o conforto de um ORM) mas fecha uma classe inteira de bug de
 "esqueci de validar no frontend" — a validação real está no único lugar que importa.
 
@@ -94,7 +94,7 @@ alguém for mexer nessa área — ver aviso crítico #2 no [README](./README.md)
 
 ## Sem ambiente de staging — decisão de fato, não de design
 
-Não há uma arquitetura que *impeça* um staging (o Supabase suporta múltiplos projetos
+Não há uma arquitetura que _impeça_ um staging (o Supabase suporta múltiplos projetos
 normalmente) — é simplesmente uma etapa que não foi feita ainda, identificada como item de
 Prioridade Alta pendente na auditoria LGPD do projeto (`docs/lgpd/plano-adequacao.md`). Não
 trate a ausência de staging como "é assim que o projeto funciona" — é uma dívida registrada,

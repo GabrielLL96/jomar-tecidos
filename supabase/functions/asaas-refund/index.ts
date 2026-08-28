@@ -1,4 +1,9 @@
-import { corsHeaders, createCallerClient, createServiceClient, requireAdmin } from '../_shared/melhor-envio.ts'
+import {
+  corsHeaders,
+  createCallerClient,
+  createServiceClient,
+  requireAdmin,
+} from '../_shared/melhor-envio.ts'
 import { getAsaasCredentials, refundAsaasPayment } from '../_shared/asaas.ts'
 
 interface RefundRequestBody {
@@ -19,7 +24,8 @@ Deno.serve(async (req) => {
     const { orderId, amount, reason } = (await req.json()) as RefundRequestBody
     if (!orderId) throw new Error('Pedido não informado')
     if (!reason?.trim()) throw new Error('Informe o motivo do reembolso')
-    if (amount !== undefined && amount <= 0) throw new Error('Valor do reembolso precisa ser maior que zero')
+    if (amount !== undefined && amount <= 0)
+      throw new Error('Valor do reembolso precisa ser maior que zero')
 
     const supabase = createServiceClient()
 
@@ -48,7 +54,10 @@ Deno.serve(async (req) => {
       .eq('order_id', orderId)
     if (refundsError) throw new Error(`Falha ao ler reembolsos anteriores: ${refundsError.message}`)
 
-    const alreadyRefunded = (previousRefunds ?? []).reduce((sum, row) => sum + Number(row.amount), 0)
+    const alreadyRefunded = (previousRefunds ?? []).reduce(
+      (sum, row) => sum + Number(row.amount),
+      0,
+    )
     const remaining = Number(order.total) - alreadyRefunded
     if (remaining <= 0) throw new Error('Pedido já foi totalmente reembolsado')
 
@@ -58,7 +67,11 @@ Deno.serve(async (req) => {
     }
 
     const credentials = await getAsaasCredentials()
-    const refundResult = await refundAsaasPayment(credentials, orderPayment.asaas_payment_id, refundAmount)
+    const refundResult = await refundAsaasPayment(
+      credentials,
+      orderPayment.asaas_payment_id,
+      refundAmount,
+    )
 
     const caller = createCallerClient(authHeader!)
     const { data: callerData } = await caller.auth.getUser()
@@ -81,8 +94,12 @@ Deno.serve(async (req) => {
     // Reembolso parcial não muda o status do pedido (decidido no spec) — só
     // vira "refunded" quando cobre o que restava.
     if (refundAmount >= remaining) {
-      const { error: statusError } = await supabase.from('orders').update({ status: 'refunded' }).eq('id', orderId)
-      if (statusError) throw new Error(`Falha ao atualizar status do pedido: ${statusError.message}`)
+      const { error: statusError } = await supabase
+        .from('orders')
+        .update({ status: 'refunded' })
+        .eq('id', orderId)
+      if (statusError)
+        throw new Error(`Falha ao atualizar status do pedido: ${statusError.message}`)
 
       const { error: historyError } = await supabase.from('order_status_history').insert({
         order_id: orderId,

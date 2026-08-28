@@ -19,7 +19,8 @@ export async function getResendCredentials(): Promise<ResendCredentials> {
     .eq('id', RESEND_SETTINGS_ID)
     .maybeSingle()
   if (error) throw new Error(`Falha ao ler configuração do Resend: ${error.message}`)
-  if (!data?.api_key) throw new Error('Resend não configurado — conecte em Configurações > Integrações')
+  if (!data?.api_key)
+    throw new Error('Resend não configurado — conecte em Configurações > Integrações')
   if (!data.from_email) throw new Error('Resend sem e-mail de remetente configurado')
   return {
     apiKey: data.api_key,
@@ -60,7 +61,11 @@ export interface SendEmailInput {
 // e no log de integração deste projeto. O chamador decide se precisa de
 // try/catch em volta; esta function sempre propaga o erro (pra quem quiser
 // tratar) mas nunca lança algo além de `Error`.
-export async function sendEmail(credentials: ResendCredentials, input: SendEmailInput, logMeta: ResendLogMeta): Promise<string> {
+export async function sendEmail(
+  credentials: ResendCredentials,
+  input: SendEmailInput,
+  logMeta: ResendLogMeta,
+): Promise<string> {
   const startedAt = Date.now()
   let statusHttp: number | null = null
   let status: LogStatus = 'success'

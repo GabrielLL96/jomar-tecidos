@@ -32,19 +32,30 @@ export function AccountOrdersPage() {
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <span className={cn('rounded-full px-2.5 py-1 text-xs', ORDER_STATUS_STYLES[order.status])}>
+              <span
+                className={cn(
+                  'rounded-full px-2.5 py-1 text-xs',
+                  ORDER_STATUS_STYLES[order.status],
+                )}
+              >
                 {ORDER_STATUS_LABELS[order.status]}
               </span>
-              <div className="text-navy w-20 text-right text-sm font-medium">{formatPriceBRL(order.total)}</div>
+              <div className="text-navy w-20 text-right text-sm font-medium">
+                {formatPriceBRL(order.total)}
+              </div>
             </div>
           </div>
           {order.delivery && (order.delivery.carrier || order.delivery.trackingCode) && (
             <div className="text-text-meta mt-2 text-xs">
-              Rastreio: {[order.delivery.carrier, order.delivery.trackingCode].filter(Boolean).join(' · ')}
+              Rastreio:{' '}
+              {[order.delivery.carrier, order.delivery.trackingCode].filter(Boolean).join(' · ')}
             </div>
           )}
           {order.status === 'pending' && order.payment?.status === 'pending' && (
-            <Link to={`/pedido/${order.id}`} className="text-navy mt-2 inline-block text-xs hover:underline">
+            <Link
+              to={`/pedido/${order.id}`}
+              className="text-navy mt-2 inline-block text-xs hover:underline"
+            >
               {order.payment.paymentMethod === 'pix' ? 'Ver QR code Pix' : 'Ver boleto'} pra pagar
             </Link>
           )}

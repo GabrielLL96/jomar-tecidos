@@ -85,7 +85,10 @@ export const integrationStatsQueryOptions = () =>
         .limit(2000)
       if (error) throw new Error(error.message)
 
-      const byIntegration = new Map<string, { total: number; failures: number; durations: number[] }>()
+      const byIntegration = new Map<
+        string,
+        { total: number; failures: number; durations: number[] }
+      >()
       for (const row of data ?? []) {
         const entry = byIntegration.get(row.integration) ?? { total: 0, failures: 0, durations: [] }
         entry.total += 1
@@ -101,7 +104,9 @@ export const integrationStatsQueryOptions = () =>
         errorRatePct: entry.total > 0 ? Math.round((entry.failures / entry.total) * 1000) / 10 : 0,
         avgDurationMs:
           entry.durations.length > 0
-            ? Math.round(entry.durations.reduce((sum, value) => sum + value, 0) / entry.durations.length)
+            ? Math.round(
+                entry.durations.reduce((sum, value) => sum + value, 0) / entry.durations.length,
+              )
             : null,
       }))
     },

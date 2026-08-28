@@ -166,15 +166,13 @@ export function AdminProductsPage() {
       }
 
       if (product.colorOptions.length > 0) {
-        const { error: colorsError } = await supabase
-          .from('product_colors')
-          .insert(
-            product.colorOptions.map((c) => ({
-              product_id: created.id,
-              label: c.label,
-              hex: c.hex,
-            })),
-          )
+        const { error: colorsError } = await supabase.from('product_colors').insert(
+          product.colorOptions.map((c) => ({
+            product_id: created.id,
+            label: c.label,
+            hex: c.hex,
+          })),
+        )
         if (colorsError) throw new Error(colorsError.message)
       }
 

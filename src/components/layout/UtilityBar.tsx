@@ -8,9 +8,11 @@ export function UtilityBar() {
   const { data: settings } = useSiteSettings()
   const [phraseIndex, setPhraseIndex] = useState(0)
 
-  const phrases = [settings.promobar_text_1, settings.promobar_text_2, settings.promobar_text_3].filter(
-    Boolean,
-  )
+  const phrases = [
+    settings.promobar_text_1,
+    settings.promobar_text_2,
+    settings.promobar_text_3,
+  ].filter(Boolean)
 
   useEffect(() => {
     if (phrases.length < 2) return

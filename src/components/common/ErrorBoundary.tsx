@@ -27,9 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="flex min-h-svh flex-col items-center justify-center gap-3 px-6 text-center">
           <p className="text-navy-dark font-serif text-xl font-semibold">Algo deu errado</p>
-          <p className="text-text-meta text-sm">
-            Recarregue a página ou volte para o início.
-          </p>
+          <p className="text-text-meta text-sm">Recarregue a página ou volte para o início.</p>
           <a href="/" className="text-brand-red text-sm underline">
             Voltar ao início
           </a>

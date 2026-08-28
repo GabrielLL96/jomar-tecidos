@@ -22,7 +22,8 @@ export function useBusinessInfo() {
     city: settings.footer_city,
     zip: settings.footer_zip,
     hours: settings.footer_hours,
-    freeShippingThreshold: Number(settings.free_shipping_threshold) || BUSINESS.freeShippingThreshold,
+    freeShippingThreshold:
+      Number(settings.free_shipping_threshold) || BUSINESS.freeShippingThreshold,
     flatShippingFee: BUSINESS.flatShippingFee,
     instagramHref: settings.footer_instagram_href,
   }

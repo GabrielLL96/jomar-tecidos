@@ -1,5 +1,10 @@
 import { createServiceClient } from './melhor-envio.ts'
-import { logIntegrationCall, maskDocument, type LogEnvironment, type LogStatus } from './integration-logger.ts'
+import {
+  logIntegrationCall,
+  maskDocument,
+  type LogEnvironment,
+  type LogStatus,
+} from './integration-logger.ts'
 
 export const ASAAS_SETTINGS_ID = '00000000-0000-0000-0000-000000000002'
 
@@ -33,7 +38,8 @@ export async function getAsaasCredentials(): Promise<AsaasCredentials> {
     .eq('id', ASAAS_SETTINGS_ID)
     .maybeSingle()
   if (error) throw new Error(`Falha ao ler configuração Asaas: ${error.message}`)
-  if (!data?.api_key) throw new Error('Asaas não configurada — conecte em Configurações > Integrações')
+  if (!data?.api_key)
+    throw new Error('Asaas não configurada — conecte em Configurações > Integrações')
   return { environment: data.environment, apiKey: data.api_key }
 }
 
@@ -108,7 +114,9 @@ async function asaasFetch(
       relatedEntityId: logMeta.relatedEntityId,
       requestSummary: logMeta.requestSummary ?? null,
       responseSummary:
-        status === 'success' && logMeta.summarizeResponse ? logMeta.summarizeResponse(parsed) : null,
+        status === 'success' && logMeta.summarizeResponse
+          ? logMeta.summarizeResponse(parsed)
+          : null,
       statusHttp,
       status,
       errorMessage,
@@ -197,7 +205,11 @@ export async function createAsaasPaymentWithCard(
       // NUNCA inclui creditCard/creditCardHolderInfo — dado de cartão e CPF
       // nunca entram no log, nem mascarados (mesma invariante de
       // asaas-charge-card/index.ts).
-      requestSummary: { billingType: 'CREDIT_CARD', value: input.value, installments: input.installmentCount ?? 1 },
+      requestSummary: {
+        billingType: 'CREDIT_CARD',
+        value: input.value,
+        installments: input.installmentCount ?? 1,
+      },
       summarizeResponse: (parsed) => {
         const p = parsed as {
           id?: string
@@ -216,14 +228,17 @@ export async function createAsaasPaymentWithCard(
         }
       },
     },
-  )) as { creditCard?: { creditCardToken?: string; creditCardNumber?: string; creditCardBrand?: string } } & {
+  )) as {
+    creditCard?: { creditCardToken?: string; creditCardNumber?: string; creditCardBrand?: string }
+  } & {
     id: string
     status: string
     invoiceUrl: string
     dueDate: string
   }
   const card = raw?.creditCard ?? {}
-  if (!card.creditCardToken) throw new Error('Asaas aprovou a cobrança mas não devolveu o token do cartão')
+  if (!card.creditCardToken)
+    throw new Error('Asaas aprovou a cobrança mas não devolveu o token do cartão')
   return {
     id: raw.id,
     status: raw.status,
@@ -271,7 +286,11 @@ export async function createAsaasPaymentWithToken(
       operation: 'create_charge_token',
       relatedEntity: 'orders',
       relatedEntityId: input.externalReference,
-      requestSummary: { billingType: 'CREDIT_CARD', value: input.value, installments: input.installmentCount ?? 1 },
+      requestSummary: {
+        billingType: 'CREDIT_CARD',
+        value: input.value,
+        installments: input.installmentCount ?? 1,
+      },
       summarizeResponse: (parsed) => {
         const p = parsed as { id?: string; status?: string }
         return { id: p?.id ?? null, status: p?.status ?? null }
@@ -284,7 +303,10 @@ export async function createAsaasPaymentWithToken(
 // — não aceita dados do cliente inline na cobrança (achado documentado no
 // spec). Lazy: só cria o customer na Asaas no primeiro checkout real de cada
 // usuário, nunca pré-popula em massa.
-export async function getOrCreateAsaasCustomer(credentials: AsaasCredentials, userId: string): Promise<string> {
+export async function getOrCreateAsaasCustomer(
+  credentials: AsaasCredentials,
+  userId: string,
+): Promise<string> {
   const supabase = createServiceClient()
   const { data: user, error: userError } = await supabase
     .from('users')

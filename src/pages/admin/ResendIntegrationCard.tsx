@@ -11,7 +11,10 @@ import { RESEND_SETTINGS_ID } from '@/features/resend/queries'
 import { validateResendConnection } from '@/features/resend/service'
 import { SettingsCard } from './SettingsCard'
 
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+})
 
 export function ResendIntegrationCard() {
   const queryClient = useQueryClient()
@@ -48,7 +51,10 @@ export function ResendIntegrationCard() {
       // vazia aqui apagaria um secret já configurado.
       if (apiKey.trim()) payload.api_key = apiKey.trim()
 
-      const { error } = await supabase.from('resend_settings').update(payload).eq('id', RESEND_SETTINGS_ID)
+      const { error } = await supabase
+        .from('resend_settings')
+        .update(payload)
+        .eq('id', RESEND_SETTINGS_ID)
       if (error) throw new Error(error.message)
       setApiKey('')
 
@@ -65,7 +71,9 @@ export function ResendIntegrationCard() {
   return (
     <SettingsCard title="Resend (e-mail transacional)">
       <div>
-        <div className="text-navy-dark text-sm font-semibold">Resend — confirmação de pedido, status e contato</div>
+        <div className="text-navy-dark text-sm font-semibold">
+          Resend — confirmação de pedido, status e contato
+        </div>
         <p className="text-text-meta mt-1 text-xs">
           {status?.connectedAt
             ? `Conectado em ${dateTimeFormatter.format(new Date(status.connectedAt))}`
@@ -83,7 +91,9 @@ export function ResendIntegrationCard() {
           </div>
           <Input
             type="password"
-            placeholder={status?.apiKeyConfigured ? '•••• já configurado — digite pra substituir' : 're_...'}
+            placeholder={
+              status?.apiKeyConfigured ? '•••• já configurado — digite pra substituir' : 're_...'
+            }
             value={apiKey}
             onChange={(event) => setApiKey(event.target.value)}
           />
@@ -100,7 +110,9 @@ export function ResendIntegrationCard() {
             value={fromEmail}
             onChange={(event) => setFromEmail(event.target.value)}
           />
-          <p className="text-text-meta text-xs">Precisa ser de um domínio já verificado na sua conta Resend.</p>
+          <p className="text-text-meta text-xs">
+            Precisa ser de um domínio já verificado na sua conta Resend.
+          </p>
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>Nome do remetente</Label>

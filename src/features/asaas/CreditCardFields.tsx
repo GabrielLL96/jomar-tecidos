@@ -36,8 +36,14 @@ export function CreditCardFields({ register, setValue, errors }: CreditCardField
     <div className="mt-3.5 flex flex-col gap-3.5">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="cardHolderName">Nome no cartão</Label>
-        <Input id="cardHolderName" placeholder="Como está no cartão" {...register('cardHolderName')} />
-        {errors.cardHolderName && <p className="text-destructive text-xs">{errors.cardHolderName.message}</p>}
+        <Input
+          id="cardHolderName"
+          placeholder="Como está no cartão"
+          {...register('cardHolderName')}
+        />
+        {errors.cardHolderName && (
+          <p className="text-destructive text-xs">{errors.cardHolderName.message}</p>
+        )}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -54,7 +60,9 @@ export function CreditCardFields({ register, setValue, errors }: CreditCardField
             setValue('cardNumber', formatted, { shouldValidate: true })
           }}
         />
-        {errors.cardNumber && <p className="text-destructive text-xs">{errors.cardNumber.message}</p>}
+        {errors.cardNumber && (
+          <p className="text-destructive text-xs">{errors.cardNumber.message}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3.5">
@@ -72,11 +80,19 @@ export function CreditCardFields({ register, setValue, errors }: CreditCardField
               setValue('cardExpiry', formatted, { shouldValidate: true })
             }}
           />
-          {errors.cardExpiry && <p className="text-destructive text-xs">{errors.cardExpiry.message}</p>}
+          {errors.cardExpiry && (
+            <p className="text-destructive text-xs">{errors.cardExpiry.message}</p>
+          )}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="cardCvv">CVV</Label>
-          <Input id="cardCvv" inputMode="numeric" placeholder="123" maxLength={4} {...register('cardCvv')} />
+          <Input
+            id="cardCvv"
+            inputMode="numeric"
+            placeholder="123"
+            maxLength={4}
+            {...register('cardCvv')}
+          />
           {errors.cardCvv && <p className="text-destructive text-xs">{errors.cardCvv.message}</p>}
         </div>
       </div>
@@ -84,8 +100,15 @@ export function CreditCardFields({ register, setValue, errors }: CreditCardField
       <div className="grid grid-cols-2 gap-3.5">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="cardPostalCode">CEP do titular</Label>
-          <Input id="cardPostalCode" inputMode="numeric" placeholder="00000-000" {...register('cardPostalCode')} />
-          {errors.cardPostalCode && <p className="text-destructive text-xs">{errors.cardPostalCode.message}</p>}
+          <Input
+            id="cardPostalCode"
+            inputMode="numeric"
+            placeholder="00000-000"
+            {...register('cardPostalCode')}
+          />
+          {errors.cardPostalCode && (
+            <p className="text-destructive text-xs">{errors.cardPostalCode.message}</p>
+          )}
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="cardAddressNumber">Número</Label>

@@ -21,7 +21,14 @@ import {
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
 import { useSeoMeta } from '@/lib/seo'
-import { Sheet, SheetClose, SheetContent, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet'
 
 const ADMIN_NAV = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -41,7 +48,10 @@ const ADMIN_NAV = [
 const PAGE_META: Record<string, { title: string; subtitle: string }> = {
   '/admin': { title: 'Resumo', subtitle: 'Visão geral do negócio hoje' },
   '/admin/produtos': { title: 'Produtos', subtitle: 'Gerencie o catálogo de tecidos e aviamentos' },
-  '/admin/composicoes': { title: 'Composições', subtitle: 'Organize os grupos de composição dos produtos' },
+  '/admin/composicoes': {
+    title: 'Composições',
+    subtitle: 'Organize os grupos de composição dos produtos',
+  },
   '/admin/estoque': { title: 'Estoque', subtitle: 'Controle de metragem disponível' },
   '/admin/vendas': { title: 'Vendas', subtitle: 'Pedidos e faturamento' },
   '/admin/entregas': { title: 'Entregas', subtitle: 'Acompanhamento logístico' },
@@ -66,7 +76,12 @@ export function AdminLayout() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
 
-  useSeoMeta({ title: 'Painel Admin', description: 'Painel de gestão Jomar.', path: '/admin', noindex: true })
+  useSeoMeta({
+    title: 'Painel Admin',
+    description: 'Painel de gestão Jomar.',
+    path: '/admin',
+    noindex: true,
+  })
 
   useEffect(() => {
     if (isLoading) return
@@ -86,7 +101,6 @@ export function AdminLayout() {
     (location.pathname.startsWith('/admin/vendas/') ? PAGE_META['/admin/vendas'] : undefined) ??
     (location.pathname.startsWith('/admin/usuarios/') ? PAGE_META['/admin/usuarios'] : undefined) ??
     PAGE_META['/admin']
-
 
   const handleLogout = async () => {
     await logout()
@@ -159,7 +173,9 @@ export function AdminLayout() {
             </button>
             <div>
               <h1 className="text-navy-dark font-serif text-[22px] font-semibold">{meta.title}</h1>
-              <div className="mt-0.5 hidden text-[12.5px] text-[#8c8375] sm:block">{meta.subtitle}</div>
+              <div className="mt-0.5 hidden text-[12.5px] text-[#8c8375] sm:block">
+                {meta.subtitle}
+              </div>
             </div>
           </div>
           <div className="relative hidden sm:block">
@@ -177,9 +193,15 @@ export function AdminLayout() {
       </div>
 
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <SheetContent side="left" className="bg-navy-dark w-72 border-none text-[#c9c5e2]" showCloseButton={false}>
+        <SheetContent
+          side="left"
+          className="bg-navy-dark w-72 border-none text-[#c9c5e2]"
+          showCloseButton={false}
+        >
           <SheetHeader>
-            <SheetTitle className="font-serif text-lg font-semibold text-white">Jomar Admin</SheetTitle>
+            <SheetTitle className="font-serif text-lg font-semibold text-white">
+              Jomar Admin
+            </SheetTitle>
           </SheetHeader>
           <SheetClose className="absolute top-3 right-3 text-[#c9c5e2]" aria-label="Fechar menu">
             <X className="size-5" />

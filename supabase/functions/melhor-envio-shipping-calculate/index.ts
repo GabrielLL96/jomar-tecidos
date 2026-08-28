@@ -43,7 +43,9 @@ Deno.serve(async (req) => {
       (item) => !item.weightGrams || !item.heightCm || !item.widthCm || !item.lengthCm,
     )
     if (missingData) {
-      throw new Error('Produto sem peso/dimensão cadastrados — não é possível cotar frete real pra este pedido')
+      throw new Error(
+        'Produto sem peso/dimensão cadastrados — não é possível cotar frete real pra este pedido',
+      )
     }
 
     const supabase = createServiceClient()
@@ -53,9 +55,11 @@ Deno.serve(async (req) => {
       .eq('key', 'footer_zip')
       .maybeSingle()
 
-    if (siteSettingsError) throw new Error(`Falha ao ler CEP de origem: ${siteSettingsError.message}`)
+    if (siteSettingsError)
+      throw new Error(`Falha ao ler CEP de origem: ${siteSettingsError.message}`)
     const originZip = (siteSettings?.value ?? '').replace(/\D/g, '')
-    if (originZip.length !== 8) throw new Error('CEP de origem (Configurações > Rodapé e contato) não configurado')
+    if (originZip.length !== 8)
+      throw new Error('CEP de origem (Configurações > Rodapé e contato) não configurado')
 
     const accessToken = await getValidAccessToken()
 
@@ -92,10 +96,11 @@ Deno.serve(async (req) => {
           const quotesResult = parsed as MelhorEnvioQuote[]
           return {
             optionCount: quotesResult.filter((q) => !q.error && q.price).length,
-            cheapest: quotesResult
-              .filter((q) => !q.error && q.price)
-              .map((q) => Number(q.price))
-              .sort((a, b) => a - b)[0] ?? null,
+            cheapest:
+              quotesResult
+                .filter((q) => !q.error && q.price)
+                .map((q) => Number(q.price))
+                .sort((a, b) => a - b)[0] ?? null,
           }
         },
       },

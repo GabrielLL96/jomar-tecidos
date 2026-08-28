@@ -9,7 +9,11 @@ import { formatPriceBRL } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import { useCompositions, useProduct, useProductReviews } from '@/features/catalog/hooks'
 import { PRODUCT_CARE_DEFAULT, PRODUCT_DELIVERY_DEFAULT } from '@/features/catalog/data'
-import { formatCompositionBreakdown, formatCompositionLabel, formatWidthM } from '@/features/catalog/utils'
+import {
+  formatCompositionBreakdown,
+  formatCompositionLabel,
+  formatWidthM,
+} from '@/features/catalog/utils'
 import { useCart } from '@/features/cart/CartContext'
 import { useFavorites } from '@/features/favorites/FavoritesContext'
 import { useProductJsonLd, useSeoMeta } from '@/lib/seo'
@@ -118,7 +122,9 @@ export function ProductDetailPage() {
                   onClick={() => setSelectedImageIdx(index)}
                   className={cn(
                     'size-16 shrink-0 overflow-hidden rounded-sm',
-                    index === selectedImageIdx ? 'ring-navy ring-2 ring-offset-2' : 'ring-input ring-1',
+                    index === selectedImageIdx
+                      ? 'ring-navy ring-2 ring-offset-2'
+                      : 'ring-input ring-1',
                   )}
                 >
                   <img src={image.url} alt="" className="h-full w-full object-cover" />
@@ -275,7 +281,9 @@ export function ProductDetailPage() {
                           />
                         ))}
                       </div>
-                      <span className="text-navy-dark text-sm font-semibold">{review.authorName}</span>
+                      <span className="text-navy-dark text-sm font-semibold">
+                        {review.authorName}
+                      </span>
                     </div>
                     <p className="text-text-body text-sm leading-relaxed">{review.text}</p>
                   </div>

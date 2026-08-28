@@ -94,7 +94,9 @@ export async function melhorEnvioFetch(
       relatedEntityId: logMeta.relatedEntityId,
       requestSummary: logMeta.requestSummary ?? null,
       responseSummary:
-        status === 'success' && logMeta.summarizeResponse ? logMeta.summarizeResponse(parsed) : null,
+        status === 'success' && logMeta.summarizeResponse
+          ? logMeta.summarizeResponse(parsed)
+          : null,
       statusHttp,
       status,
       errorMessage,
@@ -134,7 +136,9 @@ export async function getValidAccessToken(): Promise<string> {
   }
 
   if (!settings.client_id || !settings.client_secret) {
-    throw new Error('Melhor Envio: client_id/client_secret ausentes, não foi possível renovar o token.')
+    throw new Error(
+      'Melhor Envio: client_id/client_secret ausentes, não foi possível renovar o token.',
+    )
   }
 
   const tokenData = (await melhorEnvioFetch(

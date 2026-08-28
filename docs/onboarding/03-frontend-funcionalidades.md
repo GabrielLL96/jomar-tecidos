@@ -8,42 +8,42 @@ nada). Um único `<Suspense fallback={<RouteFallback />}>` envolve todas as rota
 
 ### Rotas públicas (sob `RootLayout`)
 
-| Rota | Página | Função |
-|---|---|---|
-| `/` | `Home` | landing — hero, categorias, mais vendidos, novidades (conteúdo vem de `site_settings`) |
-| `/tecidos` | `ProductsPage` | catálogo com filtros (material/cor/faixa de preço) |
-| `/tecidos/:slug` | `ProductDetailPage` | detalhe do produto, abas (composição/entrega/cuidados/avaliações) |
-| `/carrinho` | `CartPage` | carrinho |
-| `/checkout` | `CheckoutPage` | endereço, frete, cupom, pagamento (Pix/boleto/cartão) |
-| `/pedido/:id` | `ConfirmationPage` | confirmação pós-checkout |
-| `/sobre` | `AboutPage` | institucional |
-| `/politica-de-privacidade` | `PrivacyPolicyPage` | política LGPD |
-| `/contato` | `ContactPage` | contato |
-| `/favoritos` | `FavoritesPage` | produtos favoritados (client-side only) |
-| `/conta/entrar` | `LoginPage` | login |
+| Rota                                             | Página                                             | Função                                                                                 |
+| ------------------------------------------------ | -------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| `/`                                              | `Home`                                             | landing — hero, categorias, mais vendidos, novidades (conteúdo vem de `site_settings`) |
+| `/tecidos`                                       | `ProductsPage`                                     | catálogo com filtros (material/cor/faixa de preço)                                     |
+| `/tecidos/:slug`                                 | `ProductDetailPage`                                | detalhe do produto, abas (composição/entrega/cuidados/avaliações)                      |
+| `/carrinho`                                      | `CartPage`                                         | carrinho                                                                               |
+| `/checkout`                                      | `CheckoutPage`                                     | endereço, frete, cupom, pagamento (Pix/boleto/cartão)                                  |
+| `/pedido/:id`                                    | `ConfirmationPage`                                 | confirmação pós-checkout                                                               |
+| `/sobre`                                         | `AboutPage`                                        | institucional                                                                          |
+| `/politica-de-privacidade`                       | `PrivacyPolicyPage`                                | política LGPD                                                                          |
+| `/contato`                                       | `ContactPage`                                      | contato                                                                                |
+| `/favoritos`                                     | `FavoritesPage`                                    | produtos favoritados (client-side only)                                                |
+| `/conta/entrar`                                  | `LoginPage`                                        | login                                                                                  |
 | `/conta/esqueci-senha`, `/conta/redefinir-senha` | fluxo de recuperação de senha (Supabase Auth real) |
-| `/conta` (+ `/pedidos`, `/enderecos`, `/dados`) | `AccountLayout` + subpáginas | área logada do cliente |
-| `*` | `NotFoundPage` | 404 |
+| `/conta` (+ `/pedidos`, `/enderecos`, `/dados`)  | `AccountLayout` + subpáginas                       | área logada do cliente                                                                 |
+| `*`                                              | `NotFoundPage`                                     | 404                                                                                    |
 
 Não há um `ProtectedRoute` genérico envolvendo `/conta/*` — a exigência de login é tratada
 dentro de cada página/`AccountLayout`, não centralizada em `App.tsx`.
 
 ### Rotas admin (sob `AdminLayout`, path `/admin`)
 
-| Rota | Página |
-|---|---|
-| `/admin` | `AdminDashboardPage` |
-| `/admin/produtos` | `AdminProductsPage` |
-| `/admin/composicoes` | `AdminCompositionsPage` |
-| `/admin/estoque` | `AdminStockPage` |
-| `/admin/vendas` (+ `/:id`) | `AdminSalesPage` / `AdminSalesOrderDetailPage` |
-| `/admin/entregas` | `AdminDeliveriesPage` |
-| `/admin/cupons` | `AdminCouponsPage` |
-| `/admin/usuarios` | `AdminUsersPage` |
-| `/admin/relatorios` | `AdminReportsPage` |
-| `/admin/configuracoes` | `AdminSettingsPage` |
-| `/admin/logs` | `AdminLogsPage` (auditoria + erros, unificados) |
-| `/admin/integracoes-log` | `AdminIntegrationLogPage` (chamadas a Asaas/Melhor Envio) |
+| Rota                           | Página                                                     |
+| ------------------------------ | ---------------------------------------------------------- |
+| `/admin`                       | `AdminDashboardPage`                                       |
+| `/admin/produtos`              | `AdminProductsPage`                                        |
+| `/admin/composicoes`           | `AdminCompositionsPage`                                    |
+| `/admin/estoque`               | `AdminStockPage`                                           |
+| `/admin/vendas` (+ `/:id`)     | `AdminSalesPage` / `AdminSalesOrderDetailPage`             |
+| `/admin/entregas`              | `AdminDeliveriesPage`                                      |
+| `/admin/cupons`                | `AdminCouponsPage`                                         |
+| `/admin/usuarios`              | `AdminUsersPage`                                           |
+| `/admin/relatorios`            | `AdminReportsPage`                                         |
+| `/admin/configuracoes`         | `AdminSettingsPage`                                        |
+| `/admin/logs`                  | `AdminLogsPage` (auditoria + erros, unificados)            |
+| `/admin/integracoes-log`       | `AdminIntegrationLogPage` (chamadas a Asaas/Melhor Envio)  |
 | `/admin/melhor-envio/callback` | `AdminMelhorEnvioCallbackPage` (processa retorno do OAuth) |
 
 Toda a proteção do `/admin/*` acontece **num único ponto** dentro de `AdminLayout`, não por

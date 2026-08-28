@@ -22,7 +22,8 @@ export function ContactPage() {
 
   useSeoMeta({
     title: 'Contato',
-    description: 'Fale com a Jomar Tecidos e Enxovais — telefone, WhatsApp, endereço e horário de atendimento.',
+    description:
+      'Fale com a Jomar Tecidos e Enxovais — telefone, WhatsApp, endereço e horário de atendimento.',
     path: '/contato',
   })
 

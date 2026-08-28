@@ -1,4 +1,9 @@
-import { corsHeaders, createCallerClient, createServiceClient, requireAdmin } from '../_shared/melhor-envio.ts'
+import {
+  corsHeaders,
+  createCallerClient,
+  createServiceClient,
+  requireAdmin,
+} from '../_shared/melhor-envio.ts'
 import { RESEND_SETTINGS_ID } from '../_shared/resend.ts'
 
 // Resend não tem endpoint dedicado de "validar chave" — GET /domains é o
@@ -19,8 +24,10 @@ Deno.serve(async (req) => {
       .maybeSingle()
 
     if (settingsError) throw new Error(`Falha ao ler configuração: ${settingsError.message}`)
-    if (!settings?.api_key) throw new Error('API key não configurada — salve a chave antes de testar a conexão')
-    if (!settings.from_email) throw new Error('Configure o e-mail de remetente antes de testar a conexão')
+    if (!settings?.api_key)
+      throw new Error('API key não configurada — salve a chave antes de testar a conexão')
+    if (!settings.from_email)
+      throw new Error('Configure o e-mail de remetente antes de testar a conexão')
 
     const response = await fetch('https://api.resend.com/domains', {
       headers: { Authorization: `Bearer ${settings.api_key}` },
@@ -40,12 +47,16 @@ Deno.serve(async (req) => {
     // primeiro pedido de verdade.
     const domainsBody = (await response.json()) as { data?: { name: string; status: string }[] }
     const fromDomain = settings.from_email.split('@')[1]?.toLowerCase()
-    const matchingDomain = domainsBody.data?.find((domain) => domain.name.toLowerCase() === fromDomain)
+    const matchingDomain = domainsBody.data?.find(
+      (domain) => domain.name.toLowerCase() === fromDomain,
+    )
     if (!matchingDomain) {
       throw new Error(`Domínio "${fromDomain}" não está cadastrado nesta conta Resend`)
     }
     if (matchingDomain.status !== 'verified') {
-      throw new Error(`Domínio "${fromDomain}" ainda não está verificado no Resend (status: ${matchingDomain.status})`)
+      throw new Error(
+        `Domínio "${fromDomain}" ainda não está verificado no Resend (status: ${matchingDomain.status})`,
+      )
     }
 
     const caller = createCallerClient(req.headers.get('Authorization')!)

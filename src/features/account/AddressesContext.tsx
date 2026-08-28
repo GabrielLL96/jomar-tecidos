@@ -97,7 +97,9 @@ export function AddressesProvider({ children }: { children: ReactNode }) {
       .eq('id', addressId)
       .eq('user_id', user.id)
     if (error) throw new Error(error.message)
-    setAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === addressId })))
+    setAddresses((current) =>
+      current.map((address) => ({ ...address, isDefault: address.id === addressId })),
+    )
   }
 
   return (

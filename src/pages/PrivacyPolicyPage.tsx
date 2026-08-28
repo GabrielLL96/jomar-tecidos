@@ -21,7 +21,9 @@ export function PrivacyPolicyPage() {
 
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-md) px-6 py-16 md:px-12">
-      <h1 className="text-navy-dark mb-3 font-serif text-3xl font-medium">Política de Privacidade</h1>
+      <h1 className="text-navy-dark mb-3 font-serif text-3xl font-medium">
+        Política de Privacidade
+      </h1>
       <p className="text-text-meta mb-10 text-xs">Última atualização: 15 de agosto de 2026</p>
 
       <div className="flex flex-col gap-10">
@@ -38,8 +40,8 @@ export function PrivacyPolicyPage() {
             Inscrição estadual: 0010452180040
             <br />
             Encarregado de dados (DPO): não há encarregado formalmente designado — como pequena
-            empresa, atendemos a Resolução CD/ANPD nº 2/2022. Pedidos sobre dados pessoais podem
-            ser feitos pelos canais de contato do item 10 abaixo.
+            empresa, atendemos a Resolução CD/ANPD nº 2/2022. Pedidos sobre dados pessoais podem ser
+            feitos pelos canais de contato do item 10 abaixo.
           </p>
         </Section>
 
@@ -48,8 +50,8 @@ export function PrivacyPolicyPage() {
           <p>Pedido e entrega: itens comprados, endereço de entrega, histórico de pedidos.</p>
           <p>
             Pagamento: dados de cartão de crédito são transmitidos diretamente ao nosso processador
-            de pagamentos (Asaas) e <strong>não ficam armazenados nos nossos servidores</strong> — só
-            um token de referência é guardado, quando o cliente opta por salvar o cartão pra
+            de pagamentos (Asaas) e <strong>não ficam armazenados nos nossos servidores</strong> —
+            só um token de referência é guardado, quando o cliente opta por salvar o cartão pra
             próximas compras.
           </p>
           <p>
@@ -59,10 +61,15 @@ export function PrivacyPolicyPage() {
         </Section>
 
         <Section title="3. Para que usamos seus dados">
-          <p>Processar e entregar pedidos, calcular frete (via Melhor Envio) e processar pagamento (via Asaas).</p>
+          <p>
+            Processar e entregar pedidos, calcular frete (via Melhor Envio) e processar pagamento
+            (via Asaas).
+          </p>
           <p>Comunicar sobre status de pedido, entrega e questões de suporte.</p>
           <p>Enviar comunicação de marketing promocional (novidades, ofertas).</p>
-          <p>Métricas de uso do site e desempenho de campanhas, quando há consentimento de cookies.</p>
+          <p>
+            Métricas de uso do site e desempenho de campanhas, quando há consentimento de cookies.
+          </p>
         </Section>
 
         <Section title="4. Com quem compartilhamos">
@@ -106,8 +113,7 @@ export function PrivacyPolicyPage() {
             pessoal enquanto necessário pra cumprir obrigação legal ou regulatória; documentos
             fiscais de venda (nota fiscal, comprovante) seguem o prazo de 5 anos do Código
             Tributário Nacional (Lei nº 5.172/1966, art. 173); e reclamações relacionadas à compra
-            seguem o prazo de 5 anos do Código de Defesa do Consumidor (Lei nº 8.078/1990, art.
-            27).
+            seguem o prazo de 5 anos do Código de Defesa do Consumidor (Lei nº 8.078/1990, art. 27).
           </p>
         </Section>
 
@@ -120,7 +126,10 @@ export function PrivacyPolicyPage() {
         </Section>
 
         <Section title="9. Alterações nesta política">
-          <p>Podemos atualizar esta política — mudanças relevantes serão indicadas pela data no topo desta página.</p>
+          <p>
+            Podemos atualizar esta política — mudanças relevantes serão indicadas pela data no topo
+            desta página.
+          </p>
         </Section>
 
         <Section title="10. Contato">
