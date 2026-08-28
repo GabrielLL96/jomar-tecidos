@@ -1,5 +1,8 @@
 import { corsHeaders, createCallerClient, createServiceClient } from '../_shared/melhor-envio.ts'
-import { sendOrderConfirmationEmail } from '../_shared/order-emails.ts'
+import {
+  sendAdminNewOrderNotification,
+  sendOrderConfirmationEmail,
+} from '../_shared/order-emails.ts'
 import { enforceRateLimit } from '../_shared/rate-limit.ts'
 
 interface RequestBody {
@@ -38,6 +41,14 @@ Deno.serve(async (req) => {
     if (!order || order.user_id !== userId) throw new Error('Pedido não encontrado')
 
     await sendOrderConfirmationEmail(orderId)
+
+    // Best-effort: aviso interno pro admin nunca deve derrubar a confirmação
+    // do cliente, que já foi enviada com sucesso nesse ponto.
+    try {
+      await sendAdminNewOrderNotification(orderId)
+    } catch (adminEmailError) {
+      console.error('Falha ao notificar admin de novo pedido:', adminEmailError)
+    }
 
     return new Response(JSON.stringify({ sent: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

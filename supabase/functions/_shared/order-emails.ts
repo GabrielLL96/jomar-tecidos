@@ -134,6 +134,39 @@ export async function sendOrderConfirmationEmail(orderId: string): Promise<void>
   )
 }
 
+const DEFAULT_NOTIFICATION_EMAIL = 'contato@jomartecidos.com.br'
+
+// Achado real: não existia NENHUM aviso pro admin de pedido novo — só o
+// cliente recebia e-mail. Reusa resend_settings.contact_notification_email
+// (mesmo campo já usado pelo formulário de contato), mesmo fallback padrão.
+export async function sendAdminNewOrderNotification(orderId: string): Promise<void> {
+  const order = await fetchOrderForEmail(orderId)
+  const credentials = await getResendCredentials()
+  const to = credentials.contactNotificationEmail || DEFAULT_NOTIFICATION_EMAIL
+
+  const body = `
+    <p style="font-size:14px;color:#2b2b2b;">Novo pedido <strong>#${escapeHtml(order.order_number)}</strong> em ${dateFormatter.format(new Date(order.created_at))}.</p>
+    <p style="font-size:14px;color:#2b2b2b;"><strong>Cliente:</strong> ${escapeHtml(order.users?.name ?? 'Desconhecido')} (${escapeHtml(order.users?.email ?? '—')})</p>
+    ${itemsTableHtml(order.order_items)}
+    <table style="width:100%;margin-top:16px;font-size:14px;color:#2b2b2b;">
+      <tr style="font-weight:bold;"><td>Total</td><td style="text-align:right;">${currencyFormatter.format(Number(order.total))}</td></tr>
+    </table>
+  `
+  await sendEmail(
+    credentials,
+    {
+      to,
+      subject: `Novo pedido #${order.order_number}`,
+      html: emailLayout('Novo pedido recebido', body),
+    },
+    {
+      operation: 'admin_new_order_notification',
+      relatedEntity: 'orders',
+      relatedEntityId: order.id,
+    },
+  )
+}
+
 // Chamado tanto pela Edge Function admin-only (mudança manual de status)
 // quanto direto (in-process, sem hop HTTP) de dentro do asaas-webhook após
 // ele atualizar orders.status — nos dois casos relê o status ATUAL do banco,
