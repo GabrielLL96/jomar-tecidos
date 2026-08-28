@@ -1,6 +1,6 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Eye } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -12,7 +12,8 @@ import {
 } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import { formatPriceBRL } from '@/lib/format'
-import { useAdminOrders } from '@/features/orders/hooks'
+import { useAdminOrdersPage, useAdminOrdersSince } from '@/features/orders/hooks'
+import { ADMIN_ORDERS_PAGE_SIZE } from '@/features/orders/queries'
 import { ORDER_STATUS_LABELS, ORDER_STATUS_STYLES } from '@/features/orders/data'
 import { PAYMENT_METHODS } from '@/pages/checkout/schema'
 
@@ -30,13 +31,18 @@ const percentFormatter = new Intl.NumberFormat('pt-BR', {
 })
 
 export function AdminSalesPage() {
-  const { data: orders = [], isLoading } = useAdminOrders()
+  const [page, setPage] = useState(0)
 
-  const monthOrders = useMemo(() => {
+  const monthStartIso = useMemo(() => {
     const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-    return orders.filter((order) => new Date(order.createdAt) >= monthStart)
-  }, [orders])
+    return new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+  }, [])
+  const { data: monthOrders = [] } = useAdminOrdersSince(monthStartIso)
+
+  const { data: pageResult, isLoading, isFetching } = useAdminOrdersPage(page)
+  const orders = pageResult?.rows ?? []
+  const totalCount = pageResult?.count ?? 0
+  const totalPages = Math.max(1, Math.ceil(totalCount / ADMIN_ORDERS_PAGE_SIZE))
 
   const kpis = useMemo(() => {
     // "refunded" sai do faturamento junto com "cancelled" — dinheiro que
@@ -126,6 +132,35 @@ export function AdminSalesPage() {
           </TableBody>
         </Table>
       </div>
+
+      {totalCount > 0 && (
+        <div className="mt-4 flex items-center justify-between text-[13px] text-[#5c5648]">
+          <span>
+            {totalCount} {totalCount === 1 ? 'pedido' : 'pedidos'} — página {page + 1} de{' '}
+            {totalPages}
+          </span>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page === 0 || isFetching}
+              onClick={() => setPage((current) => current - 1)}
+            >
+              <ChevronLeft className="size-4" />
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={page + 1 >= totalPages || isFetching}
+              onClick={() => setPage((current) => current + 1)}
+            >
+              Próxima
+              <ChevronRight className="size-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

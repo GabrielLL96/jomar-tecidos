@@ -196,6 +196,60 @@ export const adminOrdersQueryOptions = queryOptions({
   staleTime: 30 * 1000,
 })
 
+export const ADMIN_ORDERS_PAGE_SIZE = 20
+
+export interface AdminOrdersPageResult {
+  rows: Order[]
+  count: number
+}
+
+// Tabela de Vendas no admin -- unico consumidor deste histórico completo que
+// é só pra navegar/procurar, não pra agregar nada (diferente de
+// adminOrdersQueryOptions, que Relatórios/Entregas ainda usam por completo
+// pra somar/filtrar em memória; separar em vez de paginar o hook
+// compartilhado evita quebrar esses dois). Cresce sem limite (1 pedido por
+// venda, pra sempre) -- era a listagem sem paginação de maior risco real
+// levantada na varredura.
+export function adminOrdersPageQueryOptions(page: number) {
+  return queryOptions({
+    queryKey: ['orders', 'admin', 'page', page] as const,
+    queryFn: async (): Promise<AdminOrdersPageResult> => {
+      const from = page * ADMIN_ORDERS_PAGE_SIZE
+      const to = from + ADMIN_ORDERS_PAGE_SIZE - 1
+      const { data, error, count } = await supabase
+        .from('orders')
+        .select(ORDER_SELECT, { count: 'exact' })
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false })
+        .range(from, to)
+      if (error) throw new Error(error.message)
+      return { rows: (data as unknown as OrderRow[]).map(adaptOrder), count: count ?? 0 }
+    },
+    staleTime: 30 * 1000,
+  })
+}
+
+// KPIs do mês em Vendas precisam de "todo pedido deste mês", não de "todo
+// pedido desde sempre" -- filtro por data no servidor em vez de paginar essa
+// consulta: o resultado já é naturalmente pequeno (um mês de vendas), sem
+// crescer com o histórico total da loja.
+export function adminOrdersSinceQueryOptions(sinceIso: string) {
+  return queryOptions({
+    queryKey: ['orders', 'admin', 'since', sinceIso] as const,
+    queryFn: async (): Promise<Order[]> => {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(ORDER_SELECT)
+        .is('deleted_at', null)
+        .gte('created_at', sinceIso)
+        .order('created_at', { ascending: false })
+      if (error) throw new Error(error.message)
+      return (data as unknown as OrderRow[]).map(adaptOrder)
+    },
+    staleTime: 30 * 1000,
+  })
+}
+
 export const myOrdersQueryOptions = (userId: string) =>
   queryOptions({
     queryKey: ['orders', 'mine', userId] as const,
