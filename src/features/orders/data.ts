@@ -11,7 +11,10 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 
 export const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
   pending: 'bg-[#f2ede4] text-[#8c8375]',
-  paid: 'bg-[#f2ede4] text-[#8c8375]',
+  // Antes idêntico a "pending" -- pago e ainda aguardando pagamento ficavam
+  // visualmente indistinguíveis na lista de pedidos do cliente, justamente
+  // onde a cor deveria comunicar a diferença.
+  paid: 'bg-[#f2ecd8] text-[#8c7a3d]',
   shipping: 'bg-[#e6e4ee] text-[#1c1a5e]',
   delivered: 'bg-[#e3ecec] text-[#2f6b5e]',
   cancelled: 'bg-[#f2e4e4] text-[#8c3d3d]',

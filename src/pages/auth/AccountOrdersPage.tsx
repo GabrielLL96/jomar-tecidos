@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatPriceBRL } from '@/lib/format'
 import { useAuth } from '@/features/auth/AuthContext'
@@ -22,7 +23,11 @@ export function AccountOrdersPage() {
   return (
     <div className="border-border overflow-hidden rounded-md border bg-white">
       {orders.map((order) => (
-        <div key={order.id} className="border-border border-b px-5 py-4 last:border-b-0">
+        <Link
+          key={order.id}
+          to={`/conta/pedidos/${order.id}`}
+          className="border-border hover:bg-cream-secondary/40 block border-b px-5 py-4 transition-colors last:border-b-0"
+        >
           <div className="flex items-center justify-between">
             <div>
               <div className="text-navy-dark text-sm font-semibold">#{order.orderNumber}</div>
@@ -43,6 +48,7 @@ export function AccountOrdersPage() {
               <div className="text-navy w-20 text-right text-sm font-medium">
                 {formatPriceBRL(order.total)}
               </div>
+              <ChevronRight className="text-text-meta size-4 shrink-0" />
             </div>
           </div>
           {order.delivery && (order.delivery.carrier || order.delivery.trackingCode) && (
@@ -51,15 +57,12 @@ export function AccountOrdersPage() {
               {[order.delivery.carrier, order.delivery.trackingCode].filter(Boolean).join(' · ')}
             </div>
           )}
-          <Link
-            to={`/conta/pedidos/${order.id}`}
-            className="text-navy mt-2 inline-block text-xs hover:underline"
-          >
-            {order.status === 'pending' && order.payment?.status === 'pending'
-              ? `${order.payment.paymentMethod === 'pix' ? 'Ver QR code Pix' : 'Ver boleto'} pra pagar`
-              : 'Ver detalhes do pedido'}
-          </Link>
-        </div>
+          {order.status === 'pending' && order.payment?.status === 'pending' && (
+            <div className="text-navy mt-2 text-xs font-medium">
+              {order.payment.paymentMethod === 'pix' ? 'Ver QR code Pix' : 'Ver boleto'} pra pagar
+            </div>
+          )}
+        </Link>
       ))}
     </div>
   )
