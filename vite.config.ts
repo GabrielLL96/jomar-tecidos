@@ -10,6 +10,13 @@ export default defineConfig({
   // pedir permissão de admin) — certificado confiável de verdade, sem aviso
   // de "não seguro" no navegador, diferente do certificado autoassinado puro.
   plugins: [react(), tailwindcss(), mkcert()],
+  // Porta fixa: Auth (Supabase) usa a origem como allowlist de redirect
+  // (reset de senha etc.) — porta variável quebra isso em silêncio quando o
+  // Vite incrementa por já estar ocupada.
+  server: {
+    port: 5174,
+    strictPort: true,
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

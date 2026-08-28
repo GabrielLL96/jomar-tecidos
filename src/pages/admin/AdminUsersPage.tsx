@@ -166,7 +166,9 @@ export function AdminUsersPage() {
 
   const handleSendPasswordReset = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email)
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/conta/redefinir-senha`,
+      })
       if (error) throw new Error(error.message)
       toast.success(`E-mail de redefinição enviado para ${email}`)
     } catch (error) {
