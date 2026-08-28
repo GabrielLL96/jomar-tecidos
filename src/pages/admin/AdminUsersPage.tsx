@@ -345,8 +345,16 @@ export function AdminUsersPage() {
               paginatedUsers.map((user) => {
                 return (
                   <TableRow key={user.id}>
-                    <TableCell className="font-medium">{user.name}</TableCell>
-                    <TableCell>{user.email}</TableCell>
+                    <TableCell className="p-0 font-medium">
+                      <Link to={`/admin/usuarios/${user.id}`} className="block p-2">
+                        {user.name}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="p-0">
+                      <Link to={`/admin/usuarios/${user.id}`} className="block p-2">
+                        {user.email}
+                      </Link>
+                    </TableCell>
                     <TableCell>{ROLE_LABELS[user.role]}</TableCell>
                     <TableCell>
                       <span
