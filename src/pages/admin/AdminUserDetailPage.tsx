@@ -18,6 +18,7 @@ import {
 import { cn } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { formatPriceBRL } from '@/lib/format'
+import { formatCPF } from '@/lib/cpf'
 import { useAdminUser, useAdminUserOrders, useUserAddresses } from '@/features/users/hooks'
 import {
   ROLE_LABELS,
@@ -112,7 +113,7 @@ function UserEditForm({ user }: { user: AdminUser }) {
         </div>
         <div className="flex flex-col gap-1.5">
           <Label>CPF</Label>
-          <Input value={user.cpf ?? '—'} disabled />
+          <Input value={user.cpf ? formatCPF(user.cpf) : '—'} disabled />
         </div>
       </div>
 

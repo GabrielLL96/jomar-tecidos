@@ -29,7 +29,7 @@ createRoot(document.getElementById('root')!).render(
                   <BrowserRouter>
                     <App />
                   </BrowserRouter>
-                  <Toaster richColors position="top-right" />
+                  <Toaster richColors position="bottom-right" />
                 </ConsentProvider>
               </CartProvider>
             </AddressesProvider>
