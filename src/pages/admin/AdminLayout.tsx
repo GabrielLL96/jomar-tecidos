@@ -173,7 +173,7 @@ export function AdminLayout() {
             </button>
             <div>
               <h1 className="text-navy-dark font-serif text-[22px] font-semibold">{meta.title}</h1>
-              <div className="mt-0.5 hidden text-[12.5px] text-[#8c8375] sm:block">
+              <div className="mt-0.5 hidden text-[12.5px] text-[#706657] sm:block">
                 {meta.subtitle}
               </div>
             </div>

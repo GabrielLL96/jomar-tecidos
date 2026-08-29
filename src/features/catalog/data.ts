@@ -11,7 +11,9 @@ export const STATUS_STYLES: Record<ProductStatus, string> = {
   active: 'bg-[#e2f2e6] text-[#1e7a44]',
   low_stock: 'bg-[#fbeed4] text-[#a3660a]',
   out_of_stock: 'bg-[#fbe2df] text-[#b0362b]',
-  draft: 'bg-[#ede8de] text-[#8c8375]',
+  // Cor escurecida em 2026-08-28 (auditoria a11y) -- #8c8375 reprovava
+  // WCAG AA (3.06:1) contra o fundo do badge.
+  draft: 'bg-[#ede8de] text-[#706657]',
 }
 
 export const CATEGORY_DISPLAY: Record<string, { tag: string; colors: [string, string] }> = {

@@ -4,6 +4,7 @@ import { Clock, MapPin, Phone } from 'lucide-react'
 import { toast } from 'sonner'
 import { ImagePlaceholder } from '@/components/common/ImagePlaceholder'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useBusinessInfo } from '@/features/site-settings/hooks'
@@ -44,16 +45,50 @@ export function ContactPage() {
       <div className="grid grid-cols-1 gap-14 md:grid-cols-2">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="flex flex-col gap-1.5">
-            <Input placeholder="Nome" {...register('name')} />
-            {errors.name && <p className="text-destructive text-xs">{errors.name.message}</p>}
+            <Label htmlFor="contact-name">Nome</Label>
+            <Input
+              id="contact-name"
+              placeholder="Nome"
+              aria-invalid={!!errors.name}
+              aria-describedby={errors.name ? 'contact-name-error' : undefined}
+              {...register('name')}
+            />
+            {errors.name && (
+              <p id="contact-name-error" role="alert" className="text-destructive text-xs">
+                {errors.name.message}
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Input placeholder="E-mail" {...register('email')} />
-            {errors.email && <p className="text-destructive text-xs">{errors.email.message}</p>}
+            <Label htmlFor="contact-email">E-mail</Label>
+            <Input
+              id="contact-email"
+              placeholder="E-mail"
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? 'contact-email-error' : undefined}
+              {...register('email')}
+            />
+            {errors.email && (
+              <p id="contact-email-error" role="alert" className="text-destructive text-xs">
+                {errors.email.message}
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Textarea placeholder="Mensagem" rows={5} {...register('message')} />
-            {errors.message && <p className="text-destructive text-xs">{errors.message.message}</p>}
+            <Label htmlFor="contact-message">Mensagem</Label>
+            <Textarea
+              id="contact-message"
+              placeholder="Mensagem"
+              rows={5}
+              aria-invalid={!!errors.message}
+              aria-describedby={errors.message ? 'contact-message-error' : undefined}
+              {...register('message')}
+            />
+            {errors.message && (
+              <p id="contact-message-error" role="alert" className="text-destructive text-xs">
+                {errors.message.message}
+              </p>
+            )}
           </div>
           <Button
             type="submit"

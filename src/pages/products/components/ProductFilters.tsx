@@ -6,11 +6,16 @@ interface MaterialFilter {
   count: number
 }
 
+interface ColorFilter {
+  hex: string
+  label: string
+}
+
 interface ProductFiltersProps {
   materials: MaterialFilter[]
   selectedMaterials: string[]
   onToggleMaterial: (label: string) => void
-  colors: string[]
+  colors: ColorFilter[]
   selectedColors: string[]
   onToggleColor: (hex: string) => void
   priceBounds: [number, number]
@@ -55,11 +60,12 @@ export function ProductFilters({
           Cor
         </div>
         <div className="flex flex-wrap gap-2">
-          {colors.map((hex) => (
+          {colors.map(({ hex, label }) => (
             <button
               key={hex}
               type="button"
-              aria-label={`Filtrar pela cor ${hex}`}
+              aria-label={`Filtrar pela cor ${label}`}
+              aria-pressed={selectedColors.includes(hex)}
               onClick={() => onToggleColor(hex)}
               style={{ backgroundColor: hex }}
               className={cn(

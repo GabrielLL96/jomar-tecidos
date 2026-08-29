@@ -43,7 +43,7 @@ import type { Coupon, CouponStatus, CouponType } from '@/features/orders/types'
 const COUPON_STATUS_STYLES: Record<CouponStatus, string> = {
   active: 'bg-[#e2f2e6] text-[#1e7a44]',
   scheduled: 'bg-[#fbeed4] text-[#a3660a]',
-  expired: 'bg-[#f2ede4] text-[#8c8375]',
+  expired: 'bg-[#f2ede4] text-[#706657]',
   depleted: 'bg-[#fbe2df] text-[#b0362b]',
 }
 

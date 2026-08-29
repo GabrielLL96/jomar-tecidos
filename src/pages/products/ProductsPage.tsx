@@ -46,11 +46,13 @@ export function ProductsPage() {
 
   const colors = useMemo(() => {
     if (!products) return []
-    const hexes = new Set<string>()
+    const byHex = new Map<string, string>()
     for (const product of products) {
-      for (const option of product.colorOptions) hexes.add(option.hex)
+      for (const option of product.colorOptions) {
+        if (!byHex.has(option.hex)) byHex.set(option.hex, option.label)
+      }
     }
-    return Array.from(hexes)
+    return Array.from(byHex, ([hex, label]) => ({ hex, label }))
   }, [products])
 
   const filtered = useMemo(() => {

@@ -67,7 +67,7 @@ export function AdminSalesPage() {
       <div className="mb-[22px] grid grid-cols-1 gap-[18px] sm:grid-cols-3">
         {kpis.map((kpi) => (
           <div key={kpi.label} className="rounded-md border border-[#e4ddd0] bg-white p-5">
-            <div className="text-xs text-[#8c8375]">{kpi.label}</div>
+            <div className="text-xs text-[#706657]">{kpi.label}</div>
             <div className="text-navy-dark mt-1.5 font-serif text-2xl font-semibold">
               {kpi.value}
             </div>

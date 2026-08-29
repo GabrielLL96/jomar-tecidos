@@ -189,7 +189,7 @@ export function AdminCompositionsPage() {
             >
               <div>
                 <div className="text-navy-dark text-[14.5px] font-semibold">{composition.name}</div>
-                <div className="mt-1 text-[12.5px] text-[#8c8375]">
+                <div className="mt-1 text-[12.5px] text-[#706657]">
                   {composition.products.length}{' '}
                   {composition.products.length === 1 ? 'produto' : 'produtos'}
                 </div>

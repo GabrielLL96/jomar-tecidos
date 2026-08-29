@@ -28,12 +28,19 @@ import {
   progressStepIndex,
   STATUS_MESSAGES,
 } from '@/features/orders/data'
-import { createAsaasCharge, chargeAsaasCard, chargeAsaasWithSavedCard } from '@/features/asaas/service'
+import {
+  createAsaasCharge,
+  chargeAsaasCard,
+  chargeAsaasWithSavedCard,
+} from '@/features/asaas/service'
 import { useSavedCards } from '@/features/asaas/hooks'
 import { RetryCardFields } from '@/features/asaas/RetryCardFields'
 import { cardChargeSchema, type CardChargeInput } from '@/features/asaas/cardChargeSchema'
 
-const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const dateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  dateStyle: 'short',
+  timeStyle: 'short',
+})
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short' })
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000
@@ -186,7 +193,9 @@ function CreditCardRetryForm({ order, onDone }: { order: Order; onDone: () => vo
               />
               <span>
                 •••• •••• •••• {card.lastFourDigits}
-                {card.brand && <span className="text-text-meta ml-1.5 uppercase">{card.brand}</span>}
+                {card.brand && (
+                  <span className="text-text-meta ml-1.5 uppercase">{card.brand}</span>
+                )}
               </span>
             </label>
           ))}
@@ -217,7 +226,9 @@ function CreditCardRetryForm({ order, onDone }: { order: Order; onDone: () => vo
               onClick={() => setValue('installments', n)}
               className={cn(
                 'flex-1 rounded-sm border px-2 py-2 text-center text-xs',
-                installments === n ? 'border-navy bg-navy/5 text-navy' : 'border-input text-text-body',
+                installments === n
+                  ? 'border-navy bg-navy/5 text-navy'
+                  : 'border-input text-text-body',
               )}
             >
               {n === 1 ? 'À vista' : `${n}x de ${formatPriceBRL(order.total / n)}`}
@@ -355,7 +366,9 @@ export function OrderDetail({ id, showBackToOrders = false }: OrderDetailProps) 
                             />
                           )}
                         </div>
-                        <span className="mt-1 text-center text-[10.5px] text-[#8c8375]">{step}</span>
+                        <span className="mt-1 text-center text-[10.5px] text-[#706657]">
+                          {step}
+                        </span>
                       </div>
                     )
                   })}
@@ -564,7 +577,9 @@ export function OrderDetail({ id, showBackToOrders = false }: OrderDetailProps) 
               </div>
               <div className="flex justify-between">
                 <span className="text-text-meta">Frete</span>
-                <span>{order.shippingCost === 0 ? 'Grátis' : formatPriceBRL(order.shippingCost)}</span>
+                <span>
+                  {order.shippingCost === 0 ? 'Grátis' : formatPriceBRL(order.shippingCost)}
+                </span>
               </div>
               {order.discountTotal > 0 && (
                 <div className="text-brand-red flex justify-between">

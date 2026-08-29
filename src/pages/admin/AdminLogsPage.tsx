@@ -333,7 +333,7 @@ export function AdminLogsPage() {
               <div className="rounded-md border border-[#e4ddd0]">
                 <table className="w-full text-[12.5px]">
                   <thead>
-                    <tr className="border-b border-[#e4ddd0] text-left text-[11px] tracking-wide text-[#8c8375] uppercase">
+                    <tr className="border-b border-[#e4ddd0] text-left text-[11px] tracking-wide text-[#706657] uppercase">
                       <th className="px-3 py-2 font-semibold">Campo</th>
                       <th className="px-3 py-2 font-semibold">Antes</th>
                       <th className="px-3 py-2 font-semibold">Depois</th>
@@ -349,7 +349,7 @@ export function AdminLogsPage() {
                         )}
                       >
                         <td className="px-3 py-2 font-medium text-[#5c5648]">{field.key}</td>
-                        <td className="px-3 py-2 text-[#8c8375]">
+                        <td className="px-3 py-2 text-[#706657]">
                           {formatDiffValue(field.before)}
                         </td>
                         <td

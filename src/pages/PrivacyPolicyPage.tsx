@@ -90,8 +90,8 @@ export function PrivacyPolicyPage() {
           </p>
           <p>
             <strong>Google (Analytics/Tag Manager)</strong> (métricas de uso do site, só com
-            consentimento). Esse dado pode ser transferido e processado em servidores do Google
-            fora do Brasil, com as salvaguardas exigidas pelo art. 33 da LGPD.
+            consentimento). Esse dado pode ser transferido e processado em servidores do Google fora
+            do Brasil, com as salvaguardas exigidas pelo art. 33 da LGPD.
           </p>
           <p>
             <strong>Resend</strong> (envio de e-mails transacionais — confirmação de pedido,
@@ -108,9 +108,9 @@ export function PrivacyPolicyPage() {
             Analytics — medem uso do site, só ativados com seu consentimento).
           </p>
           <p>
-            No banner de cookies você pode aceitar todos, recusar os não essenciais, ou
-            personalizar por categoria. Você pode revisar sua escolha a qualquer momento pelo link
-            "Preferências de Cookies" no rodapé.
+            No banner de cookies você pode aceitar todos, recusar os não essenciais, ou personalizar
+            por categoria. Você pode revisar sua escolha a qualquer momento pelo link "Preferências
+            de Cookies" no rodapé.
           </p>
         </Section>
 

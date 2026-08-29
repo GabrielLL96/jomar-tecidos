@@ -606,7 +606,7 @@ export function AdminProductModal({ open, onOpenChange, product = null }: AdminP
                             }}
                             className="w-[70px] rounded border border-[#d8d0c0] px-2 py-1.5 text-[13px] disabled:opacity-50"
                           />
-                          <span className="text-[12.5px] text-[#8c8375]">%</span>
+                          <span className="text-[12.5px] text-[#706657]">%</span>
                         </div>
                       )
                     })}

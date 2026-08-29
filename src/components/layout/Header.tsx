@@ -7,6 +7,7 @@ import { useCart } from '@/features/cart/CartContext'
 import { useFavorites } from '@/features/favorites/FavoritesContext'
 import { useAuth } from '@/features/auth/AuthContext'
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Input } from '@/components/ui/input'
 import { Logo } from './Logo'
 
 export function Header() {
@@ -70,12 +71,13 @@ export function Header() {
       <div className="flex items-center justify-self-end gap-3 whitespace-nowrap sm:gap-4 md:gap-5">
         {searchOpen ? (
           <form onSubmit={handleSearchSubmit} className="flex items-center gap-1.5">
-            <input
+            <Input
               autoFocus
+              aria-label="Buscar tecidos"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Buscar tecidos..."
-              className="border-input h-9 w-40 rounded-sm border px-3 text-sm outline-none sm:w-56"
+              className="h-9 w-40 rounded-sm sm:w-56"
             />
             <button
               type="button"

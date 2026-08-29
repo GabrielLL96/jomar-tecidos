@@ -19,5 +19,7 @@ export const USER_STATUS_LABELS: Record<UserStatus, string> = {
 
 export const USER_STATUS_STYLES: Record<UserStatus, string> = {
   active: 'bg-[#e2f2e6] text-[#1e7a44]',
-  inactive: 'bg-[#ede8de] text-[#8c8375]',
+  // Cor escurecida em 2026-08-28 (auditoria a11y) -- #8c8375 reprovava
+  // WCAG AA (3.06:1) contra o fundo do badge.
+  inactive: 'bg-[#ede8de] text-[#706657]',
 }

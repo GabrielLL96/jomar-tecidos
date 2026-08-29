@@ -235,7 +235,10 @@ export function AdminSalesOrderDetailPage() {
       // sobrescrever a partir do mesmo valor lido (perderia o outro item).
       const metersByProduct = new Map<string, number>()
       for (const item of order.items) {
-        metersByProduct.set(item.productId, (metersByProduct.get(item.productId) ?? 0) + item.meters)
+        metersByProduct.set(
+          item.productId,
+          (metersByProduct.get(item.productId) ?? 0) + item.meters,
+        )
       }
       const productIds = [...metersByProduct.keys()]
 
@@ -462,7 +465,7 @@ export function AdminSalesOrderDetailPage() {
                         />
                       )}
                     </div>
-                    <span className="mt-1 text-center text-[10.5px] text-[#8c8375]">{step}</span>
+                    <span className="mt-1 text-center text-[10.5px] text-[#706657]">{step}</span>
                   </div>
                 )
               })}

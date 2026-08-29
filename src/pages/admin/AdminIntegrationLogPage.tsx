@@ -118,7 +118,7 @@ export function AdminIntegrationLogPage() {
         <div className="mb-[22px] grid grid-cols-1 gap-[18px] sm:grid-cols-2">
           {stats.map((stat) => (
             <div key={stat.integration} className="rounded-md border border-[#e4ddd0] bg-white p-5">
-              <div className="text-xs text-[#8c8375]">
+              <div className="text-xs text-[#706657]">
                 {INTEGRATION_LABELS[stat.integration] ?? stat.integration} — últimas 24h
               </div>
               <div className="mt-1.5 flex items-baseline gap-4">
@@ -131,7 +131,7 @@ export function AdminIntegrationLogPage() {
                   >
                     {percentFormatter.format(stat.errorRatePct)}%
                   </div>
-                  <div className="text-[11px] text-[#8c8375]">
+                  <div className="text-[11px] text-[#706657]">
                     taxa de erro ({stat.failureCountLast24h}/{stat.totalLast24h})
                   </div>
                 </div>
@@ -139,7 +139,7 @@ export function AdminIntegrationLogPage() {
                   <div className="text-navy-dark font-serif text-2xl font-semibold">
                     {stat.avgDurationMs != null ? `${stat.avgDurationMs}ms` : '—'}
                   </div>
-                  <div className="text-[11px] text-[#8c8375]">tempo médio</div>
+                  <div className="text-[11px] text-[#706657]">tempo médio</div>
                 </div>
               </div>
             </div>

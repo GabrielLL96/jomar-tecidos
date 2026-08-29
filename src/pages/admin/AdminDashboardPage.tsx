@@ -121,7 +121,7 @@ export function AdminDashboardPage() {
       <div className="mb-7 grid grid-cols-4 gap-5">
         {kpis.map((kpi) => (
           <div key={kpi.label} className="rounded-md border border-[#e4ddd0] bg-white p-[22px]">
-            <div className="text-xs text-[#8c8375]">{kpi.label}</div>
+            <div className="text-xs text-[#706657]">{kpi.label}</div>
             <div className="text-navy-dark mt-1.5 font-serif text-[28px] font-semibold">
               {kpi.value}
             </div>
@@ -154,7 +154,7 @@ export function AdminDashboardPage() {
               <div key={c.name} className="mb-3.5">
                 <div className="mb-1.5 flex justify-between text-[13px]">
                   <span>{c.name}</span>
-                  <span className="text-[#8c8375]">{c.pct.toFixed(0)}%</span>
+                  <span className="text-[#706657]">{c.pct.toFixed(0)}%</span>
                 </div>
                 <div className="h-1.5 rounded-full bg-[#ede8de]">
                   <div

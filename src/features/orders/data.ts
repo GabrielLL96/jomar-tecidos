@@ -10,11 +10,14 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
 }
 
 export const ORDER_STATUS_STYLES: Record<OrderStatus, string> = {
-  pending: 'bg-[#f2ede4] text-[#8c8375]',
+  // Cores de texto escurecidas em 2026-08-28 (auditoria a11y) -- as
+  // originais (#8c8375, #8c7a3d) reprovavam WCAG AA (3.21:1 e 3.58:1)
+  // contra o próprio fundo do badge; mantido o mesmo matiz, só mais escuro.
+  pending: 'bg-[#f2ede4] text-[#706657]',
   // Antes idêntico a "pending" -- pago e ainda aguardando pagamento ficavam
   // visualmente indistinguíveis na lista de pedidos do cliente, justamente
   // onde a cor deveria comunicar a diferença.
-  paid: 'bg-[#f2ecd8] text-[#8c7a3d]',
+  paid: 'bg-[#f2ecd8] text-[#6e5f2f]',
   shipping: 'bg-[#e6e4ee] text-[#1c1a5e]',
   delivered: 'bg-[#e3ecec] text-[#2f6b5e]',
   cancelled: 'bg-[#f2e4e4] text-[#8c3d3d]',

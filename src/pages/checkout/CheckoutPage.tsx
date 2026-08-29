@@ -19,7 +19,11 @@ import { calculateDiscount, isCouponValid } from '@/features/orders/coupon-utils
 import type { Coupon } from '@/features/orders/types'
 import { useProducts } from '@/features/catalog/hooks'
 import { useShippingQuote } from '@/features/melhor-envio/useShippingQuote'
-import { createAsaasCharge, chargeAsaasCard, chargeAsaasWithSavedCard } from '@/features/asaas/service'
+import {
+  createAsaasCharge,
+  chargeAsaasCard,
+  chargeAsaasWithSavedCard,
+} from '@/features/asaas/service'
 import { useSavedCards } from '@/features/asaas/hooks'
 import { sendOrderConfirmationEmail } from '@/features/resend/service'
 import { CreditCardFields } from '@/features/asaas/CreditCardFields'
@@ -314,32 +318,74 @@ export function CheckoutPage() {
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <Label htmlFor="fullName">Nome completo</Label>
-                <Input id="fullName" {...register('fullName')} />
+                <Input
+                  id="fullName"
+                  aria-invalid={!!errors.fullName}
+                  aria-describedby={errors.fullName ? 'fullName-error' : undefined}
+                  {...register('fullName')}
+                />
                 {errors.fullName && (
-                  <p className="text-destructive text-xs">{errors.fullName.message}</p>
+                  <p id="fullName-error" role="alert" className="text-destructive text-xs">
+                    {errors.fullName.message}
+                  </p>
                 )}
               </div>
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <Label htmlFor="address">Endereço</Label>
-                <Input id="address" {...register('address')} />
+                <Input
+                  id="address"
+                  aria-invalid={!!errors.address}
+                  aria-describedby={errors.address ? 'address-error' : undefined}
+                  {...register('address')}
+                />
                 {errors.address && (
-                  <p className="text-destructive text-xs">{errors.address.message}</p>
+                  <p id="address-error" role="alert" className="text-destructive text-xs">
+                    {errors.address.message}
+                  </p>
                 )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="city">Cidade</Label>
-                <Input id="city" {...register('city')} />
-                {errors.city && <p className="text-destructive text-xs">{errors.city.message}</p>}
+                <Input
+                  id="city"
+                  aria-invalid={!!errors.city}
+                  aria-describedby={errors.city ? 'city-error' : undefined}
+                  {...register('city')}
+                />
+                {errors.city && (
+                  <p id="city-error" role="alert" className="text-destructive text-xs">
+                    {errors.city.message}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="state">UF</Label>
-                <Input id="state" maxLength={2} {...register('state')} />
-                {errors.state && <p className="text-destructive text-xs">{errors.state.message}</p>}
+                <Input
+                  id="state"
+                  maxLength={2}
+                  aria-invalid={!!errors.state}
+                  aria-describedby={errors.state ? 'state-error' : undefined}
+                  {...register('state')}
+                />
+                {errors.state && (
+                  <p id="state-error" role="alert" className="text-destructive text-xs">
+                    {errors.state.message}
+                  </p>
+                )}
               </div>
               <div className="flex flex-col gap-1.5 sm:col-span-2">
                 <Label htmlFor="zip">CEP</Label>
-                <Input id="zip" {...register('zip')} />
-                {errors.zip && <p className="text-destructive text-xs">{errors.zip.message}</p>}
+                <Input
+                  id="zip"
+                  aria-invalid={!!errors.zip}
+                  aria-describedby={errors.zip ? 'zip-error' : undefined}
+                  {...register('zip')}
+                />
+                {errors.zip && (
+                  <p id="zip-error" role="alert" className="text-destructive text-xs">
+                    {errors.zip.message}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -354,11 +400,17 @@ export function CheckoutPage() {
               </p>
             ) : (
               <>
-                <div className="mb-3.5 flex gap-3">
+                <div
+                  role="radiogroup"
+                  aria-label="Método de pagamento"
+                  className="mb-3.5 flex gap-3"
+                >
                   {PAYMENT_METHODS.map((method) => (
                     <button
                       key={method.value}
                       type="button"
+                      role="radio"
+                      aria-checked={paymentMethod === method.value}
                       onClick={() => setValue('paymentMethod', method.value)}
                       className={cn(
                         'flex-1 rounded-sm border px-3 py-3 text-center text-sm',
@@ -423,11 +475,17 @@ export function CheckoutPage() {
                       <CreditCardFields register={register} setValue={setValue} errors={errors} />
                     )}
                     {total >= MIN_INSTALLMENT_TOTAL && (
-                      <div className="mt-3 flex gap-2">
+                      <div
+                        role="radiogroup"
+                        aria-label="Número de parcelas"
+                        className="mt-3 flex gap-2"
+                      >
                         {[1, 2, 3].map((n) => (
                           <button
                             key={n}
                             type="button"
+                            role="radio"
+                            aria-checked={installments === n}
                             onClick={() => setValue('installments', n)}
                             className={cn(
                               'flex-1 rounded-sm border px-2 py-2 text-center text-xs',

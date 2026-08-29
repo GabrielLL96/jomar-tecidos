@@ -234,7 +234,7 @@ export function AdminReportsPage() {
       {reports.map((report) => (
         <div key={report.name} className="rounded-md border border-[#e4ddd0] bg-white p-[22px]">
           <div className="text-navy-dark text-sm font-semibold">{report.name}</div>
-          <div className="mt-1.5 text-[12.5px] leading-relaxed text-[#8c8375]">{report.desc}</div>
+          <div className="mt-1.5 text-[12.5px] leading-relaxed text-[#706657]">{report.desc}</div>
           <button
             type="button"
             onClick={report.onExport}
