@@ -84,6 +84,10 @@ export function PrivacyPolicyPage() {
             <strong>Google (Analytics/Tag Manager)</strong> (métricas de uso do site, só com
             consentimento).
           </p>
+          <p>
+            <strong>Resend</strong> (envio de e-mails transacionais — confirmação de pedido,
+            boas-vindas e contato).
+          </p>
           <p>Não compartilhamos seus dados com nenhum outro terceiro além dos listados acima.</p>
         </Section>
 
