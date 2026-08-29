@@ -52,11 +52,11 @@ export async function deleteProductImage(image: ProductImage): Promise<void> {
 export async function reorderProductImages(
   updates: { id: string; sortOrder: number }[],
 ): Promise<void> {
-  for (const update of updates) {
-    const { error } = await supabase
-      .from('product_images')
-      .update({ sort_order: update.sortOrder })
-      .eq('id', update.id)
-    if (error) throw new Error(error.message)
-  }
+  const results = await Promise.all(
+    updates.map((update) =>
+      supabase.from('product_images').update({ sort_order: update.sortOrder }).eq('id', update.id),
+    ),
+  )
+  const failed = results.find((result) => result.error)?.error
+  if (failed) throw new Error(failed.message)
 }

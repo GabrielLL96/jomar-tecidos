@@ -104,40 +104,49 @@ export function AdminCompositionsPage() {
     setIsDeleting(true)
     try {
       if (needsReassign) {
-        for (const product of deletingComposition.products) {
-          const { data: existingTarget, error: fetchError } = await supabase
-            .from('product_compositions')
-            .select('percentage')
-            .eq('product_id', product.id)
-            .eq('composition_id', reassignTargetId)
-            .maybeSingle()
-          if (fetchError) throw new Error(fetchError.message)
+        const productIds = deletingComposition.products.map((product) => product.id)
+        const { data: existingTargets, error: fetchError } = await supabase
+          .from('product_compositions')
+          .select('product_id, percentage')
+          .in('product_id', productIds)
+          .eq('composition_id', reassignTargetId)
+        if (fetchError) throw new Error(fetchError.message)
 
-          if (existingTarget) {
-            // produto já usa a composição destino também — soma os percentuais numa
-            // linha só em vez de duplicar a referência (o total do produto não muda).
-            const { error: updateError } = await supabase
-              .from('product_compositions')
-              .update({ percentage: existingTarget.percentage + product.percentage })
-              .eq('product_id', product.id)
-              .eq('composition_id', reassignTargetId)
-            if (updateError) throw new Error(updateError.message)
+        const existingPercentageByProduct = new Map(
+          existingTargets.map((target) => [target.product_id, target.percentage]),
+        )
 
-            const { error: deleteOldError } = await supabase
-              .from('product_compositions')
-              .delete()
-              .eq('product_id', product.id)
-              .eq('composition_id', deletingComposition.id)
-            if (deleteOldError) throw new Error(deleteOldError.message)
-          } else {
+        const results = await Promise.all(
+          deletingComposition.products.map(async (product) => {
+            const existingPercentage = existingPercentageByProduct.get(product.id)
+            if (existingPercentage !== undefined) {
+              // produto já usa a composição destino também — soma os percentuais numa
+              // linha só em vez de duplicar a referência (o total do produto não muda).
+              const { error: updateError } = await supabase
+                .from('product_compositions')
+                .update({ percentage: existingPercentage + product.percentage })
+                .eq('product_id', product.id)
+                .eq('composition_id', reassignTargetId)
+              if (updateError) return updateError
+
+              const { error: deleteOldError } = await supabase
+                .from('product_compositions')
+                .delete()
+                .eq('product_id', product.id)
+                .eq('composition_id', deletingComposition.id)
+              return deleteOldError
+            }
+
             const { error: repointError } = await supabase
               .from('product_compositions')
               .update({ composition_id: reassignTargetId })
               .eq('product_id', product.id)
               .eq('composition_id', deletingComposition.id)
-            if (repointError) throw new Error(repointError.message)
-          }
-        }
+            return repointError
+          }),
+        )
+        const failed = results.find((error) => error)
+        if (failed) throw new Error(failed.message)
       }
 
       const { error } = await supabase
