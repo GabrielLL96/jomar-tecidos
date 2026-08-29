@@ -20,7 +20,23 @@ export interface UnifiedLogFilters {
   dateTo: string
 }
 
-export const unifiedLogsQueryOptions = (filters: UnifiedLogFilters) =>
+// Campos que de fato precisam de uma consulta nova ao banco. "search" fica de
+// fora de propósito — filtra em memória sobre o resultado já buscado (ver
+// useUnifiedLogs) — incluí-lo na key/queryFn faria cada tecla digitada
+// refazer a busca inteira nas duas tabelas (até 300 linhas com blob de
+// diff JSON) só pra filtrar depois algo que já estava na resposta anterior.
+export type UnifiedLogQueryFilters = Omit<UnifiedLogFilters, 'search'>
+
+// Colunas explícitas, sem `select('*')` — activity_logs tem `ip_address`,
+// que nenhum lugar do app lê (nem ActivityLog/adaptLog); error_logs já usa
+// as 10 colunas, mas listar protege contra bloat silencioso se o schema
+// ganhar coluna nova amanhã.
+const ACTIVITY_LOG_COLUMNS =
+  'id, user_id, user_email, action, entity, entity_id, data_before, data_after, status, error_message, details, created_at'
+const ERROR_LOG_COLUMNS =
+  'id, user_id, user_email, message, stack, source, url, user_agent, context, created_at'
+
+export const unifiedLogsQueryOptions = (filters: UnifiedLogQueryFilters) =>
   queryOptions({
     queryKey: ['unified-logs', filters] as const,
     queryFn: async (): Promise<UnifiedLogEntry[]> => {
@@ -31,7 +47,7 @@ export const unifiedLogsQueryOptions = (filters: UnifiedLogFilters) =>
           (async () => {
             let query = supabase
               .from('activity_logs')
-              .select('*')
+              .select(ACTIVITY_LOG_COLUMNS)
               .order('created_at', { ascending: false })
               .limit(RECENT_LIMIT)
             if (filters.dateFrom) query = query.gte('created_at', `${filters.dateFrom}T00:00:00`)
@@ -57,7 +73,7 @@ export const unifiedLogsQueryOptions = (filters: UnifiedLogFilters) =>
           (async () => {
             let query = supabase
               .from('error_logs')
-              .select('*')
+              .select(ERROR_LOG_COLUMNS)
               .order('created_at', { ascending: false })
               .limit(RECENT_LIMIT)
             if (filters.dateFrom) query = query.gte('created_at', `${filters.dateFrom}T00:00:00`)
@@ -79,19 +95,6 @@ export const unifiedLogsQueryOptions = (filters: UnifiedLogFilters) =>
       }
 
       const merged = (await Promise.all(tasks)).flat()
-
-      const search = filters.search.trim().toLowerCase()
-      const filtered = search
-        ? merged.filter((entry) => {
-            const summary =
-              entry.kind === 'activity' ? (entry.raw.details ?? '') : entry.raw.message
-            return (
-              entry.userEmail?.toLowerCase().includes(search) ||
-              summary.toLowerCase().includes(search)
-            )
-          })
-        : merged
-
-      return filtered.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+      return merged.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
     },
   })

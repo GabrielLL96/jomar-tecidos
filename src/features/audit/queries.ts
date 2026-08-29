@@ -18,7 +18,27 @@ export interface ActivityLogFilters {
 
 type ActivityLogRow = Database['public']['Tables']['activity_logs']['Row']
 
-export function adaptLog(row: ActivityLogRow): ActivityLog {
+// Pick, não o Row inteiro -- deixa quem chama pedir só essas colunas ao
+// banco (ex.: logs-overview/queries.ts, que evita `ip_address`/`user_agent`
+// por não serem usadas em lugar nenhum) sem erro de tipo por faltar coluna
+// que a função nunca lê de verdade.
+type ActivityLogRowFields = Pick<
+  ActivityLogRow,
+  | 'id'
+  | 'user_id'
+  | 'user_email'
+  | 'action'
+  | 'entity'
+  | 'entity_id'
+  | 'data_before'
+  | 'data_after'
+  | 'status'
+  | 'error_message'
+  | 'details'
+  | 'created_at'
+>
+
+export function adaptLog(row: ActivityLogRowFields): ActivityLog {
   return {
     id: row.id,
     userId: row.user_id,
