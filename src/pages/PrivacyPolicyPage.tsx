@@ -24,7 +24,7 @@ export function PrivacyPolicyPage() {
       <h1 className="text-navy-dark mb-3 font-serif text-3xl font-medium">
         Política de Privacidade
       </h1>
-      <p className="text-text-meta mb-10 text-xs">Última atualização: 15 de agosto de 2026</p>
+      <p className="text-text-meta mb-10 text-xs">Última atualização: 28 de agosto de 2026</p>
 
       <div className="flex flex-col gap-10">
         <Section title="1. Quem somos">
@@ -63,12 +63,20 @@ export function PrivacyPolicyPage() {
         <Section title="3. Para que usamos seus dados">
           <p>
             Processar e entregar pedidos, calcular frete (via Melhor Envio) e processar pagamento
-            (via Asaas).
+            (via Asaas), emitir nota fiscal e cumprir obrigações fiscais — base legal: execução de
+            contrato e cumprimento de obrigação legal (art. 7º, incisos II e V, da LGPD).
           </p>
-          <p>Comunicar sobre status de pedido, entrega e questões de suporte.</p>
-          <p>Enviar comunicação de marketing promocional (novidades, ofertas).</p>
           <p>
-            Métricas de uso do site e desempenho de campanhas, quando há consentimento de cookies.
+            Comunicar sobre status de pedido, entrega e questões de suporte — base legal: execução
+            de contrato (art. 7º, V).
+          </p>
+          <p>
+            Enviar comunicação de marketing promocional (novidades, ofertas) — base legal:
+            consentimento (art. 7º, I).
+          </p>
+          <p>
+            Métricas de uso do site e desempenho de campanhas, quando há consentimento de cookies —
+            base legal: consentimento (art. 7º, I).
           </p>
         </Section>
 
@@ -82,19 +90,26 @@ export function PrivacyPolicyPage() {
           </p>
           <p>
             <strong>Google (Analytics/Tag Manager)</strong> (métricas de uso do site, só com
-            consentimento).
+            consentimento). Esse dado pode ser transferido e processado em servidores do Google
+            fora do Brasil, com as salvaguardas exigidas pelo art. 33 da LGPD.
           </p>
           <p>
             <strong>Resend</strong> (envio de e-mails transacionais — confirmação de pedido,
-            boas-vindas e contato).
+            boas-vindas e contato). Esse dado pode ser transferido e processado em servidores fora
+            do Brasil, com as salvaguardas exigidas pelo art. 33 da LGPD.
           </p>
           <p>Não compartilhamos seus dados com nenhum outro terceiro além dos listados acima.</p>
         </Section>
 
         <Section title="5. Cookies">
           <p>
-            Usamos cookies pra manter sua sessão logada e, com seu consentimento, medir uso do site
-            via Google Analytics. Você pode revisar sua escolha a qualquer momento pelo link
+            Usamos dois tipos de cookies: <strong>essenciais</strong> (sessão, carrinho, login —
+            sempre ativos, necessários pro site funcionar) e <strong>analíticos</strong> (Google
+            Analytics — medem uso do site, só ativados com seu consentimento).
+          </p>
+          <p>
+            No banner de cookies você pode aceitar todos, recusar os não essenciais, ou
+            personalizar por categoria. Você pode revisar sua escolha a qualquer momento pelo link
             "Preferências de Cookies" no rodapé.
           </p>
         </Section>
