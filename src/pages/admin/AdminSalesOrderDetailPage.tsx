@@ -220,37 +220,62 @@ export function AdminSalesOrderDetailPage() {
       })
       if (historyError) throw new Error(historyError.message)
 
-      // estorno de estoque — mesmo read-then-write client-side já usado no checkout.
+      // Estorno de estoque — antes eram 3 idas ao banco POR ITEM
+      // (select+update+insert), sequenciais (achado real de auditoria
+      // sql-patterns: N+1, nem Promise.all). Agora é 1 select em lote + N
+      // updates disparados em paralelo (não mais sequenciais) + 1 insert em
+      // lote. Não virou upsert em lote de verdade porque o tipo gerado do
+      // Supabase pra upsert exige o shape inteiro de Insert (todas as
+      // colunas obrigatórias de products), não só as colunas que mudam —
+      // e não virou RPC com UPDATE set-based porque duplicaria a regra de
+      // computeStockStatus (incl. o caso 'draft') em SQL, um segundo lugar
+      // pra manter sincronizado. Agrega por productId antes de calcular o
+      // novo estoque — um pedido pode ter 2 itens do mesmo produto em
+      // cores diferentes, e cada um precisa somar no mesmo estoque, não
+      // sobrescrever a partir do mesmo valor lido (perderia o outro item).
+      const metersByProduct = new Map<string, number>()
       for (const item of order.items) {
-        const { data: product, error: productError } = await supabase
-          .from('products')
-          .select('stock_meters, min_stock_meters, status')
-          .eq('id', item.productId)
-          .single()
-        if (productError) throw new Error(productError.message)
+        metersByProduct.set(item.productId, (metersByProduct.get(item.productId) ?? 0) + item.meters)
+      }
+      const productIds = [...metersByProduct.keys()]
 
-        const newStock = Number(product.stock_meters) + item.meters
-        const newStatus = computeStockStatus(
-          product.status,
-          newStock,
-          Number(product.min_stock_meters),
-        )
+      const { data: products, error: productsError } = await supabase
+        .from('products')
+        .select('id, stock_meters, min_stock_meters, status')
+        .in('id', productIds)
+      if (productsError) throw new Error(productsError.message)
+      if (products.length !== productIds.length) {
+        throw new Error('Produto do pedido não encontrado — estorno de estoque abortado')
+      }
 
-        const { error: updateError } = await supabase
-          .from('products')
-          .update({ stock_meters: newStock, status: newStatus })
-          .eq('id', item.productId)
-        if (updateError) throw new Error(updateError.message)
+      const updateResults = await Promise.all(
+        products.map((product) => {
+          const meters = metersByProduct.get(product.id) ?? 0
+          const newStock = Number(product.stock_meters) + meters
+          const newStatus = computeStockStatus(
+            product.status,
+            newStock,
+            Number(product.min_stock_meters),
+          )
+          return supabase
+            .from('products')
+            .update({ stock_meters: newStock, status: newStatus })
+            .eq('id', product.id)
+        }),
+      )
+      const updateError = updateResults.find((result) => result.error)?.error
+      if (updateError) throw new Error(updateError.message)
 
-        const { error: movementError } = await supabase.from('stock_movements').insert({
+      const { error: movementError } = await supabase.from('stock_movements').insert(
+        order.items.map((item) => ({
           product_id: item.productId,
           quantity: item.meters,
           reason: `Cancelamento pedido #${order.orderNumber}`,
           user_id: user?.id ?? null,
           performed_by_name: user?.name ?? 'Desconhecido',
-        })
-        if (movementError) throw new Error(movementError.message)
-      }
+        })),
+      )
+      if (movementError) throw new Error(movementError.message)
 
       if (order.couponId) {
         const { error: couponError } = await supabase.rpc('decrement_coupon_usage', {
