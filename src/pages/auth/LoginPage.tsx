@@ -34,8 +34,6 @@ function useRedirectParam() {
 
 function LoginForm() {
   const { login } = useAuth()
-  const navigate = useNavigate()
-  const redirectParam = useRedirectParam()
   const [showPassword, setShowPassword] = useState(false)
   const {
     register,
@@ -45,9 +43,14 @@ function LoginForm() {
 
   const onSubmit = async (data: LoginInput) => {
     try {
-      const profile = await login(data)
+      // Redirect não acontece aqui — login() resolve com um profile buscado
+      // localmente, ANTES do contexto (via onAuthStateChange/SIGNED_IN) ter
+      // atualizado `user`/`isLoading` de verdade. Navegar com esse profile
+      // local levava o guard da página de destino a ler `user: null` ainda
+      // stale e chutar de volta pro login. O único navigate certo é o do
+      // useEffect de LoginPage, que espera o contexto confirmar.
+      await login(data)
       toast.success('Login realizado com sucesso')
-      navigate(redirectParam || defaultRedirectFor(profile.role))
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível entrar')
       // Sem sessão, não há auth.uid() verificável — user_email aqui é o que
@@ -106,9 +109,6 @@ function LoginForm() {
 
 function SignupForm() {
   const { signup } = useAuth()
-  const navigate = useNavigate()
-  // Cadastro novo sempre nasce como 'customer' — sem branch por role aqui.
-  const redirectParam = useRedirectParam()
   const {
     register,
     handleSubmit,
@@ -130,7 +130,8 @@ function SignupForm() {
       sendWelcomeEmail().catch((emailError) =>
         console.error('Falha ao enviar e-mail de boas-vindas:', emailError),
       )
-      navigate(redirectParam || '/conta')
+      // Mesmo raciocínio de LoginForm.onSubmit — o useEffect de LoginPage
+      // navega quando o contexto confirmar `user`, não daqui.
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Não foi possível criar a conta')
     }
