@@ -6,7 +6,8 @@ import type { UnifiedLogEntry } from './types'
 function matchesSearch(entry: UnifiedLogEntry, search: string): boolean {
   const summary = entry.kind === 'activity' ? (entry.raw.details ?? '') : entry.raw.message
   return (
-    (entry.userEmail?.toLowerCase().includes(search) ?? false) || summary.toLowerCase().includes(search)
+    (entry.userEmail?.toLowerCase().includes(search) ?? false) ||
+    summary.toLowerCase().includes(search)
   )
 }
 

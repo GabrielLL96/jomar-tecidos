@@ -69,7 +69,10 @@ async function asaasErrorInfo(
         : `Asaas recusou a chamada (HTTP ${response.status})`
     const errors = rawErrors
       ? rawErrors.map((e: unknown) => ({
-          code: typeof (e as { code?: unknown })?.code === 'string' ? (e as { code: string }).code : null,
+          code:
+            typeof (e as { code?: unknown })?.code === 'string'
+              ? (e as { code: string }).code
+              : null,
           description:
             typeof (e as { description?: unknown })?.description === 'string'
               ? (e as { description: string }).description
@@ -499,19 +502,14 @@ export async function getAsaasPixQrCode(
   credentials: AsaasCredentials,
   paymentId: string,
 ): Promise<AsaasPixQrCode> {
-  const result = (await asaasFetch(
-    credentials,
-    `/v3/payments/${paymentId}/pixQrCode`,
-    undefined,
-    {
-      operation: 'get_pix_qrcode',
-      requestSummary: { paymentId },
-      // encodedImage/payload NUNCA entram no log — não são secret, mas são o
-      // próprio meio de pagamento (qualquer um com o payload consegue gerar o
-      // QR e pagar aquela cobrança); sem valor de debug em persistir.
-      summarizeResponse: () => ({ hasQrCode: true }),
-    },
-  )) as AsaasPixQrCode
+  const result = (await asaasFetch(credentials, `/v3/payments/${paymentId}/pixQrCode`, undefined, {
+    operation: 'get_pix_qrcode',
+    requestSummary: { paymentId },
+    // encodedImage/payload NUNCA entram no log — não são secret, mas são o
+    // próprio meio de pagamento (qualquer um com o payload consegue gerar o
+    // QR e pagar aquela cobrança); sem valor de debug em persistir.
+    summarizeResponse: () => ({ hasQrCode: true }),
+  })) as AsaasPixQrCode
   return { ...result, expirationDate: parseAsaasLocalDateTime(result.expirationDate) }
 }
 
