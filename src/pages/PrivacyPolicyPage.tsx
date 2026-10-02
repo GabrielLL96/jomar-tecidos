@@ -1,14 +1,6 @@
+import { LegalSection as Section } from '@/components/common/LegalSection'
 import { useBusinessInfo } from '@/features/site-settings/hooks'
 import { useSeoMeta } from '@/lib/seo'
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-navy-dark font-serif text-xl font-medium">{title}</h2>
-      <div className="text-text-body flex flex-col gap-3 text-sm leading-relaxed">{children}</div>
-    </section>
-  )
-}
 
 export function PrivacyPolicyPage() {
   const business = useBusinessInfo()
@@ -24,7 +16,7 @@ export function PrivacyPolicyPage() {
       <h1 className="text-navy-dark mb-3 font-serif text-3xl font-medium">
         Política de Privacidade
       </h1>
-      <p className="text-text-meta mb-10 text-xs">Última atualização: 28 de agosto de 2026</p>
+      <p className="text-text-meta mb-10 text-xs">Última atualização: 2 de outubro de 2026</p>
 
       <div className="flex flex-col gap-10">
         <Section title="1. Quem somos">
@@ -69,10 +61,6 @@ export function PrivacyPolicyPage() {
           <p>
             Comunicar sobre status de pedido, entrega e questões de suporte — base legal: execução
             de contrato (art. 7º, V).
-          </p>
-          <p>
-            Enviar comunicação de marketing promocional (novidades, ofertas) — base legal:
-            consentimento (art. 7º, I).
           </p>
           <p>
             Métricas de uso do site e desempenho de campanhas, quando há consentimento de cookies —
@@ -133,6 +121,11 @@ export function PrivacyPolicyPage() {
             fiscais de venda (nota fiscal, comprovante) seguem o prazo de 5 anos do Código
             Tributário Nacional (Lei nº 5.172/1966, art. 173); e reclamações relacionadas à compra
             seguem o prazo de 5 anos do Código de Defesa do Consumidor (Lei nº 8.078/1990, art. 27).
+          </p>
+          <p>
+            Já os registros técnicos de erro do site são apagados automaticamente após 90 dias, e os
+            registros de comunicação com as integrações (pagamento, frete e e-mail) são apagados
+            automaticamente após 180 dias.
           </p>
         </Section>
 
