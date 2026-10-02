@@ -24,7 +24,9 @@ export function Footer() {
             </Link>
             <span className={inertLinkClass}>Formas de Entrega</span>
             <span className={inertLinkClass}>Trocas e Devoluções</span>
-            <span className={inertLinkClass}>Termos de Uso</span>
+            <Link to="/termos-de-uso" className={inertLinkClass}>
+              Termos de Uso
+            </Link>
           </div>
         </div>
 

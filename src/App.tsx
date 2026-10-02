@@ -22,6 +22,9 @@ const AboutPage = lazy(() => import('@/pages/AboutPage').then((m) => ({ default:
 const PrivacyPolicyPage = lazy(() =>
   import('@/pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage })),
 )
+const TermsOfUsePage = lazy(() =>
+  import('@/pages/TermsOfUsePage').then((m) => ({ default: m.TermsOfUsePage })),
+)
 const ContactPage = lazy(() =>
   import('@/pages/contact/ContactPage').then((m) => ({ default: m.ContactPage })),
 )
@@ -132,6 +135,7 @@ function App() {
             <Route path="/pedido/:id" element={<ConfirmationPage />} />
             <Route path="/sobre" element={<AboutPage />} />
             <Route path="/politica-de-privacidade" element={<PrivacyPolicyPage />} />
+            <Route path="/termos-de-uso" element={<TermsOfUsePage />} />
             <Route path="/contato" element={<ContactPage />} />
             <Route path="/favoritos" element={<FavoritesPage />} />
             <Route path="/conta/entrar" element={<LoginPage />} />
