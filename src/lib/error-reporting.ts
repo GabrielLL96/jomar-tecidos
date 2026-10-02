@@ -39,7 +39,9 @@ async function reportError(input: {
       message: truncate(input.message, 2000) ?? 'Erro sem mensagem',
       stack: truncate(input.stack, 8000),
       source: input.source,
-      url: truncate(window.location.href, 2000),
+      // Sem query/hash de propósito: link de reset de senha traz
+      // #access_token / ?code= e isso não pode parar em error_logs.
+      url: truncate(window.location.origin + window.location.pathname, 2000),
       user_agent: truncate(navigator.userAgent, 500),
       context: (input.context as Json) ?? null,
     })

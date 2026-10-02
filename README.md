@@ -15,13 +15,13 @@ Landing page / e-commerce da **Jomar Tecidos e Enxovais** (Pouso Alegre, MG, des
 
 ## Escopo atual
 
-Catálogo, carrinho, checkout, favoritos e login são **mockados localmente** (sem backend) — decisão registrada nos ADRs do projeto. Roteamento usa rotas reais do React Router (não state interno). Pagamento real (gateway Pix/cartão/boleto) está fora de escopo desta fase; o checkout apenas simula a confirmação do pedido.
+Backend real em **Supabase** (Postgres + RLS + Edge Functions): catálogo, carrinho, favoritos, login/conta, pedidos e painel admin. O checkout cria o pedido pela RPC `create_order` (`security definer`) — preços, frete e cupom são recalculados no servidor, o client não dita valores. Pagamento real via **Asaas** (Pix, boleto e cartão; edge functions `asaas-*`), frete via **Melhor Envio** (hoje em sandbox) e e-mail transacional via **Resend**. Roteamento usa rotas reais do React Router (não state interno).
 
 ## Como rodar
 
 ```bash
 npm install
-cp .env.example .env   # preencher VITE_PUBLIC_CRYPTO_KEY
+cp .env.example .env   # preencher as variáveis (ver tabela abaixo)
 npm run dev            # servidor de desenvolvimento
 ```
 
@@ -37,10 +37,16 @@ npm run dev            # servidor de desenvolvimento
 
 ### Variáveis de ambiente
 
-| Variável                 | Descrição                                                                                             |
-| ------------------------ | ----------------------------------------------------------------------------------------------------- |
-| `VITE_API_URL`           | Base URL da API (não utilizada nesta fase — catálogo é mockado)                                       |
-| `VITE_PUBLIC_CRYPTO_KEY` | Chave de criptografia do `useSecureStorage`. Sem ela, o hook salva sem criptografia (fallback seguro) |
+| Variável                   | Descrição                                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`        | URL do projeto Supabase                                                                               |
+| `VITE_SUPABASE_ANON_KEY`   | Chave anon (pública) do Supabase — o acesso a dados é protegido por RLS                               |
+| `VITE_SUPABASE_PROJECT_ID` | ID do projeto Supabase (usado pelos scripts de CLI/types)                                             |
+| `VITE_PUBLIC_CRYPTO_KEY`   | Chave de criptografia do `useSecureStorage`. Sem ela, o hook salva sem criptografia (fallback seguro) |
+| `SUPABASE_ACCESS_TOKEN`    | Só scripts da CLI do Supabase (`sb:login`/`sb:link`) — não é lida pelo Vite                           |
+| `RESEND_SMTP_PASSWORD`     | Só `config:push` (SMTP do Auth via Resend) — não é lida pelo Vite                                     |
+
+`VITE_API_URL` não é mais usada: o único consumidor era `src/lib/axios.ts`, que não é importado por nenhum módulo. Segredos de Melhor Envio, Asaas e Resend ficam no banco/secrets das edge functions, nunca no `.env` do front.
 
 ## Estrutura de pastas
 
@@ -51,10 +57,10 @@ src/
     layout/    # Header, Footer, UtilityBar, RootLayout
     common/    # componentes utilitários (ImagePlaceholder, ícones)
   features/
-    catalog/   # dados mock, hooks (TanStack Query), tipos do catálogo
+    catalog/   # hooks (TanStack Query), tipos do catálogo
     cart/      # contexto do carrinho
     favorites/ # contexto de favoritos
-    auth/      # contexto de autenticação mockada
+    auth/      # contexto de autenticação (Supabase Auth)
   pages/       # páginas roteadas
   hooks/       # useSecureStorage e demais hooks globais
   lib/         # axios, query-client, constants, format, utils
