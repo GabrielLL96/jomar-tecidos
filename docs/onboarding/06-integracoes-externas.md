@@ -1,6 +1,8 @@
 # 6. Integrações externas
 
-Três integrações reais: **Asaas** (pagamento), **Melhor Envio** (frete) e **Google Tag
+Quatro integrações reais: **Asaas** (pagamento), **Melhor Envio** (frete), **Resend**
+(e-mail transacional; 5 edge functions: `resend-validate-connection`, `send-order-confirmation-email`,
+`send-order-status-email`, `send-welcome-email`, `send-contact-email`) e **Google Tag
 Manager** (analytics, condicionado a consentimento LGPD). Nenhuma delas é chamada
 diretamente do frontend — tudo passa por Edge Functions do Supabase, que guardam as
 credenciais reais.
@@ -173,13 +175,18 @@ caseiro de **opt-in explícito por injeção condicional de script**:
   — LGPD art. 7º VI não exige consentimento para isso.
 - Banner com 3 ações: Recusar, Aceitar todos, Personalizar (toggle individual de
   "Analíticos").
-- `GoogleTagManager.tsx` só injeta o `<script>`/`<noscript><iframe>` do container
-  `GTM-M4GCP7VG` se `hasAnalyticsConsent === true`. GA4 é configurado dentro do próprio
+- `GoogleTagManager.tsx` só injeta o `<script>` (sem `<noscript>`, que não tem efeito numa SPA) do
+  container `GTM-M4GCP7VG` se `hasAnalyticsConsent === true`. Não injeta em `/checkout`,
+  `/pedido/:id` e `/conta/pedidos/:id` (telas de cartão) e força reload ao entrar nelas se o
+  GTM já estiver carregado. GA4 é configurado dentro do próprio
   container GTM (no dashboard do Google), não hardcoded no código.
 - **Revogação real, não cosmética**: se o usuário já tinha consentido e agora recusa, o
   código força `window.location.reload()` — remover o `<script>` do DOM não para tracking
   já em execução nem limpa cookie já setado pelo Google; só reload garante que a tag não
   volta a carregar.
+
+**CSP** (`public/_headers`): tag nova no GTM que precise de script inline ou de outra origem
+será bloqueada — liberar a origem na CSP, nunca afrouxar com `unsafe-inline`.
 
 Transferência internacional de dado via GTM/GA4 (infraestrutura do Google fora do Brasil)
 está mapeada em `docs/lgpd/operadores.md`, mas nenhum DPA foi revisado formalmente — pendência

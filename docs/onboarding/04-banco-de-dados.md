@@ -40,11 +40,18 @@ decisão específica.
   `delete_order()`).
 - **`order_items`** — `unit_price` sempre gravado pelo servidor (nunca aceita o valor que o
   client mandar).
+- **INSERT direto em `orders`/`order_items` revogado do client** (migration
+  `20261001120000_revoke_direct_order_insert.sql`): pedido só nasce via RPC `create_order()`.
+  O UPDATE de `orders` é column-scoped: `grant update (status, cancel_reason)` (migration
+  `20260828234500`).
 - **`order_status_history`** — ledger append-only de toda transição de status.
 - **`coupons`** — percentual (limitado a ≤100% por `CHECK`), fixo, ou frete grátis;
-  `starts_at`/`expires_at`/`max_uses`.
+  `starts_at`/`expires_at`/`max_uses`. Sem leitura pública: SELECT direto só para staff; o
+  checkout valida o código pela RPC `validate_coupon(p_code)` (migration `20261002130000`).
 - **`shipping_quotes`** — cache de cotação real de frete (Melhor Envio), ~15min de validade,
-  usada por `create_order()` como fonte de verdade de preço de frete.
+  usada por `create_order()` como fonte de verdade de preço de frete. Amarrada a `user_id` +
+  itens cotados (peso/dimensão calculados no servidor); `create_order()` exige dono, CEP de
+  destino e itens idênticos (migration `20261002120000`).
 - **`deliveries`** — rastreio (`tracking_code`/`tracking_url`), correlação com Melhor Envio
   (`melhor_envio_shipment_id`/`protocol`, ainda não populados — geração de etiqueta é fase
   futura não implementada).
@@ -73,10 +80,14 @@ decisão específica.
   composições, cupons, entregas, estoque, reembolso, pagamento). Imutável para
   `authenticated` — só triggers `security definer` escrevem.
 - **`error_logs`** — erros de runtime capturados no client (`window.onerror`,
-  `unhandledrejection`, error boundary do React). Qualquer visitante pode inserir; só admin lê.
+  `unhandledrejection`, error boundary do React). Qualquer visitante pode inserir; só admin lê. `url` grava só `origin + pathname`
+  (sem query/hash — o link de reset de senha carrega token no hash).
 - **`integration_logs`** — toda chamada de saída/entrada com Asaas e Melhor Envio, com
   resumo allowlist da requisição/resposta (nunca o body cru — dado de cartão nunca entra
   aqui em nenhuma hipótese).
+- **Retenção** (a partir de 2026-10-02): função `purge_old_logs()` + job `pg_cron` diário
+  (`purge-old-logs`, 03:17) apaga `error_logs` > 90 dias e `integration_logs` > 180 dias
+  (migration `20261002140000_purge_old_logs_cron.sql`; ainda não aplicada em produção).
 
 ## Padrão de autorização (RLS + GRANT)
 
@@ -202,7 +213,7 @@ trigger). Promoção a `admin` é sempre um `UPDATE` explícito feito pela Edge 
 Usa **só a anon key** — nunca a service role key, que fica restrita ao runtime das Edge
 Functions. Sessão não usa o `localStorage` padrão do Supabase Auth: usa
 `secureCookieStorage` (`src/lib/secureCookieStorage.ts`) — cookies `Secure`/`SameSite=Lax`,
-criptografados com AES, divididos em chunks (limite de ~4KB por cookie), `Max-Age` de 30
+ofuscados com AES (chave no bundle — não é proteção contra XSS), divididos em chunks (limite de ~4KB por cookie), `Max-Age` de 30
 dias. `detectSessionInUrl: true` é necessário para o fluxo de recuperação de senha.
 
 ## Regenerando tipos após alterar o schema

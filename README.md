@@ -8,10 +8,9 @@ Landing page / e-commerce da **Jomar Tecidos e Enxovais** (Pouso Alegre, MG, des
 - [Tailwind CSS v4](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/) (estilo `radix-nova`, ícones [Lucide](https://lucide.dev/))
 - [React Router](https://reactrouter.com/) v7
 - [TanStack Query](https://tanstack.com/query) v5
-- [Axios](https://axios-http.com/)
 - [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
 - [Motion](https://motion.dev/) (Framer Motion)
-- `useSecureStorage` — hook próprio que criptografa dados salvos no `localStorage` (AES via `crypto-js`)
+- `useSecureStorage` — hook próprio que **ofusca** (AES via `crypto-js`) os dados salvos no `localStorage` — a chave vai no bundle, então não é sigilo (ver comentário em `src/lib/secureStorage.ts`)
 
 ## Escopo atual
 
@@ -27,24 +26,24 @@ npm run dev            # servidor de desenvolvimento
 
 ### Scripts
 
-| Comando           | Descrição                                 |
-| ----------------- | ----------------------------------------- |
-| `npm run dev`     | Servidor de desenvolvimento (Vite)        |
-| `npm run build`   | Type-check (`tsc -b`) + build de produção |
-| `npm run preview` | Preview local do build de produção        |
-| `npm run lint`    | ESLint                                    |
-| `npm run format`  | Prettier (`--write`)                      |
+| Comando           | Descrição                                            |
+| ----------------- | ---------------------------------------------------- |
+| `npm run dev`     | Servidor de desenvolvimento (Vite)                   |
+| `npm run build`   | Format + type-check (`tsc -b`) + lint + `vite build` |
+| `npm run preview` | Preview local do build de produção                   |
+| `npm run lint`    | ESLint                                               |
+| `npm run format`  | Prettier (`--write`)                                 |
 
 ### Variáveis de ambiente
 
-| Variável                   | Descrição                                                                                             |
-| -------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `VITE_SUPABASE_URL`        | URL do projeto Supabase                                                                               |
-| `VITE_SUPABASE_ANON_KEY`   | Chave anon (pública) do Supabase — o acesso a dados é protegido por RLS                               |
-| `VITE_SUPABASE_PROJECT_ID` | ID do projeto Supabase (usado pelos scripts de CLI/types)                                             |
-| `VITE_PUBLIC_CRYPTO_KEY`   | Chave de criptografia do `useSecureStorage`. Sem ela, o hook salva sem criptografia (fallback seguro) |
-| `SUPABASE_ACCESS_TOKEN`    | Só scripts da CLI do Supabase (`sb:login`/`sb:link`) — não é lida pelo Vite                           |
-| `RESEND_SMTP_PASSWORD`     | Só `config:push` (SMTP do Auth via Resend) — não é lida pelo Vite                                     |
+| Variável                   | Descrição                                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `VITE_SUPABASE_URL`        | URL do projeto Supabase                                                                                      |
+| `VITE_SUPABASE_ANON_KEY`   | Chave anon (pública) do Supabase — o acesso a dados é protegido por RLS                                      |
+| `VITE_SUPABASE_PROJECT_ID` | ID do projeto Supabase (usado pelos scripts de CLI/types)                                                    |
+| `VITE_PUBLIC_CRYPTO_KEY`   | Chave de ofuscação do `useSecureStorage` (vai no bundle, não é segredo). Sem ela, o hook salva em texto puro |
+| `SUPABASE_ACCESS_TOKEN`    | Só scripts da CLI do Supabase (`sb:login`/`sb:link`) — não é lida pelo Vite                                  |
+| `RESEND_SMTP_PASSWORD`     | Só `config:push` (SMTP do Auth via Resend) — não é lida pelo Vite                                            |
 
 Segredos de Melhor Envio, Asaas e Resend ficam no banco/secrets das edge functions, nunca no `.env` do front.
 
@@ -61,7 +60,9 @@ src/
     cart/      # contexto do carrinho
     favorites/ # contexto de favoritos
     auth/      # contexto de autenticação (Supabase Auth)
+    resend/    # integração de e-mail transacional (Resend)
+    # + account, asaas, audit, consent, error-logs, integration-logs, logs-overview, melhor-envio, orders, site-settings, stock, users
   pages/       # páginas roteadas
   hooks/       # useSecureStorage e demais hooks globais
-  lib/         # axios, query-client, constants, format, utils
+  lib/         # supabase, edge-functions, query-client, constants, format, utils, seo, cpf, csv, error-reporting, image-compression, secureStorage, secureCookieStorage
 ```

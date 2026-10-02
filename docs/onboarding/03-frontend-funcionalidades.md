@@ -61,7 +61,7 @@ rota — detalhe completo em
 4. **Checkout** (`/checkout`) — exige login (desde o commit `6b7af6e`, 2026-08-13). Fluxo:
    endereço (novo ou existente) → cálculo de frete (cotação real via Melhor Envio, dispara
    sozinho quando o CEP completa 8 dígitos) → cupom opcional → método de pagamento (Pix,
-   boleto ou cartão) → submit chama a RPC `create_order()`, que faz tudo numa transação
+   boleto ou cartão; o cupom é validado pela RPC `validate_coupon`) → submit chama a RPC `create_order()`, que faz tudo numa transação
    atômica no servidor (releitura de preço, estoque, frete e cupom — nunca confia no valor
    que o client mandou). Ver [04-banco-de-dados.md](./04-banco-de-dados.md) para o detalhe
    de `create_order()` e [06-integracoes-externas.md](./06-integracoes-externas.md) para o

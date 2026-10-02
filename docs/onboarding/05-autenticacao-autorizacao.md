@@ -11,7 +11,7 @@ convenção de outro projeto). Consome Supabase Auth real — não é mock.
   (best-effort, sem bloquear o login se falhar) um `update` de `users.last_login_at`, busca o
   perfil completo (`id, name, email, phone, role` de `public.users`) e devolve para o
   chamador decidir o redirect.
-- Sessão persistida em **cookies criptografados** (`secureCookieStorage`), não
+- Sessão persistida em **cookies ofuscados** (`secureCookieStorage`, AES com chave no bundle — ofuscação, não sigilo), não
   `localStorage` puro — ver detalhe em
   [04-banco-de-dados.md](./04-banco-de-dados.md#client-supabase-no-frontend-srclibsupabasets).
   `persistSession: true`, `autoRefreshToken: true`, `detectSessionInUrl: true` (necessário

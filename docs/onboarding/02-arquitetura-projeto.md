@@ -27,7 +27,7 @@ src/
 │   └── ui/                      # componentes shadcn/radix (button, dialog, sheet, table, tabs, select...)
 ├── features/                  # lógica de domínio — ver tabela abaixo
 ├── hooks/                       # hooks genéricos (hoje só useSecureStorage.ts)
-├── lib/                          # infraestrutura: supabase client, axios, query-client, utils, formatação, SEO
+├── lib/                          # infraestrutura: supabase client, edge-functions, query-client, utils, formatação, SEO, error-reporting, secureStorage
 └── pages/                        # componentes de rota (montam features + components)
     ├── admin/                     # todas as páginas /admin/*
     ├── auth/                      # login, conta, recuperação de senha
@@ -61,6 +61,7 @@ queryOptions), `types.ts`, e ocasionalmente um `*Context.tsx` para estado global
 | `melhor-envio/`     | Fluxo OAuth de conexão e cotação de frete                                                                                 |
 | `orders/`           | Pedidos — monta o objeto `Order` completo (itens, entrega, pagamento, reembolsos, histórico) num único `select` com joins |
 | `site-settings/`    | Conteúdo editável da Home/rodapé, configs internas (frete grátis, etc.)                                                   |
+| `resend/`           | Integração de e-mail transacional (Resend): status de conexão e configuração; envio pelas edge functions `send-*`         |
 | `stock/`            | Movimentações de estoque                                                                                                  |
 | `users/`            | Gestão de usuários no admin                                                                                               |
 

@@ -61,6 +61,12 @@ mudança **não** vai para produção — diferente do frontend, onde o push já
 Isso é uma fonte comum de confusão: "eu já commitei e pushei, por que a Edge Function ainda
 está com o comportamento antigo?" — porque falta o passo de deploy manual dela.
 
+## Headers de segurança (`public/_headers`)
+
+Copiado para `dist/` no build e aplicado pelo Cloudflare Pages: `X-Frame-Options: DENY`,
+`Strict-Transport-Security`, `Permissions-Policy` e `Content-Security-Policy` (aplicada desde
+2026-10-02). Rollback da CSP: renomear o header para `Content-Security-Policy-Report-Only`.
+
 ## Migrations de banco
 
 `npm run db:push` aplica migrations pendentes diretamente no projeto Supabase real — de novo,
