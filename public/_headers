@@ -1,0 +1,23 @@
+# Headers de segurança do Cloudflare Pages (copiado pra dist/ no build).
+#
+# Content-Security-Policy (aplicada): só frame-ancestors — bloqueia o site
+# dentro de iframe de terceiro (clickjacking no checkout/admin) sem risco de
+# quebrar script nenhum.
+#
+# Content-Security-Policy-Report-Only: a política completa em observação. O
+# navegador NÃO bloqueia, só registra violação no console. Quando o console
+# ficar limpo nas páginas principais (com cookies analíticos aceitos, pra
+# GTM/GA carregarem), mover o conteúdo pra Content-Security-Policy.
+# Ponto em aberto: tags Custom HTML configuradas no painel do GTM exigem
+# 'unsafe-inline' — se aparecerem violações delas, decidir entre restringir o
+# container ou aceitar 'unsafe-inline' (enfraquece a proteção contra XSS).
+#
+# Origens: Supabase (REST/Auth/Storage/Edge Functions + Realtime via wss),
+# GTM e Google Analytics. Fontes são locais (@fontsource). Asaas e Melhor
+# Envio só são chamados pelas edge functions, nunca pelo navegador.
+/*
+  X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://www.googletagmanager.com https://*.googletagmanager.com; connect-src 'self' https://ooghhxcrdndulzlrsliz.supabase.co wss://ooghhxcrdndulzlrsliz.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; img-src 'self' data: blob: https://ooghhxcrdndulzlrsliz.supabase.co https://*.google-analytics.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Strict-Transport-Security: max-age=31536000
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), usb=(), payment=()
