@@ -4,7 +4,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: '14.15'
+    PostgrestVersion: '14.5'
   }
   public: {
     Tables: {
@@ -71,9 +71,11 @@ export type Database = {
         Row: {
           city: string
           created_at: string
+          district: string | null
           id: string
           is_default: boolean
           label: string
+          number: string | null
           state: string
           street: string
           user_id: string
@@ -82,9 +84,11 @@ export type Database = {
         Insert: {
           city: string
           created_at?: string
+          district?: string | null
           id?: string
           is_default?: boolean
           label: string
+          number?: string | null
           state: string
           street: string
           user_id: string
@@ -93,9 +97,11 @@ export type Database = {
         Update: {
           city?: string
           created_at?: string
+          district?: string | null
           id?: string
           is_default?: boolean
           label?: string
+          number?: string | null
           state?: string
           street?: string
           user_id?: string
@@ -283,6 +289,7 @@ export type Database = {
           carrier: string | null
           eta_date: string | null
           id: string
+          melhor_envio_label_url: string | null
           melhor_envio_protocol: string | null
           melhor_envio_shipment_id: string | null
           order_id: string
@@ -294,6 +301,7 @@ export type Database = {
           carrier?: string | null
           eta_date?: string | null
           id?: string
+          melhor_envio_label_url?: string | null
           melhor_envio_protocol?: string | null
           melhor_envio_shipment_id?: string | null
           order_id: string
@@ -305,6 +313,7 @@ export type Database = {
           carrier?: string | null
           eta_date?: string | null
           id?: string
+          melhor_envio_label_url?: string | null
           melhor_envio_protocol?: string | null
           melhor_envio_shipment_id?: string | null
           order_id?: string
@@ -567,6 +576,7 @@ export type Database = {
           order_id: string
           payment_method: Database['public']['Enums']['payment_method']
           pix_copy_paste: string | null
+          pix_expiration: string | null
           pix_qr_code: string | null
           status: string
           updated_at: string
@@ -585,6 +595,7 @@ export type Database = {
           order_id: string
           payment_method: Database['public']['Enums']['payment_method']
           pix_copy_paste?: string | null
+          pix_expiration?: string | null
           pix_qr_code?: string | null
           status?: string
           updated_at?: string
@@ -603,6 +614,7 @@ export type Database = {
           order_id?: string
           payment_method?: Database['public']['Enums']['payment_method']
           pix_copy_paste?: string | null
+          pix_expiration?: string | null
           pix_qr_code?: string | null
           status?: string
           updated_at?: string
@@ -661,6 +673,7 @@ export type Database = {
           payment_method: Database['public']['Enums']['payment_method']
           shipping_address_id: string
           shipping_cost: number
+          shipping_service_id: number | null
           status: Database['public']['Enums']['order_status']
           subtotal: number
           total: number
@@ -677,6 +690,7 @@ export type Database = {
           payment_method: Database['public']['Enums']['payment_method']
           shipping_address_id: string
           shipping_cost?: number
+          shipping_service_id?: number | null
           status?: Database['public']['Enums']['order_status']
           subtotal: number
           total: number
@@ -693,6 +707,7 @@ export type Database = {
           payment_method?: Database['public']['Enums']['payment_method']
           shipping_address_id?: string
           shipping_cost?: number
+          shipping_service_id?: number | null
           status?: Database['public']['Enums']['order_status']
           subtotal?: number
           total?: number
@@ -1102,23 +1117,37 @@ export type Database = {
           destination_zip: string
           expires_at: string
           id: string
+          items: Json | null
           options: Json
+          user_id: string | null
         }
         Insert: {
           created_at?: string
           destination_zip: string
           expires_at?: string
           id?: string
+          items?: Json | null
           options: Json
+          user_id?: string | null
         }
         Update: {
           created_at?: string
           destination_zip?: string
           expires_at?: string
           id?: string
+          items?: Json | null
           options?: Json
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: 'shipping_quotes_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
       }
       site_settings: {
         Row: {
@@ -1319,6 +1348,20 @@ export type Database = {
         Returns: {
           api_key_configured: boolean
           from_email_configured: boolean
+        }[]
+      }
+      validate_coupon: {
+        Args: { p_code: string }
+        Returns: {
+          code: string
+          expires_at: string
+          id: string
+          max_uses: number
+          starts_at: string
+          status: Database['public']['Enums']['coupon_status']
+          type: Database['public']['Enums']['coupon_type']
+          used_count: number
+          value: number
         }[]
       }
     }

@@ -144,10 +144,10 @@ export function CheckoutPage() {
   }
 
   const handleApplyCoupon = async () => {
+    // RPC em vez de select direto: a tabela não é mais legível pelo cliente
+    // (listava todos os cupons). Só volta linha se o cupom é utilizável agora.
     const { data, error } = await supabase
-      .from('coupons')
-      .select('id, code, type, value, max_uses, used_count, starts_at, expires_at, status')
-      .eq('code', couponCode.trim().toUpperCase())
+      .rpc('validate_coupon', { p_code: couponCode })
       .maybeSingle()
 
     const coupon: Coupon | null = data
