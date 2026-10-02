@@ -49,6 +49,13 @@ interface MelhorEnvioQuote {
   error?: string | null
 }
 
+// Erro de validação de entrada, seguro de mostrar ao cliente. Qualquer outro
+// erro (token, API da Melhor Envio, banco) é detalhe técnico e vira a
+// mensagem genérica abaixo — o client cai na taxa fixa estimada.
+class UserFacingError extends Error {}
+
+const GENERIC_ERROR_MESSAGE = 'Não foi possível calcular o frete agora. Usando taxa estimada.'
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
@@ -57,12 +64,12 @@ Deno.serve(async (req) => {
 
     const { destinationZip, items } = (await req.json()) as CalculateRequestBody
     const cleanDestinationZip = (destinationZip ?? '').replace(/\D/g, '')
-    if (cleanDestinationZip.length !== 8) throw new Error('CEP de destino inválido')
-    if (!items || items.length === 0) throw new Error('Carrinho vazio')
+    if (cleanDestinationZip.length !== 8) throw new UserFacingError('CEP de destino inválido')
+    if (!items || items.length === 0) throw new UserFacingError('Carrinho vazio')
     const invalidItem = items.some(
       (item) => typeof item.productId !== 'string' || !(Number(item.meters) > 0),
     )
-    if (invalidItem) throw new Error('Item inválido no carrinho')
+    if (invalidItem) throw new UserFacingError('Item inválido no carrinho')
 
     const supabase = createServiceClient()
 
@@ -79,13 +86,13 @@ Deno.serve(async (req) => {
 
     const products = (productRows ?? []) as ProductShippingRow[]
     if (products.length !== productIds.length || products.some((p) => p.status === 'draft')) {
-      throw new Error('Produto indisponível no carrinho')
+      throw new UserFacingError('Produto indisponível no carrinho')
     }
     const missingData = products.some(
       (p) => !p.weight_grams || !p.package_height_cm || !p.package_width_cm || !p.package_length_cm,
     )
     if (missingData) {
-      throw new Error(
+      throw new UserFacingError(
         'Produto sem peso/dimensão cadastrados — não é possível cotar frete real pra este pedido',
       )
     }
@@ -100,7 +107,7 @@ Deno.serve(async (req) => {
       throw new Error(`Falha ao ler CEP de origem: ${siteSettingsError.message}`)
     const originZip = (siteSettings?.value ?? '').replace(/\D/g, '')
     if (originZip.length !== 8)
-      throw new Error('CEP de origem (Configurações > Rodapé e contato) não configurado')
+      throw new UserFacingError('CEP de origem (Configurações > Rodapé e contato) não configurado')
 
     const accessToken = await getValidAccessToken()
 
@@ -182,7 +189,12 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Erro desconhecido'
+    // Falhas da Melhor Envio já ficam em integration_logs (melhorEnvioFetch),
+    // mas leitura de token/produtos/settings e insert da cotação não — o
+    // console.error garante o detalhe nos logs da function.
+    if (!(error instanceof UserFacingError))
+      console.error('melhor-envio-shipping-calculate:', error)
+    const message = error instanceof UserFacingError ? error.message : GENERIC_ERROR_MESSAGE
     return new Response(JSON.stringify({ error: message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

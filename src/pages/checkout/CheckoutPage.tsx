@@ -28,7 +28,7 @@ import { useSavedCards } from '@/features/asaas/hooks'
 import { sendOrderConfirmationEmail } from '@/features/resend/service'
 import { CreditCardFields } from '@/features/asaas/CreditCardFields'
 import { useSeoMeta } from '@/lib/seo'
-import { checkoutSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
+import { checkoutSchema, deliveryFieldsSchema, PAYMENT_METHODS, type CheckoutInput } from './schema'
 
 // Abaixo disso, parcela ficaria irrisória — só oferece 2x/3x a partir daqui.
 const MIN_INSTALLMENT_TOTAL = 30
@@ -103,17 +103,22 @@ export function CheckoutPage() {
   // dado de peso/dimensão (cai na taxa fixa de propósito, ver comentário
   // acima) ou cotação real com opção selecionada. `noCarriersAvailable` some
   // desta lista por design — se travou, section 2 deve continuar trancada.
+  // Falha da API de frete (≠ "sem transportadora") cai na taxa fixa; o
+  // create_order() aplica o mesmo valor quando não recebe quoteId.
+  const shippingQuoteFailed = shippingQuoteError !== null && !noCarriersAvailable
   const shippingDecided =
     isFreeShipping ||
     cartItemsMissingShippingData ||
-    (!shippingBlocked && !isCalculatingShipping && selectedShippingServiceId !== null)
+    (!shippingBlocked && !isCalculatingShipping && selectedShippingServiceId !== null) ||
+    shippingQuoteFailed
   const deliveryZipDigits = (zip ?? '').replace(/\D/g, '')
   const deliveryFilled =
-    (fullName ?? '').trim().length >= 3 &&
-    (address ?? '').trim().length >= 5 &&
-    (city ?? '').trim().length >= 2 &&
-    (state ?? '').trim().length === 2 &&
-    deliveryZipDigits.length === 8
+    deliveryFieldsSchema.safeParse({
+      fullName: (fullName ?? '').trim(),
+      address: (address ?? '').trim(),
+      city: (city ?? '').trim(),
+      state: (state ?? '').trim(),
+    }).success && deliveryZipDigits.length === 8
   const paymentSectionLocked = !deliveryFilled || !shippingDecided
   const discount = appliedCoupon ? calculateDiscount(appliedCoupon, subtotal, shipping) : 0
   const total = subtotal + shipping - discount
