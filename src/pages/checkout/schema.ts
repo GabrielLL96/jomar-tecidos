@@ -11,7 +11,8 @@ const checkoutBaseSchema = z.object({
   address: z.string().min(5, 'Informe o endereço'),
   city: z.string().min(2, 'Informe a cidade'),
   state: z.string().length(2, 'UF inválida'),
-  zip: z.string().min(8, 'CEP inválido'),
+  // Campo é texto livre (aceita máscara): conta só os dígitos.
+  zip: z.string().refine((value) => value.replace(/\D/g, '').length === 8, 'CEP inválido'),
   paymentMethod: z.enum(['credit_card', 'pix', 'boleto']),
   // Parcelamento sem juros, só cartão — mínimo de pedido pra oferecer 2x/3x
   // é decidido no componente (MIN_INSTALLMENT_TOTAL em CheckoutPage.tsx),
@@ -59,13 +60,13 @@ export const checkoutSchema = checkoutBaseSchema.superRefine((data, ctx) => {
 })
 
 // Só os campos de entrega — usado pra liberar a seção de pagamento sem
-// duplicar as regras de tamanho. O zip fica de fora: o campo aceita texto
-// livre (min(8) conta máscara/letras), então o gate valida 8 dígitos à parte.
+// duplicar as regras do submit.
 export const deliveryFieldsSchema = checkoutBaseSchema.pick({
   fullName: true,
   address: true,
   city: true,
   state: true,
+  zip: true,
 })
 
 export type CheckoutInput = z.infer<typeof checkoutSchema>

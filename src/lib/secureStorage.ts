@@ -1,5 +1,9 @@
 import CryptoJS from 'crypto-js'
 
+// Ofuscação, não proteção: VITE_PUBLIC_CRYPTO_KEY vai embutida no bundle, então
+// qualquer script na página (XSS, extensão) decifra os valores. Serve só pra não
+// deixar dado legível a olho no storage — não guardar aqui nada que dependa
+// de sigilo de verdade.
 const STORAGE_SECRET = import.meta.env.VITE_PUBLIC_CRYPTO_KEY
 export const ENCRYPTION_PREFIX = 'enc:'
 

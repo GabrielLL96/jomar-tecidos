@@ -111,14 +111,13 @@ export function CheckoutPage() {
     cartItemsMissingShippingData ||
     (!shippingBlocked && !isCalculatingShipping && selectedShippingServiceId !== null) ||
     shippingQuoteFailed
-  const deliveryZipDigits = (zip ?? '').replace(/\D/g, '')
-  const deliveryFilled =
-    deliveryFieldsSchema.safeParse({
-      fullName: (fullName ?? '').trim(),
-      address: (address ?? '').trim(),
-      city: (city ?? '').trim(),
-      state: (state ?? '').trim(),
-    }).success && deliveryZipDigits.length === 8
+  const deliveryFilled = deliveryFieldsSchema.safeParse({
+    fullName: (fullName ?? '').trim(),
+    address: (address ?? '').trim(),
+    city: (city ?? '').trim(),
+    state: (state ?? '').trim(),
+    zip: zip ?? '',
+  }).success
   const paymentSectionLocked = !deliveryFilled || !shippingDecided
   const discount = appliedCoupon ? calculateDiscount(appliedCoupon, subtotal, shipping) : 0
   const total = subtotal + shipping - discount

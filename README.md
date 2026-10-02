@@ -46,7 +46,7 @@ npm run dev            # servidor de desenvolvimento
 | `SUPABASE_ACCESS_TOKEN`    | Só scripts da CLI do Supabase (`sb:login`/`sb:link`) — não é lida pelo Vite                           |
 | `RESEND_SMTP_PASSWORD`     | Só `config:push` (SMTP do Auth via Resend) — não é lida pelo Vite                                     |
 
-`VITE_API_URL` não é mais usada: o único consumidor era `src/lib/axios.ts`, que não é importado por nenhum módulo. Segredos de Melhor Envio, Asaas e Resend ficam no banco/secrets das edge functions, nunca no `.env` do front.
+Segredos de Melhor Envio, Asaas e Resend ficam no banco/secrets das edge functions, nunca no `.env` do front.
 
 ## Estrutura de pastas
 

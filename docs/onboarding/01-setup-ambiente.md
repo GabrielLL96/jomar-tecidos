@@ -43,10 +43,8 @@ mesmo `.env` porque os scripts usam `dotenv-cli` para injetá-las):
 Peça esses valores a quem já tem acesso ao projeto — não estão documentados aqui de
 propósito (são credenciais).
 
-Existe também `VITE_API_URL`, referenciada em `src/lib/axios.ts` com fallback para
-`http://localhost:3000/api` — não está em `.env.example` porque não há um backend HTTP
-próprio rodando nessa URL atualmente (o projeto usa Supabase diretamente, não uma API REST
-intermediária); o axios configurado existe mas não é o caminho principal de dados do app.
+Não há API REST própria: o front fala direto com o Supabase (PostgREST, RPCs e edge
+functions). A antiga `VITE_API_URL`/`src/lib/axios.ts` foi removida em 2026-10-02.
 
 ## Rodando localmente
 
