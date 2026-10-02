@@ -132,6 +132,7 @@ export function AdminLogsPage() {
             </SelectContent>
           </Select>
           <Input
+            aria-label="Buscar por e-mail ou mensagem"
             placeholder="Buscar por e-mail ou mensagem…"
             value={filters.search}
             onChange={(event) => updateFilter('search', event.target.value)}

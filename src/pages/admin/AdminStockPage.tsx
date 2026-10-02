@@ -199,6 +199,7 @@ export function AdminStockPage() {
       <div className="mb-[18px] flex flex-col gap-2.5 sm:flex-row sm:justify-between">
         <div className="flex flex-col gap-2.5 sm:flex-row">
           <Input
+            aria-label="Buscar por nome ou SKU"
             placeholder="Buscar por nome ou SKU…"
             value={search}
             onChange={(event) => setSearch(event.target.value)}

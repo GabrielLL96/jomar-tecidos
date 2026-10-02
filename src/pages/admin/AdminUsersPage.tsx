@@ -265,6 +265,7 @@ export function AdminUsersPage() {
       <div className="mb-[18px] flex flex-col gap-2.5 sm:flex-row sm:justify-between">
         <div className="flex flex-col gap-2.5 sm:flex-row">
           <Input
+            aria-label="Buscar por nome ou e-mail"
             placeholder="Buscar por nome ou e-mail…"
             value={search}
             onChange={(event) => {

@@ -83,7 +83,7 @@
   --accent-foreground: var(--navy-dark);
   --destructive: var(--brand-red);
   --border: #e4ddd0;
-  --input: #d8d0c0;
+  --input: #928973;
   --ring: var(--navy);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -148,5 +148,19 @@
   }
   html {
     @apply font-sans;
+  }
+}
+
+/* tw-animate-css (animate-in/out de Dialog, Sheet, Select...) e transições
+   Tailwind não respeitam prefers-reduced-motion sozinhos; Motion é coberto
+   pelo <MotionConfig reducedMotion="user"> em main.tsx. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

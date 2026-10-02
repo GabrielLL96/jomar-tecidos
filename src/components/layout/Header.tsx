@@ -101,12 +101,19 @@ export function Header() {
 
         <NavLink
           to="/favoritos"
-          aria-label="Favoritos"
+          aria-label={
+            favoriteIds.length > 0
+              ? `Favoritos (${favoriteIds.length} ${favoriteIds.length === 1 ? 'item' : 'itens'})`
+              : 'Favoritos'
+          }
           className="relative flex items-center text-foreground"
         >
           <Heart className="size-[18px]" />
           {favoriteIds.length > 0 && (
-            <span className="bg-brand-red absolute -top-2 -right-2 flex size-4 items-center justify-center rounded-full text-xs font-semibold text-white">
+            <span
+              aria-hidden="true"
+              className="bg-brand-red absolute -top-2 -right-2 flex size-4 items-center justify-center rounded-full text-xs font-semibold text-white"
+            >
               {favoriteIds.length}
             </span>
           )}
@@ -122,11 +129,17 @@ export function Header() {
 
         <NavLink
           to="/carrinho"
+          aria-label={
+            itemCount > 0 ? `Sacola (${itemCount} ${itemCount === 1 ? 'item' : 'itens'})` : 'Sacola'
+          }
           className="border-navy text-navy relative flex items-center gap-1.5 rounded-sm border px-3 py-2 text-sm font-medium sm:px-4"
         >
           <ShoppingBag className="size-4 sm:hidden" />
           <span className="hidden sm:inline">Sacola</span>
-          <span className="bg-brand-red flex size-[18px] items-center justify-center rounded-full text-xs font-semibold text-white">
+          <span
+            aria-hidden="true"
+            className="bg-brand-red flex size-[18px] items-center justify-center rounded-full text-xs font-semibold text-white"
+          >
             {itemCount}
           </span>
         </NavLink>

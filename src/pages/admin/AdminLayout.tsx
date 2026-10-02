@@ -181,6 +181,7 @@ export function AdminLayout() {
           <div className="relative hidden sm:block">
             <Search className="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-[#a39a8c]" />
             <input
+              aria-label="Buscar"
               placeholder="Buscar…"
               className="w-[220px] rounded-[5px] border border-[#d8d0c0] py-2.5 pr-3.5 pl-9 text-[13px]"
             />
