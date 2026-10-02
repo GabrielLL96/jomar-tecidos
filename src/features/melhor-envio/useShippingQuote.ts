@@ -39,9 +39,8 @@ export function useShippingQuote(
   const [error, setError] = useState<string | null>(null)
   const [noCarriersAvailable, setNoCarriersAvailable] = useState(false)
 
-  // weightGrams do produto é peso por metro — a linha do carrinho pesa isso
-  // vezes os metros comprados. Altura/largura/comprimento da embalagem NÃO
-  // escalam por metro (caixa/rolo padrão do produto).
+  // Só decide se dá pra cotar (fallback de taxa fixa quando falta dado) — o
+  // peso/dimensão usado na cotação é lido de products pela edge function.
   const missingData = items.some((item) => {
     const product = products.find((p) => p.id === item.productId)
     return (
@@ -59,7 +58,10 @@ export function useShippingQuote(
   // "ajustar state durante o render" já documentado no projeto (React
   // Compiler rejeita setState síncrono dentro de useEffect como erro de lint,
   // não warning, ver skills/reactjs.md).
-  const inputKey = `${cleanZip}:${enabled}:${missingData}`
+  // create_order() rejeita cotação cujo carrinho difere do pedido — mudar
+  // metragem (não só adicionar/remover linha) precisa recotar.
+  const itemsSignature = items.map((item) => `${item.productId}:${item.meters}`).join('|')
+  const inputKey = `${cleanZip}:${enabled}:${missingData}:${itemsSignature}`
   const [syncedInputKey, setSyncedInputKey] = useState<string | null>(null)
   if (inputKey !== syncedInputKey) {
     setSyncedInputKey(inputKey)
@@ -78,16 +80,10 @@ export function useShippingQuote(
       setError(null)
       setNoCarriersAvailable(false)
       try {
-        const quoteItems = items.map((item) => {
-          const product = products.find((p) => p.id === item.productId)
-          return {
-            weightGrams: Math.ceil((product?.weightGrams ?? 0) * item.meters),
-            heightCm: product?.packageHeightCm ?? 0,
-            widthCm: product?.packageWidthCm ?? 0,
-            lengthCm: product?.packageLengthCm ?? 0,
-            quantity: 1,
-          }
-        })
+        const quoteItems = items.map((item) => ({
+          productId: item.productId,
+          meters: item.meters,
+        }))
         const { quoteId: id, options: opts } = await calculateShipping(cleanZip, quoteItems)
         if (opts.length === 0) {
           setError('Nenhuma transportadora disponível pra este CEP')
@@ -105,7 +101,7 @@ export function useShippingQuote(
     }, 600)
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cleanZip, enabled, missingData, items.length])
+  }, [cleanZip, enabled, missingData, itemsSignature])
 
   return {
     options,

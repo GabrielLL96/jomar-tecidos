@@ -36,11 +36,12 @@ export async function requireAdmin(authorizationHeader: string | null) {
   if (role !== 'admin') throw new Error('Só admin pode fazer essa ação')
 }
 
-export async function requireAuthenticated(authorizationHeader: string | null) {
+export async function requireAuthenticated(authorizationHeader: string | null): Promise<string> {
   if (!authorizationHeader) throw new Error('Não autenticado')
   const caller = createCallerClient(authorizationHeader)
   const { data, error } = await caller.auth.getUser()
   if (error || !data.user) throw new Error('Sessão inválida')
+  return data.user.id
 }
 
 // ============================================================================

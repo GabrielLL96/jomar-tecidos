@@ -6,12 +6,11 @@ export interface MelhorEnvioStatus {
   secretConfigured: boolean
 }
 
+// Peso/dimensão são lidos de products pela edge function — o client só diz
+// o que está no carrinho, e a cotação fica amarrada a esses itens.
 export interface ShippingQuoteItemInput {
-  weightGrams: number
-  heightCm: number
-  widthCm: number
-  lengthCm: number
-  quantity: number
+  productId: string
+  meters: number
 }
 
 export interface ShippingQuoteOption {

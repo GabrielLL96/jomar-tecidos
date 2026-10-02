@@ -7,16 +7,37 @@ import {
 } from '../_shared/melhor-envio.ts'
 
 interface ShippingItemInput {
-  weightGrams: number
-  heightCm: number
-  widthCm: number
-  lengthCm: number
-  quantity: number
+  productId: string
+  meters: number
 }
 
 interface CalculateRequestBody {
   destinationZip: string
   items: ShippingItemInput[]
+}
+
+interface ProductShippingRow {
+  id: string
+  status: string
+  weight_grams: number | null
+  package_height_cm: number | null
+  package_width_cm: number | null
+  package_length_cm: number | null
+}
+
+const roundMeters = (meters: number) => Math.round(meters * 100) / 100
+
+// Mesmo formato que create_order() monta a partir de p_items pra comparar
+// com shipping_quotes.items: { product_id: metros somados, 2 casas }.
+function groupMetersByProduct(items: ShippingItemInput[]): Record<string, number> {
+  const grouped: Record<string, number> = {}
+  for (const item of items) {
+    grouped[item.productId] = (grouped[item.productId] ?? 0) + Number(item.meters)
+  }
+  for (const productId of Object.keys(grouped)) {
+    grouped[productId] = roundMeters(grouped[productId])
+  }
+  return grouped
 }
 
 interface MelhorEnvioQuote {
@@ -32,15 +53,36 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    await requireAuthenticated(req.headers.get('Authorization'))
+    const userId = await requireAuthenticated(req.headers.get('Authorization'))
 
     const { destinationZip, items } = (await req.json()) as CalculateRequestBody
     const cleanDestinationZip = (destinationZip ?? '').replace(/\D/g, '')
     if (cleanDestinationZip.length !== 8) throw new Error('CEP de destino inválido')
     if (!items || items.length === 0) throw new Error('Carrinho vazio')
+    const invalidItem = items.some(
+      (item) => typeof item.productId !== 'string' || !(Number(item.meters) > 0),
+    )
+    if (invalidItem) throw new Error('Item inválido no carrinho')
 
-    const missingData = items.some(
-      (item) => !item.weightGrams || !item.heightCm || !item.widthCm || !item.lengthCm,
+    const supabase = createServiceClient()
+
+    // Peso/dimensão vêm de products, nunca do client — antes o client mandava
+    // weightGrams/dimensões e dava pra cotar 1g e usar a cotação num pedido
+    // pesado. A cotação fica amarrada a este carrinho em shipping_quotes.items.
+    const metersByProduct = groupMetersByProduct(items)
+    const productIds = Object.keys(metersByProduct)
+    const { data: productRows, error: productsError } = await supabase
+      .from('products')
+      .select('id, status, weight_grams, package_height_cm, package_width_cm, package_length_cm')
+      .in('id', productIds)
+    if (productsError) throw new Error(`Falha ao ler produtos: ${productsError.message}`)
+
+    const products = (productRows ?? []) as ProductShippingRow[]
+    if (products.length !== productIds.length || products.some((p) => p.status === 'draft')) {
+      throw new Error('Produto indisponível no carrinho')
+    }
+    const missingData = products.some(
+      (p) => !p.weight_grams || !p.package_height_cm || !p.package_width_cm || !p.package_length_cm,
     )
     if (missingData) {
       throw new Error(
@@ -48,7 +90,6 @@ Deno.serve(async (req) => {
       )
     }
 
-    const supabase = createServiceClient()
     const { data: siteSettings, error: siteSettingsError } = await supabase
       .from('site_settings')
       .select('key, value')
@@ -79,19 +120,21 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           from: { postal_code: originZip },
           to: { postal_code: cleanDestinationZip },
-          products: items.map((item, index) => ({
-            id: String(index),
-            width: item.widthCm,
-            height: item.heightCm,
-            length: item.lengthCm,
-            weight: item.weightGrams / 1000,
-            quantity: item.quantity,
+          // weight_grams é peso por metro — a linha pesa isso vezes os metros.
+          // Altura/largura/comprimento da embalagem não escalam por metro.
+          products: products.map((product) => ({
+            id: product.id,
+            width: product.package_width_cm,
+            height: product.package_height_cm,
+            length: product.package_length_cm,
+            weight: Math.ceil(product.weight_grams! * metersByProduct[product.id]) / 1000,
+            quantity: 1,
           })),
         }),
       },
       {
         operation: 'calculate_shipping',
-        requestSummary: { destinationZip: cleanDestinationZip, itemCount: items.length },
+        requestSummary: { destinationZip: cleanDestinationZip, itemCount: products.length },
         summarizeResponse: (parsed) => {
           const quotesResult = parsed as MelhorEnvioQuote[]
           return {
@@ -125,7 +168,12 @@ Deno.serve(async (req) => {
     // preço real depois, em vez de confiar no valor que o checkout mandar.
     const { data: quoteRow, error: quoteError } = await supabase
       .from('shipping_quotes')
-      .insert({ destination_zip: cleanDestinationZip, options })
+      .insert({
+        destination_zip: cleanDestinationZip,
+        options,
+        user_id: userId,
+        items: metersByProduct,
+      })
       .select('id')
       .single()
     if (quoteError) throw new Error(`Falha ao salvar cotação: ${quoteError.message}`)
