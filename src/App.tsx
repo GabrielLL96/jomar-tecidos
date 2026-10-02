@@ -40,6 +40,7 @@ const ForgotPasswordPage = lazy(() =>
 const ResetPasswordPage = lazy(() =>
   import('@/pages/auth/ResetPasswordPage').then((m) => ({ default: m.ResetPasswordPage })),
 )
+const MfaPage = lazy(() => import('@/pages/auth/MfaPage').then((m) => ({ default: m.MfaPage })))
 const AccountLayout = lazy(() =>
   import('@/pages/auth/AccountLayout').then((m) => ({ default: m.AccountLayout })),
 )
@@ -141,6 +142,7 @@ function App() {
             <Route path="/conta/entrar" element={<LoginPage />} />
             <Route path="/conta/esqueci-senha" element={<ForgotPasswordPage />} />
             <Route path="/conta/redefinir-senha" element={<ResetPasswordPage />} />
+            <Route path="/conta/mfa" element={<MfaPage />} />
             <Route path="/conta" element={<AccountLayout />}>
               <Route index element={<AccountSummaryPage />} />
               <Route path="pedidos" element={<AccountOrdersPage />} />

@@ -68,3 +68,17 @@ export const accountDataSchema = z.object({
 })
 
 export type AccountDataInput = z.infer<typeof accountDataSchema>
+
+export const TOTP_CODE_LENGTH = 6
+
+export const totpCodeSchema = z.object({
+  code: z
+    .string()
+    .trim()
+    .regex(
+      new RegExp(`^\\d{${TOTP_CODE_LENGTH}}$`),
+      `Informe os ${TOTP_CODE_LENGTH} dígitos do app`,
+    ),
+})
+
+export type TotpCodeInput = z.infer<typeof totpCodeSchema>

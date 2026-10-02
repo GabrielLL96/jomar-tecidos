@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   BarChart3,
@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/features/auth/AuthContext'
+import { useAdminAccessGuard } from './useAdminAccessGuard'
 import { useSeoMeta } from '@/lib/seo'
 import {
   Sheet,
@@ -71,7 +72,7 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
 }
 
 export function AdminLayout() {
-  const { user, isLoading, logout } = useAuth()
+  const { user, logout } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -83,18 +84,9 @@ export function AdminLayout() {
     noindex: true,
   })
 
-  useEffect(() => {
-    if (isLoading) return
-    if (!user) {
-      navigate('/conta/entrar', { replace: true })
-      return
-    }
-    if (user.role !== 'admin') {
-      navigate('/', { replace: true })
-    }
-  }, [user, isLoading, navigate])
+  const { hasAccess } = useAdminAccessGuard()
 
-  if (isLoading || !user || user.role !== 'admin') return null
+  if (!hasAccess || !user) return null
 
   const meta =
     PAGE_META[location.pathname] ??

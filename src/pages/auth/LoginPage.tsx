@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useAuth, type AuthUser } from '@/features/auth/AuthContext'
+import { useAuth } from '@/features/auth/AuthContext'
+import { postLoginRedirectFor } from '@/features/auth/redirects'
 import { sendWelcomeEmail } from '@/features/resend/service'
 import { useSeoMeta } from '@/lib/seo'
 import { supabase } from '@/lib/supabase'
@@ -18,14 +19,6 @@ import {
   type LoginInput,
   type SignupInput,
 } from '@/features/auth/schema'
-
-// Sem `?redirect=` explícito (ex.: checkout mandando de volta pra si mesmo),
-// o destino padrão depende do papel do usuário — admin vai pro painel, não
-// pra área de cliente. Um `?redirect=` explícito sempre vence (um admin
-// tentando comprar como cliente não deve ser forçado de volta pro painel).
-function defaultRedirectFor(role: AuthUser['role']) {
-  return role === 'admin' ? '/admin' : '/conta'
-}
 
 function useRedirectParam() {
   const [searchParams] = useSearchParams()
@@ -218,7 +211,7 @@ export function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && user)
-      navigate(redirectParam || defaultRedirectFor(user.role), { replace: true })
+      navigate(postLoginRedirectFor(user.role, redirectParam), { replace: true })
   }, [user, isLoading, navigate, redirectParam])
 
   if (isLoading || user) return null
