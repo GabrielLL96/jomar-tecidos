@@ -13,11 +13,12 @@
 # container ou aceitar 'unsafe-inline' (enfraquece a proteção contra XSS).
 #
 # Origens: Supabase (REST/Auth/Storage/Edge Functions + Realtime via wss),
-# GTM e Google Analytics. Fontes são locais (@fontsource). Asaas e Melhor
+# GTM, Google Analytics e o beacon do Cloudflare Web Analytics (injetado pelo
+# próprio Cloudflare; envia pra /cdn-cgi/rum, mesma origem). Fontes são locais (@fontsource). Asaas e Melhor
 # Envio só são chamados pelas edge functions, nunca pelo navegador.
 /*
   X-Frame-Options: DENY
   Content-Security-Policy: frame-ancestors 'none'
-  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://www.googletagmanager.com https://*.googletagmanager.com; connect-src 'self' https://ooghhxcrdndulzlrsliz.supabase.co wss://ooghhxcrdndulzlrsliz.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; img-src 'self' data: blob: https://ooghhxcrdndulzlrsliz.supabase.co https://*.google-analytics.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy-Report-Only: default-src 'self'; script-src 'self' https://www.googletagmanager.com https://*.googletagmanager.com https://static.cloudflareinsights.com; connect-src 'self' https://ooghhxcrdndulzlrsliz.supabase.co wss://ooghhxcrdndulzlrsliz.supabase.co https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; img-src 'self' data: blob: https://ooghhxcrdndulzlrsliz.supabase.co https://*.google-analytics.com https://*.googletagmanager.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   Strict-Transport-Security: max-age=31536000
   Permissions-Policy: camera=(), microphone=(), geolocation=(), usb=(), payment=()

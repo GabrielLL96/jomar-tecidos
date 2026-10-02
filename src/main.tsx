@@ -5,6 +5,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { MotionConfig } from 'motion/react'
 import { Toaster } from 'sonner'
+import { z } from 'zod'
 import { queryClient } from '@/lib/query-client'
 import { AuthProvider } from '@/features/auth/AuthContext'
 import { FavoritesProvider } from '@/features/favorites/FavoritesContext'
@@ -15,6 +16,10 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary'
 import { initErrorReporting } from '@/lib/error-reporting'
 import App from './App.tsx'
 import './index.css'
+
+// Zod 4 testa `new Function` pra otimizar parse; sob a CSP (sem 'unsafe-eval')
+// esse teste vira violação reportada. jitless pula o teste — validação igual.
+z.config({ jitless: true })
 
 initErrorReporting()
 
