@@ -3,9 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/features/auth/AuthContext'
-import { isStaffRole, mfaStepQueryOptions } from '@/features/auth/mfa'
+import { hasStaffAccess, isStaffRole, mfaStepQueryOptions } from '@/features/auth/mfa'
 import { defaultRedirectFor } from '@/features/auth/redirects'
-import { MfaEnroll } from '@/features/auth/components/MfaEnroll'
 import { MfaChallenge } from '@/features/auth/components/MfaChallenge'
 import { useSeoMeta } from '@/lib/seo'
 
@@ -24,7 +23,7 @@ function useMfaGuard() {
     if (isLoading) return
     if (!user) navigate('/conta/entrar', { replace: true })
     else if (!isStaff) navigate('/conta', { replace: true })
-    else if (step === 'verified') navigate(destination, { replace: true })
+    else if (step && hasStaffAccess(step)) navigate(destination, { replace: true })
   }, [user, isLoading, isStaff, step, destination, navigate])
 
   const goToDestination = () => navigate(destination, { replace: true })
@@ -54,7 +53,6 @@ export function MfaPage() {
         Verificação em duas etapas
       </h1>
       {error && <p className="text-destructive text-center text-sm">{error.message}</p>}
-      {step === 'enroll' && <MfaEnroll onVerified={goToDestination} />}
       {step === 'challenge' && <MfaChallenge onVerified={goToDestination} />}
       <Button variant="link" onClick={handleLogout} className="mt-6 w-full">
         Sair

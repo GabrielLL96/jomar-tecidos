@@ -34,9 +34,8 @@ export function MfaEnroll({ onVerified }: MfaEnrollProps) {
   return (
     <div className="flex flex-col gap-5">
       <p className="text-text-body text-sm leading-relaxed">
-        Contas da equipe exigem verificação em duas etapas. Escaneie o QR code com um aplicativo
-        autenticador (Google Authenticator, Microsoft Authenticator, 1Password…) e digite o código
-        gerado.
+        Escaneie o QR code com um aplicativo autenticador (Google Authenticator, Microsoft
+        Authenticator, 1Password…) e digite o código gerado.
       </p>
       <img
         src={enrollment.qrCode}

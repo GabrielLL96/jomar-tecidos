@@ -106,6 +106,9 @@ const AdminUsersPage = lazy(() =>
 const AdminUserDetailPage = lazy(() =>
   import('@/pages/admin/AdminUserDetailPage').then((m) => ({ default: m.AdminUserDetailPage })),
 )
+const AdminProfilePage = lazy(() =>
+  import('@/pages/admin/AdminProfilePage').then((m) => ({ default: m.AdminProfilePage })),
+)
 const AdminSettingsPage = lazy(() =>
   import('@/pages/admin/AdminSettingsPage').then((m) => ({ default: m.AdminSettingsPage })),
 )
@@ -166,6 +169,7 @@ function App() {
             <Route path="usuarios/:id" element={<AdminUserDetailPage />} />
             <Route path="relatorios" element={<AdminReportsPage />} />
             <Route path="configuracoes" element={<AdminSettingsPage />} />
+            <Route path="perfil" element={<AdminProfilePage />} />
             <Route path="logs" element={<AdminLogsPage />} />
             <Route path="integracoes-log" element={<AdminIntegrationLogPage />} />
             <Route path="melhor-envio/callback" element={<AdminMelhorEnvioCallbackPage />} />
