@@ -47,6 +47,10 @@ export function MfaPage() {
     navigate('/', { replace: true })
   }
 
+  // Sem MFA ativo a página só redireciona — não desenha nada até saber que é
+  // desafio, senão o título pisca antes do redirect.
+  if (!error && step !== 'challenge') return null
+
   return (
     <main className="mx-auto w-full max-w-(--breakpoint-sm) px-6 py-20">
       <h1 className="text-navy-dark mb-8 text-center font-serif text-3xl font-medium">

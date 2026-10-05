@@ -9,13 +9,14 @@ export function defaultRedirectFor(role: UserRole) {
   return role === 'admin' ? '/admin' : '/conta'
 }
 
-// Logo após o login: staff passa pelo /conta/mfa, que pede o código se o MFA
-// estiver ativo e segue direto pro destino se não estiver. Um `?redirect=`
-// explícito sempre vence (um admin tentando comprar como cliente não deve ser
-// forçado pro painel nem pro MFA; se o /admin for aberto depois, o guard do
-// painel manda pro desafio).
+// Logo após o login. Admin vai direto pro /admin: o guard do painel só manda
+// pro desafio quem tem MFA ativo — passar pelo /conta/mfa sem precisar fazia
+// a tela piscar antes de seguir. Demais roles de staff (sem painel próprio)
+// passam pelo /conta/mfa. Um `?redirect=` explícito sempre vence (um admin
+// tentando comprar como cliente não deve ser forçado pro painel nem pro MFA).
 export function postLoginRedirectFor(role: UserRole, redirectParam: string | null) {
   if (redirectParam) return redirectParam
+  if (role === 'admin') return defaultRedirectFor(role)
   return isStaffRole(role) ? MFA_PATH : defaultRedirectFor(role)
 }
 
