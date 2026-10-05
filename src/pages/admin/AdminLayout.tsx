@@ -15,6 +15,7 @@ import {
   Settings,
   Tag,
   Truck,
+  UserCog,
   Users,
   X,
 } from 'lucide-react'
@@ -44,6 +45,7 @@ const ADMIN_NAV = [
   { to: '/admin/logs', label: 'Logs', icon: History, end: false },
   { to: '/admin/integracoes-log', label: 'Logs de Integração', icon: Plug, end: false },
   { to: '/admin/configuracoes', label: 'Configurações', icon: Settings, end: false },
+  { to: '/admin/perfil', label: 'Meu perfil', icon: UserCog, end: false },
 ] as const
 
 const PAGE_META: Record<string, { title: string; subtitle: string }> = {
@@ -68,6 +70,7 @@ const PAGE_META: Record<string, { title: string; subtitle: string }> = {
     title: 'Configurações',
     subtitle: 'Conteúdo da home, categorias e informações de contato',
   },
+  '/admin/perfil': { title: 'Meu perfil', subtitle: 'Seus dados e segurança da conta' },
   '/admin/melhor-envio/callback': { title: 'Melhor Envio', subtitle: 'Conectando integração' },
 }
 
